@@ -16,6 +16,12 @@ export function Header() {
             >
               Board
             </Link>
+            <Link
+              to="/archived"
+              className="text-sm font-medium text-gray-700 hover:text-gray-900"
+            >
+              Archived
+            </Link>
             {hasRole('admin') && (
               <Link
                 to="/admin"

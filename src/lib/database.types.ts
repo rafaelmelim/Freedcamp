@@ -93,6 +93,7 @@ export interface Database {
           updated_at: string | null
           completed: boolean
           priority: TaskPriority
+          archived: boolean
         }
         Insert: {
           id?: number
@@ -106,6 +107,7 @@ export interface Database {
           updated_at?: string | null
           completed?: boolean
           priority?: TaskPriority
+          archived?: boolean
         }
         Update: {
           id?: number
@@ -119,6 +121,7 @@ export interface Database {
           updated_at?: string | null
           completed?: boolean
           priority?: TaskPriority
+          archived?: boolean
         }
       }
       labels: {

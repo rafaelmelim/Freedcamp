@@ -16,6 +16,7 @@ interface TaskDetailsModalProps {
   onClose: () => void;
   onUpdate: (taskId: number, data: Partial<Task>, labels: Label[]) => void;
   onDelete: (taskId: number) => void;
+  onArchive?: (taskId: number) => void;
 }
 
 const priorityColors = {
@@ -24,7 +25,14 @@ const priorityColors = {
   low: 'bg-blue-100 text-blue-800 ring-blue-600/20',
 };
 
-export function TaskDetailsModal({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsModalProps) {
+export function TaskDetailsModal({
+  task,
+  isOpen,
+  onClose,
+  onUpdate,
+  onDelete,
+  onArchive,
+}: TaskDetailsModalProps) {
   const { register, handleSubmit, formState: { errors } } = useForm({
     defaultValues: {
       title: task.title,
@@ -146,18 +154,34 @@ export function TaskDetailsModal({ task, isOpen, onClose, onUpdate, onDelete }: 
                   </div>
 
                   <div className="flex justify-between pt-4">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (confirm('Are you sure you want to delete this task?')) {
-                          onDelete(task.id);
-                          onClose();
-                        }
-                      }}
-                      className="px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700"
-                    >
-                      Delete Task
-                    </button>
+                    <div className="flex space-x-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (confirm('Are you sure you want to delete this task?')) {
+                            onDelete(task.id);
+                            onClose();
+                          }
+                        }}
+                        className="px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700"
+                      >
+                        Delete Task
+                      </button>
+                      {onArchive && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (confirm('Are you sure you want to archive this task?')) {
+                              onArchive(task.id);
+                              onClose();
+                            }
+                          }}
+                          className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-700"
+                        >
+                          Archive Task
+                        </button>
+                      )}
+                    </div>
 
                     <div className="flex space-x-2">
                       <button

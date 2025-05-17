@@ -5,6 +5,7 @@ import { RoleProtectedRoute } from './components/RoleProtectedRoute'
 import { LoginPage } from './pages/LoginPage'
 import { BoardPage } from './pages/BoardPage'
 import { AdminPage } from './pages/AdminPage'
+import { ArchivedTasksPage } from './pages/ArchivedTasksPage'
 
 function App() {
   return (
@@ -25,6 +26,14 @@ function App() {
             <RoleProtectedRoute requiredRole="admin">
               <AdminPage />
             </RoleProtectedRoute>
+          }
+        />
+        <Route
+          path="/archived"
+          element={
+            <ProtectedRoute>
+              <ArchivedTasksPage />
+            </ProtectedRoute>
           }
         />
         <Route path="*" element={<Navigate to="/board" replace />} />
