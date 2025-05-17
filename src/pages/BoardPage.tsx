@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { format, isPast, isToday } from 'date-fns';
+import { format, isPast, isToday, addDays, startOfDay } from 'date-fns';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'react-hot-toast';
@@ -9,17 +9,29 @@ import { Database } from '../lib/database.types';
 import { TaskForm } from '../components/TaskForm';
 import { ImportCSV } from '../components/ImportCSV';
 import { Header } from '../components/Header';
+import { TaskFilters } from '../components/TaskFilters';
 
 type Project = Database['public']['Tables']['projects']['Row'];
 type Task = Database['public']['Tables']['tasks']['Row'];
 type ProjectInsert = Database['public']['Tables']['projects']['Insert'];
 type TaskInsert = Database['public']['Tables']['tasks']['Insert'];
 
+interface TaskFiltersState {
+  search: string;
+  showCompleted: boolean;
+  dueDateFilter: 'all' | 'overdue' | 'today' | 'upcoming' | 'none';
+}
+
 export function BoardPage() {
   const { user } = useAuth();
   const [isAddingProject, setIsAddingProject] = useState(false);
   const [newProjectTitle, setNewProjectTitle] = useState('');
   const [addingTaskToProject, setAddingTaskToProject] = useState<number | null>(null);
+  const [filters, setFilters] = useState<TaskFiltersState>({
+    search: '',
+    showCompleted: true,
+    dueDateFilter: 'all',
+  });
   const queryClient = useQueryClient();
 
   const { data: projects, isLoading: isLoadingProjects } = useQuery({
@@ -92,6 +104,23 @@ export function BoardPage() {
     },
     onError: () => {
       toast.error('Failed to create task');
+    },
+  });
+
+  const toggleTaskCompleted = useMutation({
+    mutationFn: async ({ taskId, completed }: { taskId: number; completed: boolean }) => {
+      const { error } = await supabase
+        .from('tasks')
+        .update({ completed })
+        .eq('id', taskId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+    },
+    onError: () => {
+      toast.error('Failed to update task');
     },
   });
 
@@ -173,6 +202,46 @@ export function BoardPage() {
     importData.mutate({ projects, tasks });
   };
 
+  const filterTasks = (tasks: Task[] | undefined, projectId: number): Task[] => {
+    if (!tasks) return [];
+
+    return tasks
+      .filter(task => task.project_id === projectId)
+      .filter(task => {
+        // Filter by completion status
+        if (!filters.showCompleted && task.completed) {
+          return false;
+        }
+
+        // Filter by search term
+        if (filters.search && !task.title.toLowerCase().includes(filters.search.toLowerCase())) {
+          return false;
+        }
+
+        // Filter by due date
+        if (task.due_date) {
+          const dueDate = startOfDay(new Date(task.due_date));
+          const today = startOfDay(new Date());
+
+          switch (filters.dueDateFilter) {
+            case 'overdue':
+              return isPast(dueDate) && !isToday(dueDate);
+            case 'today':
+              return isToday(dueDate);
+            case 'upcoming':
+              return dueDate >= today && dueDate <= addDays(today, 7);
+            case 'none':
+              return false;
+            default:
+              return true;
+          }
+        } else {
+          return filters.dueDateFilter === 'none' || filters.dueDateFilter === 'all';
+        }
+      })
+      .sort((a, b) => a.position - b.position);
+  };
+
   if (isLoadingProjects || isLoadingTasks) {
     return <div>Loading...</div>;
   }
@@ -194,6 +263,8 @@ export function BoardPage() {
             </button>
           </div>
         </div>
+
+        <TaskFilters onFilterChange={setFilters} />
 
         {isAddingProject && (
           <div className="mb-8 bg-white/80 backdrop-blur-sm rounded-lg p-4">
@@ -270,47 +341,63 @@ export function BoardPage() {
                               {...provided.droppableProps}
                               className="space-y-2"
                             >
-                              {tasks
-                                ?.filter((task) => task.project_id === project.id)
-                                .sort((a, b) => a.position - b.position)
-                                .map((task, index) => (
-                                  <Draggable
-                                    key={task.id}
-                                    draggableId={String(task.id)}
-                                    index={index}
-                                  >
-                                    {(provided) => (
-                                      <div
-                                        ref={provided.innerRef}
-                                        {...provided.draggableProps}
-                                        {...provided.dragHandleProps}
-                                        className="bg-white rounded-md shadow-sm p-3 hover:shadow-md transition-shadow"
-                                      >
-                                        <h4 className="font-medium text-gray-900">
-                                          {task.title}
-                                        </h4>
-                                        {task.description && (
-                                          <p className="text-sm text-gray-600 mt-1">
-                                            {task.description}
-                                          </p>
-                                        )}
-                                        {task.due_date && (
-                                          <p
-                                            className={`text-sm mt-2 ${
-                                              isPast(new Date(task.due_date)) && !isToday(new Date(task.due_date))
-                                                ? 'text-red-600'
-                                                : isToday(new Date(task.due_date))
-                                                ? 'text-orange-600'
-                                                : 'text-gray-600'
-                                            }`}
-                                          >
-                                            Due: {format(new Date(task.due_date), 'dd/MM/yyyy')}
-                                          </p>
-                                        )}
+                              {filterTasks(tasks, project.id).map((task, index) => (
+                                <Draggable
+                                  key={task.id}
+                                  draggableId={String(task.id)}
+                                  index={index}
+                                >
+                                  {(provided) => (
+                                    <div
+                                      ref={provided.innerRef}
+                                      {...provided.draggableProps}
+                                      {...provided.dragHandleProps}
+                                      className={`bg-white rounded-md shadow-sm p-3 hover:shadow-md transition-shadow ${
+                                        task.completed ? 'opacity-50' : ''
+                                      }`}
+                                    >
+                                      <div className="flex items-start gap-3">
+                                        <input
+                                          type="checkbox"
+                                          checked={task.completed}
+                                          onChange={(e) =>
+                                            toggleTaskCompleted.mutate({
+                                              taskId: task.id,
+                                              completed: e.target.checked,
+                                            })
+                                          }
+                                          className="mt-1 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                                        />
+                                        <div className="flex-1">
+                                          <h4 className={`font-medium text-gray-900 ${
+                                            task.completed ? 'line-through' : ''
+                                          }`}>
+                                            {task.title}
+                                          </h4>
+                                          {task.description && (
+                                            <p className="text-sm text-gray-600 mt-1">
+                                              {task.description}
+                                            </p>
+                                          )}
+                                          {task.due_date && (
+                                            <p
+                                              className={`text-sm mt-2 ${
+                                                isPast(new Date(task.due_date)) && !isToday(new Date(task.due_date))
+                                                  ? 'text-red-600'
+                                                  : isToday(new Date(task.due_date))
+                                                  ? 'text-orange-600'
+                                                  : 'text-gray-600'
+                                              }`}
+                                            >
+                                              Due: {format(new Date(task.due_date), 'dd/MM/yyyy')}
+                                            </p>
+                                          )}
+                                        </div>
                                       </div>
-                                    )}
-                                  </Draggable>
-                                ))}
+                                    </div>
+                                  )}
+                                </Draggable>
+                              ))}
                               {provided.placeholder}
                             </div>
                           )}
