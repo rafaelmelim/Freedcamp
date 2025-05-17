@@ -8,6 +8,7 @@ import { toast } from 'react-hot-toast';
 import { Database } from '../lib/database.types';
 import { TaskForm } from '../components/TaskForm';
 import { ImportCSV } from '../components/ImportCSV';
+import { Header } from '../components/Header';
 
 type Project = Database['public']['Tables']['projects']['Row'];
 type Task = Database['public']['Tables']['tasks']['Row'];
@@ -15,7 +16,7 @@ type ProjectInsert = Database['public']['Tables']['projects']['Insert'];
 type TaskInsert = Database['public']['Tables']['tasks']['Insert'];
 
 export function BoardPage() {
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const [isAddingProject, setIsAddingProject] = useState(false);
   const [newProjectTitle, setNewProjectTitle] = useState('');
   const [addingTaskToProject, setAddingTaskToProject] = useState<number | null>(null);
@@ -178,17 +179,7 @@ export function BoardPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-500/10 to-primary-700/20">
-      <header className="bg-white/80 backdrop-blur-sm shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <h1 className="text-xl font-semibold text-gray-900">Freedcamp</h1>
-          <button
-            onClick={() => signOut()}
-            className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
-          >
-            Sign out
-          </button>
-        </div>
-      </header>
+      <Header />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex justify-between items-center mb-8">
