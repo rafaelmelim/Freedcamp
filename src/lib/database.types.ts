@@ -164,6 +164,32 @@ export interface Database {
           created_at?: string | null
         }
       }
+      comments: {
+        Row: {
+          id: number
+          task_id: number
+          author_id: string
+          content: string
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: number
+          task_id: number
+          author_id: string
+          content: string
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: number
+          task_id?: number
+          author_id?: string
+          content?: string
+          created_at?: string | null
+          updated_at?: string | null
+        }
+      }
       user_roles: {
         Row: {
           id: number

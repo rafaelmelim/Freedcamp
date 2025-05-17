@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { format } from 'date-fns';
 import { Database, TaskPriority } from '../lib/database.types';
 import { LabelPicker } from './LabelPicker';
+import { TaskComments } from './TaskComments';
 
 type Task = Database['public']['Tables']['tasks']['Row'];
 type Label = Database['public']['Tables']['labels']['Row'];
@@ -132,6 +133,11 @@ export function TaskDetailsModal({ task, isOpen, onClose, onUpdate, onDelete }: 
                       selectedLabels={selectedLabels}
                       onToggleLabel={handleToggleLabel}
                     />
+                  </div>
+
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">Comments</h4>
+                    <TaskComments taskId={task.id} />
                   </div>
 
                   <div className="flex justify-between pt-4">
