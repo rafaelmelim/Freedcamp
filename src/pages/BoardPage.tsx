@@ -5,7 +5,7 @@ import { format, isPast, isToday, addDays, startOfDay } from 'date-fns';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'react-hot-toast';
-import { Database } from '../lib/database.types';
+import { Database, TaskPriority } from '../lib/database.types';
 import { TaskForm } from '../components/TaskForm';
 import { ImportCSV } from '../components/ImportCSV';
 import { Header } from '../components/Header';
@@ -20,7 +20,14 @@ interface TaskFiltersState {
   search: string;
   showCompleted: boolean;
   dueDateFilter: 'all' | 'overdue' | 'today' | 'upcoming' | 'none';
+  priorityFilter: TaskPriority | 'all';
 }
+
+const priorityColors = {
+  high: 'bg-red-100 text-red-800 ring-red-600/20',
+  medium: 'bg-yellow-100 text-yellow-800 ring-yellow-600/20',
+  low: 'bg-blue-100 text-blue-800 ring-blue-600/20',
+};
 
 export function BoardPage() {
   const { user } = useAuth();
@@ -31,6 +38,7 @@ export function BoardPage() {
     search: '',
     showCompleted: true,
     dueDateFilter: 'all',
+    priorityFilter: 'all',
   });
   const queryClient = useQueryClient();
 
@@ -218,6 +226,11 @@ export function BoardPage() {
           return false;
         }
 
+        // Filter by priority
+        if (filters.priorityFilter !== 'all' && task.priority !== filters.priorityFilter) {
+          return false;
+        }
+
         // Filter by due date
         if (task.due_date) {
           const dueDate = startOfDay(new Date(task.due_date));
@@ -239,7 +252,15 @@ export function BoardPage() {
           return filters.dueDateFilter === 'none' || filters.dueDateFilter === 'all';
         }
       })
-      .sort((a, b) => a.position - b.position);
+      .sort((a, b) => {
+        // Sort by priority (high to low)
+        const priorityOrder = { high: 0, medium: 1, low: 2 };
+        const priorityDiff = priorityOrder[a.priority] - priorityOrder[b.priority];
+        if (priorityDiff !== 0) return priorityDiff;
+        
+        // Then by position
+        return a.position - b.position;
+      });
   };
 
   if (isLoadingProjects || isLoadingTasks) {
@@ -369,11 +390,20 @@ export function BoardPage() {
                                           className="mt-1 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                                         />
                                         <div className="flex-1">
-                                          <h4 className={`font-medium text-gray-900 ${
-                                            task.completed ? 'line-through' : ''
-                                          }`}>
-                                            {task.title}
-                                          </h4>
+                                          <div className="flex items-center gap-2 mb-1">
+                                            <span
+                                              className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${
+                                                priorityColors[task.priority]
+                                              }`}
+                                            >
+                                              {task.priority}
+                                            </span>
+                                            <h4 className={`font-medium text-gray-900 ${
+                                              task.completed ? 'line-through' : ''
+                                            }`}>
+                                              {task.title}
+                                            </h4>
+                                          </div>
                                           {task.description && (
                                             <p className="text-sm text-gray-600 mt-1">
                                               {task.description}
