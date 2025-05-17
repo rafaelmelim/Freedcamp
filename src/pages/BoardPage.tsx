@@ -71,6 +71,7 @@ export function BoardPage() {
             label: labels (*)
           )
         `)
+        .eq('archived', false)
         .order('position');
 
       if (error) throw error;
@@ -198,6 +199,24 @@ export function BoardPage() {
     },
     onError: () => {
       toast.error('Failed to delete task');
+    },
+  });
+
+  const archiveTask = useMutation({
+    mutationFn: async (taskId: number) => {
+      const { error } = await supabase
+        .from('tasks')
+        .update({ archived: true })
+        .eq('id', taskId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      toast.success('Task archived successfully');
+    },
+    onError: () => {
+      toast.error('Failed to archive task');
     },
   });
 
@@ -562,6 +581,10 @@ export function BoardPage() {
             }}
             onDelete={(taskId) => {
               deleteTask.mutate(taskId);
+              setSelectedTask(null);
+            }}
+            onArchive={(taskId) => {
+              archiveTask.mutate(taskId);
               setSelectedTask(null);
             }}
           />
