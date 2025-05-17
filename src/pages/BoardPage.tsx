@@ -8,6 +8,7 @@ import { toast } from 'react-hot-toast';
 import { Database, TaskPriority } from '../lib/database.types';
 import { TaskForm } from '../components/TaskForm';
 import { ImportCSV } from '../components/ImportCSV';
+import { ExportCSV } from '../components/ExportCSV';
 import { Header } from '../components/Header';
 import { TaskFilters } from '../components/TaskFilters';
 import { TaskDetailsModal } from '../components/TaskDetailsModal';
@@ -360,6 +361,7 @@ export function BoardPage() {
           <h2 className="text-2xl font-bold text-gray-900">My Board</h2>
           <div className="flex space-x-4">
             <ImportCSV onImport={handleImport} />
+            <ExportCSV />
             <button
               onClick={() => setIsAddingProject(true)}
               className="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
