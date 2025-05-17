@@ -210,6 +210,32 @@ export interface Database {
           created_at?: string | null
         }
       }
+      time_entries: {
+        Row: {
+          id: number
+          task_id: number
+          start_time: string
+          end_time: string
+          duration: number
+          created_at: string | null
+        }
+        Insert: {
+          id?: number
+          task_id: number
+          start_time: string
+          end_time: string
+          duration: number
+          created_at?: string | null
+        }
+        Update: {
+          id?: number
+          task_id?: number
+          start_time?: string
+          end_time?: string
+          duration?: number
+          created_at?: string | null
+        }
+      }
     }
   }
 }

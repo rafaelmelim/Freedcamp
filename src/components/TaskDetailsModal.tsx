@@ -5,6 +5,7 @@ import { format } from 'date-fns';
 import { Database, TaskPriority } from '../lib/database.types';
 import { LabelPicker } from './LabelPicker';
 import { TaskComments } from './TaskComments';
+import { TimeTracking } from './TimeTracking';
 
 type Task = Database['public']['Tables']['tasks']['Row'];
 type Label = Database['public']['Tables']['labels']['Row'];
@@ -133,6 +134,10 @@ export function TaskDetailsModal({ task, isOpen, onClose, onUpdate, onDelete }: 
                       selectedLabels={selectedLabels}
                       onToggleLabel={handleToggleLabel}
                     />
+                  </div>
+
+                  <div>
+                    <TimeTracking taskId={task.id} />
                   </div>
 
                   <div>
