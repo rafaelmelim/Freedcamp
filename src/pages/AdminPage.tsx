@@ -1,13 +1,16 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { Database } from '../lib/database.types';
 import { toast } from 'react-hot-toast';
+import { Header } from '../components/Header';
 
 type Profile = Database['public']['Tables']['profiles']['Row'];
 type Role = Database['public']['Tables']['roles']['Row'];
 type UserRole = Database['public']['Tables']['user_roles']['Row'];
 
 export function AdminPage() {
+  const queryClient = useQueryClient();
+
   const { data: profiles, isLoading: isLoadingProfiles } = useQuery({
     queryKey: ['profiles'],
     queryFn: async () => {
@@ -46,21 +49,25 @@ export function AdminPage() {
     },
   });
 
-  const assignRole = async (profileId: string, roleId: number) => {
-    try {
+  const assignRoleMutation = useMutation({
+    mutationFn: async ({ profileId, roleId }: { profileId: string; roleId: number }) => {
       const { error } = await supabase
         .from('user_roles')
         .insert([{ profile_id: profileId, role_id: roleId }]);
 
       if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['user_roles'] });
       toast.success('Role assigned successfully');
-    } catch (error) {
+    },
+    onError: () => {
       toast.error('Failed to assign role');
-    }
-  };
+    },
+  });
 
-  const removeRole = async (profileId: string, roleId: number) => {
-    try {
+  const removeRoleMutation = useMutation({
+    mutationFn: async ({ profileId, roleId }: { profileId: string; roleId: number }) => {
       const { error } = await supabase
         .from('user_roles')
         .delete()
@@ -68,11 +75,33 @@ export function AdminPage() {
         .eq('role_id', roleId);
 
       if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['user_roles'] });
       toast.success('Role removed successfully');
-    } catch (error) {
+    },
+    onError: () => {
       toast.error('Failed to remove role');
-    }
-  };
+    },
+  });
+
+  const updateProfileMutation = useMutation({
+    mutationFn: async ({ id, name }: { id: string; name: string }) => {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ name })
+        .eq('id', id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['profiles'] });
+      toast.success('Profile updated successfully');
+    },
+    onError: () => {
+      toast.error('Failed to update profile');
+    },
+  });
 
   if (isLoadingProfiles || isLoadingRoles || isLoadingUserRoles) {
     return <div>Loading...</div>;
@@ -80,6 +109,7 @@ export function AdminPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-500/10 to-primary-700/20">
+      <Header />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <h1 className="text-2xl font-bold text-gray-900 mb-8">User Management</h1>
         
@@ -105,7 +135,20 @@ export function AdminPage() {
               {profiles?.map((profile) => (
                 <tr key={profile.id}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {profile.name}
+                    <input
+                      type="text"
+                      defaultValue={profile.name}
+                      onBlur={(e) => {
+                        const newName = e.target.value.trim();
+                        if (newName && newName !== profile.name) {
+                          updateProfileMutation.mutate({
+                            id: profile.id,
+                            name: newName,
+                          });
+                        }
+                      }}
+                      className="w-full px-2 py-1 border border-transparent rounded-md focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+                    />
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {profile.email}
@@ -123,7 +166,10 @@ export function AdminPage() {
                         >
                           {role.name}
                           <button
-                            onClick={() => removeRole(profile.id, role.id)}
+                            onClick={() => removeRoleMutation.mutate({
+                              profileId: profile.id,
+                              roleId: role.id,
+                            })}
                             className="ml-1 text-primary-600 hover:text-primary-900"
                           >
                             ×
@@ -137,7 +183,11 @@ export function AdminPage() {
                       onChange={(e) => {
                         const roleId = parseInt(e.target.value);
                         if (roleId) {
-                          assignRole(profile.id, roleId);
+                          assignRoleMutation.mutate({
+                            profileId: profile.id,
+                            roleId,
+                          });
+                          e.target.value = '';
                         }
                       }}
                       className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md"
