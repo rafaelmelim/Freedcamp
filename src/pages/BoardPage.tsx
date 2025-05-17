@@ -13,6 +13,7 @@ import { TaskFilters } from '../components/TaskFilters';
 
 type Project = Database['public']['Tables']['projects']['Row'];
 type Task = Database['public']['Tables']['tasks']['Row'];
+type Label = Database['public']['Tables']['labels']['Row'];
 type ProjectInsert = Database['public']['Tables']['projects']['Insert'];
 type TaskInsert = Database['public']['Tables']['tasks']['Insert'];
 
@@ -60,11 +61,16 @@ export function BoardPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('tasks')
-        .select('*')
+        .select(`
+          *,
+          task_labels (
+            label: labels (*)
+          )
+        `)
         .order('position');
 
       if (error) throw error;
-      return data as Task[];
+      return data as (Task & { task_labels: { label: Label }[] })[];
     },
   });
 
@@ -96,14 +102,31 @@ export function BoardPage() {
   });
 
   const createTask = useMutation({
-    mutationFn: async (task: TaskInsert) => {
-      const { data, error } = await supabase
+    mutationFn: async ({ task, labels }: { task: TaskInsert, labels: Label[] }) => {
+      // First create the task
+      const { data: taskData, error: taskError } = await supabase
         .from('tasks')
         .insert([task])
-        .select();
+        .select()
+        .single();
 
-      if (error) throw error;
-      return data[0];
+      if (taskError) throw taskError;
+
+      // Then create the task-label associations
+      if (labels.length > 0) {
+        const { error: labelError } = await supabase
+          .from('task_labels')
+          .insert(
+            labels.map(label => ({
+              task_id: taskData.id,
+              label_id: label.id,
+            }))
+          );
+
+        if (labelError) throw labelError;
+      }
+
+      return taskData;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
@@ -350,7 +373,7 @@ export function BoardPage() {
                         {addingTaskToProject === project.id && (
                           <TaskForm
                             projectId={project.id}
-                            onSubmit={(task) => createTask.mutate(task)}
+                            onSubmit={(task, labels) => createTask.mutate({ task, labels })}
                             onCancel={() => setAddingTaskToProject(null)}
                           />
                         )}
@@ -421,6 +444,22 @@ export function BoardPage() {
                                             >
                                               Due: {format(new Date(task.due_date), 'dd/MM/yyyy')}
                                             </p>
+                                          )}
+                                          {task.task_labels?.length > 0 && (
+                                            <div className="flex flex-wrap gap-1 mt-2">
+                                              {task.task_labels.map(({ label }) => (
+                                                <span
+                                                  key={label.id}
+                                                  className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+                                                  style={{
+                                                    backgroundColor: `${label.color}20`,
+                                                    color: label.color,
+                                                  }}
+                                                >
+                                                  {label.name}
+                                                </span>
+                                              ))}
+                                            </div>
                                           )}
                                         </div>
                                       </div>

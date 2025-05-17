@@ -1,24 +1,36 @@
 import { useForm } from 'react-hook-form';
 import { format } from 'date-fns';
 import { Database, TaskPriority } from '../lib/database.types';
+import { LabelPicker } from './LabelPicker';
+import { useState } from 'react';
 
 type Task = Database['public']['Tables']['tasks']['Insert'];
+type Label = Database['public']['Tables']['labels']['Row'];
 
 interface TaskFormProps {
   projectId: number;
-  onSubmit: (data: Task) => void;
+  onSubmit: (data: Task, labels: Label[]) => void;
   onCancel: () => void;
 }
 
 export function TaskForm({ projectId, onSubmit, onCancel }: TaskFormProps) {
   const { register, handleSubmit, formState: { errors } } = useForm<Task>();
+  const [selectedLabels, setSelectedLabels] = useState<Label[]>([]);
 
   const onFormSubmit = (data: Task) => {
     onSubmit({
       ...data,
       project_id: projectId,
       position: 0,
-    });
+    }, selectedLabels);
+  };
+
+  const handleToggleLabel = (label: Label) => {
+    setSelectedLabels(prev => 
+      prev.some(l => l.id === label.id)
+        ? prev.filter(l => l.id !== label.id)
+        : [...prev, label]
+    );
   };
 
   return (
@@ -65,6 +77,17 @@ export function TaskForm({ projectId, onSubmit, onCancel }: TaskFormProps) {
             <option value="high">High Priority</option>
           </select>
         </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Labels
+        </label>
+        <LabelPicker
+          taskId={0}
+          selectedLabels={selectedLabels}
+          onToggleLabel={handleToggleLabel}
+        />
       </div>
 
       <div className="flex justify-end space-x-2">
