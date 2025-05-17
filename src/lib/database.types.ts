@@ -121,6 +121,49 @@ export interface Database {
           priority?: TaskPriority
         }
       }
+      labels: {
+        Row: {
+          id: number
+          name: string
+          color: string
+          owner_id: string | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: number
+          name: string
+          color: string
+          owner_id?: string | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: number
+          name?: string
+          color?: string
+          owner_id?: string | null
+          created_at?: string | null
+        }
+      }
+      task_labels: {
+        Row: {
+          id: number
+          task_id: number
+          label_id: number
+          created_at: string | null
+        }
+        Insert: {
+          id?: number
+          task_id: number
+          label_id: number
+          created_at?: string | null
+        }
+        Update: {
+          id?: number
+          task_id?: number
+          label_id?: number
+          created_at?: string | null
+        }
+      }
       user_roles: {
         Row: {
           id: number
