@@ -10,6 +10,7 @@ import { TaskForm } from '../components/TaskForm';
 import { ImportCSV } from '../components/ImportCSV';
 import { Header } from '../components/Header';
 import { TaskFilters } from '../components/TaskFilters';
+import { TaskDetailsModal } from '../components/TaskDetailsModal';
 
 type Project = Database['public']['Tables']['projects']['Row'];
 type Task = Database['public']['Tables']['tasks']['Row'];
@@ -35,6 +36,7 @@ export function BoardPage() {
   const [isAddingProject, setIsAddingProject] = useState(false);
   const [newProjectTitle, setNewProjectTitle] = useState('');
   const [addingTaskToProject, setAddingTaskToProject] = useState<number | null>(null);
+  const [selectedTask, setSelectedTask] = useState<(Task & { task_labels: { label: Label }[] }) | null>(null);
   const [filters, setFilters] = useState<TaskFiltersState>({
     search: '',
     showCompleted: true,
@@ -138,6 +140,65 @@ export function BoardPage() {
     },
   });
 
+  const updateTask = useMutation({
+    mutationFn: async ({ taskId, data, labels }: { taskId: number, data: Partial<Task>, labels: Label[] }) => {
+      // Update task data
+      const { error: taskError } = await supabase
+        .from('tasks')
+        .update(data)
+        .eq('id', taskId);
+
+      if (taskError) throw taskError;
+
+      // Delete existing label associations
+      const { error: deleteError } = await supabase
+        .from('task_labels')
+        .delete()
+        .eq('task_id', taskId);
+
+      if (deleteError) throw deleteError;
+
+      // Create new label associations
+      if (labels.length > 0) {
+        const { error: labelError } = await supabase
+          .from('task_labels')
+          .insert(
+            labels.map(label => ({
+              task_id: taskId,
+              label_id: label.id,
+            }))
+          );
+
+        if (labelError) throw labelError;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      toast.success('Task updated successfully');
+    },
+    onError: () => {
+      toast.error('Failed to update task');
+    },
+  });
+
+  const deleteTask = useMutation({
+    mutationFn: async (taskId: number) => {
+      const { error } = await supabase
+        .from('tasks')
+        .delete()
+        .eq('id', taskId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      toast.success('Task deleted successfully');
+    },
+    onError: () => {
+      toast.error('Failed to delete task');
+    },
+  });
+
   const toggleTaskCompleted = useMutation({
     mutationFn: async ({ taskId, completed }: { taskId: number; completed: boolean }) => {
       const { error } = await supabase
@@ -233,7 +294,7 @@ export function BoardPage() {
     importData.mutate({ projects, tasks });
   };
 
-  const filterTasks = (tasks: Task[] | undefined, projectId: number): Task[] => {
+  const filterTasks = (tasks: (Task & { task_labels: { label: Label }[] })[] | undefined, projectId: number) => {
     if (!tasks) return [];
 
     return tasks
@@ -396,20 +457,22 @@ export function BoardPage() {
                                       ref={provided.innerRef}
                                       {...provided.draggableProps}
                                       {...provided.dragHandleProps}
-                                      className={`bg-white rounded-md shadow-sm p-3 hover:shadow-md transition-shadow ${
+                                      className={`bg-white rounded-md shadow-sm p-3 hover:shadow-md transition-shadow cursor-pointer ${
                                         task.completed ? 'opacity-50' : ''
                                       }`}
+                                      onClick={() => setSelectedTask(task)}
                                     >
                                       <div className="flex items-start gap-3">
                                         <input
                                           type="checkbox"
                                           checked={task.completed}
-                                          onChange={(e) =>
+                                          onChange={(e) => {
+                                            e.stopPropagation();
                                             toggleTaskCompleted.mutate({
                                               taskId: task.id,
                                               completed: e.target.checked,
-                                            })
-                                          }
+                                            });
+                                          }}
                                           className="mt-1 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                                         />
                                         <div className="flex-1">
@@ -480,6 +543,22 @@ export function BoardPage() {
             )}
           </Droppable>
         </DragDropContext>
+
+        {selectedTask && (
+          <TaskDetailsModal
+            task={selectedTask}
+            isOpen={true}
+            onClose={() => setSelectedTask(null)}
+            onUpdate={(taskId, data, labels) => {
+              updateTask.mutate({ taskId, data, labels });
+              setSelectedTask(null);
+            }}
+            onDelete={(taskId) => {
+              deleteTask.mutate(taskId);
+              setSelectedTask(null);
+            }}
+          />
+        )}
       </main>
     </div>
   );
