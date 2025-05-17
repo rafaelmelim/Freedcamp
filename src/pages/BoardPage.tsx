@@ -9,6 +9,7 @@ import { Database, TaskPriority } from '../lib/database.types';
 import { TaskForm } from '../components/TaskForm';
 import { ImportCSV } from '../components/ImportCSV';
 import { ExportCSV } from '../components/ExportCSV';
+import { TaskStatistics } from '../components/TaskStatistics';
 import { Header } from '../components/Header';
 import { TaskFilters } from '../components/TaskFilters';
 import { TaskDetailsModal } from '../components/TaskDetailsModal';
@@ -369,6 +370,10 @@ export function BoardPage() {
               New Project
             </button>
           </div>
+        </div>
+
+        <div className="mb-8">
+          <TaskStatistics tasks={tasks || []} />
         </div>
 
         <TaskFilters onFilterChange={setFilters} />
