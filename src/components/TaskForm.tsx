@@ -1,6 +1,6 @@
 import { useForm } from 'react-hook-form';
 import { format } from 'date-fns';
-import { Database } from '../lib/database.types';
+import { Database, TaskPriority } from '../lib/database.types';
 
 type Task = Database['public']['Tables']['tasks']['Insert'];
 
@@ -44,13 +44,27 @@ export function TaskForm({ projectId, onSubmit, onCancel }: TaskFormProps) {
         />
       </div>
 
-      <div>
-        <input
-          type="date"
-          {...register('due_date')}
-          min={format(new Date(), 'yyyy-MM-dd')}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary-500"
-        />
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <input
+            type="date"
+            {...register('due_date')}
+            min={format(new Date(), 'yyyy-MM-dd')}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary-500"
+          />
+        </div>
+
+        <div>
+          <select
+            {...register('priority')}
+            defaultValue="medium"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary-500"
+          >
+            <option value="low">Low Priority</option>
+            <option value="medium">Medium Priority</option>
+            <option value="high">High Priority</option>
+          </select>
+        </div>
       </div>
 
       <div className="flex justify-end space-x-2">

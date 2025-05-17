@@ -1,10 +1,12 @@
 import { useState } from 'react';
+import { TaskPriority } from '../lib/database.types';
 
 interface TaskFiltersProps {
   onFilterChange: (filters: {
     search: string;
     showCompleted: boolean;
     dueDateFilter: 'all' | 'overdue' | 'today' | 'upcoming' | 'none';
+    priorityFilter: TaskPriority | 'all';
   }) => void;
 }
 
@@ -12,20 +14,26 @@ export function TaskFilters({ onFilterChange }: TaskFiltersProps) {
   const [search, setSearch] = useState('');
   const [showCompleted, setShowCompleted] = useState(true);
   const [dueDateFilter, setDueDateFilter] = useState<'all' | 'overdue' | 'today' | 'upcoming' | 'none'>('all');
+  const [priorityFilter, setPriorityFilter] = useState<TaskPriority | 'all'>('all');
 
   const handleSearchChange = (value: string) => {
     setSearch(value);
-    onFilterChange({ search: value, showCompleted, dueDateFilter });
+    onFilterChange({ search: value, showCompleted, dueDateFilter, priorityFilter });
   };
 
   const handleShowCompletedChange = (value: boolean) => {
     setShowCompleted(value);
-    onFilterChange({ search, showCompleted: value, dueDateFilter });
+    onFilterChange({ search, showCompleted: value, dueDateFilter, priorityFilter });
   };
 
   const handleDueDateFilterChange = (value: 'all' | 'overdue' | 'today' | 'upcoming' | 'none') => {
     setDueDateFilter(value);
-    onFilterChange({ search, showCompleted, dueDateFilter: value });
+    onFilterChange({ search, showCompleted, dueDateFilter: value, priorityFilter });
+  };
+
+  const handlePriorityFilterChange = (value: TaskPriority | 'all') => {
+    setPriorityFilter(value);
+    onFilterChange({ search, showCompleted, dueDateFilter, priorityFilter: value });
   };
 
   return (
@@ -63,6 +71,17 @@ export function TaskFilters({ onFilterChange }: TaskFiltersProps) {
         <option value="today">Due today</option>
         <option value="upcoming">Upcoming</option>
         <option value="none">No due date</option>
+      </select>
+
+      <select
+        value={priorityFilter}
+        onChange={(e) => handlePriorityFilterChange(e.target.value as TaskPriority | 'all')}
+        className="px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-500"
+      >
+        <option value="all">All priorities</option>
+        <option value="high">High priority</option>
+        <option value="medium">Medium priority</option>
+        <option value="low">Low priority</option>
       </select>
     </div>
   );

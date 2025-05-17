@@ -6,6 +6,8 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
+export type TaskPriority = 'low' | 'medium' | 'high';
+
 export interface Database {
   public: {
     Tables: {
@@ -90,6 +92,7 @@ export interface Database {
           created_at: string | null
           updated_at: string | null
           completed: boolean
+          priority: TaskPriority
         }
         Insert: {
           id?: number
@@ -102,6 +105,7 @@ export interface Database {
           created_at?: string | null
           updated_at?: string | null
           completed?: boolean
+          priority?: TaskPriority
         }
         Update: {
           id?: number
@@ -114,6 +118,7 @@ export interface Database {
           created_at?: string | null
           updated_at?: string | null
           completed?: boolean
+          priority?: TaskPriority
         }
       }
       user_roles: {
