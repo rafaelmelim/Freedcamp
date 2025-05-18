@@ -34,76 +34,87 @@ export function TaskForm({ projectId, onSubmit, onCancel }: TaskFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-4 bg-white rounded-md p-4 shadow-sm">
-      <div>
-        <input
-          type="text"
-          {...register('title', { required: 'Title is required' })}
-          placeholder="Task title"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary-500"
-        />
-        {errors.title && (
-          <p className="mt-1 text-sm text-red-600">{errors.title.message}</p>
-        )}
-      </div>
-
-      <div>
-        <textarea
-          {...register('description')}
-          placeholder="Description (optional)"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary-500"
-          rows={3}
-        />
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
+    <form onSubmit={handleSubmit(onFormSubmit)} className="glass-card p-4 animate-fade-in">
+      <div className="space-y-4">
         <div>
           <input
-            type="date"
-            {...register('due_date')}
-            min={format(new Date(), 'yyyy-MM-dd')}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary-500"
+            type="text"
+            {...register('title', { required: 'Title is required' })}
+            placeholder="Task title"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md 
+                     focus:outline-none focus:ring-2 focus:ring-primary-500 
+                     transition-colors duration-200"
+          />
+          {errors.title && (
+            <p className="mt-1 text-sm text-red-600 animate-fade-in">{errors.title.message}</p>
+          )}
+        </div>
+
+        <div>
+          <textarea
+            {...register('description')}
+            placeholder="Description (optional)"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md 
+                     focus:outline-none focus:ring-2 focus:ring-primary-500 
+                     transition-colors duration-200"
+            rows={3}
           />
         </div>
 
-        <div>
-          <select
-            {...register('priority')}
-            defaultValue="medium"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary-500"
-          >
-            <option value="low">Low Priority</option>
-            <option value="medium">Medium Priority</option>
-            <option value="high">High Priority</option>
-          </select>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <input
+              type="date"
+              {...register('due_date')}
+              min={format(new Date(), 'yyyy-MM-dd')}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md 
+                       focus:outline-none focus:ring-2 focus:ring-primary-500 
+                       transition-colors duration-200"
+            />
+          </div>
+
+          <div>
+            <select
+              {...register('priority')}
+              defaultValue="medium"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md 
+                       focus:outline-none focus:ring-2 focus:ring-primary-500 
+                       transition-colors duration-200"
+            >
+              <option value="low">Low Priority</option>
+              <option value="medium">Medium Priority</option>
+              <option value="high">High Priority</option>
+            </select>
+          </div>
         </div>
-      </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Labels
-        </label>
-        <LabelPicker
-          taskId={0}
-          selectedLabels={selectedLabels}
-          onToggleLabel={handleToggleLabel}
-        />
-      </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Labels
+          </label>
+          <LabelPicker
+            taskId={0}
+            selectedLabels={selectedLabels}
+            onToggleLabel={handleToggleLabel}
+          />
+        </div>
 
-      <div className="flex justify-end space-x-2">
-        <button
-          type="button"
-          onClick={onCancel}
-          className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
-        >
-          Cancel
-        </button>
-        <button
-          type="submit"
-          className="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-        >
-          Add Task
-        </button>
+        <div className="flex justify-end space-x-2">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 
+                     transition-colors duration-200 hover-effect"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className="btn-primary hover-effect"
+          >
+            Add Task
+          </button>
+        </div>
       </div>
     </form>
   );

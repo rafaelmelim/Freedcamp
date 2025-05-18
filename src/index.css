@@ -18,12 +18,69 @@
 
 @layer base {
   body {
-    @apply bg-gray-50;
+    @apply bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen;
+  }
+
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
   }
 }
 
 @layer components {
   .btn-primary {
-    @apply px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500;
+    @apply px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-md 
+           hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 
+           focus:ring-primary-500 transition-colors duration-200;
   }
+
+  /* Glass effect for cards */
+  .glass-card {
+    @apply bg-white/80 backdrop-blur-sm shadow-sm rounded-lg 
+           border border-white/20 transition-all duration-300
+           hover:shadow-md hover:bg-white/90;
+  }
+
+  /* Task card animations */
+  .task-card {
+    @apply transform transition-all duration-200 
+           hover:-translate-y-1 hover:shadow-lg;
+  }
+
+  /* Project column styles */
+  .project-column {
+    @apply glass-card p-4 min-w-[300px] transition-transform duration-300;
+  }
+
+  /* Dragging styles */
+  .dragging {
+    @apply opacity-50 scale-105 rotate-1;
+  }
+
+  /* Header styles */
+  .app-header {
+    @apply bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50
+           border-b border-gray-200/50;
+  }
+
+  /* Button hover effects */
+  .hover-effect {
+    @apply hover:scale-105 transition-transform duration-200;
+  }
+
+  /* Loading animation */
+  .loading-spinner {
+    @apply animate-spin rounded-full border-4 border-gray-200 
+           border-t-primary-600 h-8 w-8;
+  }
+}
+
+/* Custom animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
 }
