@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { useAuth } from "../contexts/AuthContext";
 import { toast } from "react-hot-toast";
 import { ResetPasswordForm } from "../components/ResetPasswordForm";
+import { SignUpForm } from "../components/SignUpForm";
 
 interface LoginFormData {
   email: string;
@@ -14,6 +15,7 @@ export function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [showResetPassword, setShowResetPassword] = useState(false);
+  const [showSignUp, setShowSignUp] = useState(false);
   const {
     register,
     handleSubmit,
@@ -183,6 +185,7 @@ export function LoginPage() {
               <span className="text-gray-600">Ainda não tem conta? </span>
               <button
                 type="button"
+                onClick={() => setShowSignUp(true)}
                 className="text-primary-600 font-medium hover:text-primary-800 
                          focus:outline-none focus:underline transition-colors"
               >
@@ -234,6 +237,10 @@ export function LoginPage() {
 
       {showResetPassword && (
         <ResetPasswordForm onClose={() => setShowResetPassword(false)} />
+      )}
+
+      {showSignUp && (
+        <SignUpForm onClose={() => setShowSignUp(false)} />
       )}
     </div>
   );
