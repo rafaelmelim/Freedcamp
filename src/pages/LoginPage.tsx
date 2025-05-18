@@ -88,11 +88,7 @@ export function LoginPage() {
                   type="password"
                   autoComplete="current-password"
                   {...register("password", {
-                    required: "Senha é obrigatória",
-                    minLength: {
-                      value: 6,
-                      message: "A senha deve ter pelo menos 6 caracteres",
-                    },
+                    required: "Senha é obrigatória"
                   })}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 
                            placeholder-gray-500 focus:outline-none focus:ring-2 
