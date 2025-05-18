@@ -25,21 +25,23 @@ export function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-[#f8f9fa] py-12 px-4 sm:px-6 lg:px-8">
-      <div className="w-full max-w-[450px] mx-auto">
-        <div className="bg-white w-full rounded-2xl shadow-[0_2px_10px_rgba(0,0,0,0.1)] px-8 py-12 space-y-8">
-          <div>
-            <h1 className="text-center text-2xl font-normal text-[#202124] mb-2">
-              Bem-vindo ao Freedcamp
-            </h1>
-            <h2 className="text-center text-[15px] text-[#5f6368]">
-              Use sua conta para continuar
-            </h2>
-          </div>
+    <div className="min-h-screen flex flex-col bg-[#ec0000]">
+      <header className="bg-white py-4 px-6 shadow-md">
+        <h1 className="text-[#ec0000] text-2xl font-bold">Freedcamp</h1>
+      </header>
+
+      <main className="flex-1 flex items-center justify-center p-4">
+        <div className="w-full max-w-[400px] bg-white rounded-lg shadow-xl p-8">
+          <h2 className="text-2xl font-bold text-[#333] mb-8 text-center">
+            Acesse sua conta
+          </h2>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            <div className="rounded-lg border border-[#dadce0] hover:border-[#d2e3fc] focus-within:border-[#1a73e8] p-6 space-y-5 transition-all duration-200">
+            <div className="space-y-4">
               <div>
+                <label htmlFor="email" className="block text-sm font-medium text-[#666] mb-1">
+                  Email
+                </label>
                 <input
                   id="email"
                   type="email"
@@ -51,15 +53,18 @@ export function LoginPage() {
                       message: 'Email inválido'
                     }
                   })}
-                  className="block w-full px-3 py-3 border border-[#dadce0] rounded-md text-[#202124] placeholder-[#5f6368] focus:outline-none focus:ring-2 focus:ring-[#1a73e8] focus:border-transparent text-base transition-all duration-200"
-                  placeholder="Email ou telefone"
+                  className="w-full px-4 py-3 border border-[#ddd] rounded-lg text-[#333] placeholder-[#999] focus:outline-none focus:ring-2 focus:ring-[#ec0000] focus:border-transparent transition-all duration-200"
+                  placeholder="Digite seu email"
                 />
                 {errors.email && (
-                  <p className="mt-2 text-sm text-[#d93025]">{errors.email.message}</p>
+                  <p className="mt-1 text-sm text-[#ec0000]">{errors.email.message}</p>
                 )}
               </div>
 
               <div>
+                <label htmlFor="password" className="block text-sm font-medium text-[#666] mb-1">
+                  Senha
+                </label>
                 <input
                   id="password"
                   type="password"
@@ -71,76 +76,74 @@ export function LoginPage() {
                       message: 'A senha deve ter pelo menos 6 caracteres'
                     }
                   })}
-                  className="block w-full px-3 py-3 border border-[#dadce0] rounded-md text-[#202124] placeholder-[#5f6368] focus:outline-none focus:ring-2 focus:ring-[#1a73e8] focus:border-transparent text-base transition-all duration-200"
+                  className="w-full px-4 py-3 border border-[#ddd] rounded-lg text-[#333] placeholder-[#999] focus:outline-none focus:ring-2 focus:ring-[#ec0000] focus:border-transparent transition-all duration-200"
                   placeholder="Digite sua senha"
                 />
                 {errors.password && (
-                  <p className="mt-2 text-sm text-[#d93025]">{errors.password.message}</p>
+                  <p className="mt-1 text-sm text-[#ec0000]">{errors.password.message}</p>
                 )}
               </div>
+            </div>
 
+            <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <input
                   id="remember-me"
                   name="remember-me"
                   type="checkbox"
-                  className="h-4 w-4 text-[#1a73e8] focus:ring-2 focus:ring-[#1a73e8] focus:ring-offset-2 border-[#dadce0] rounded cursor-pointer"
+                  className="h-4 w-4 text-[#ec0000] focus:ring-2 focus:ring-[#ec0000] border-[#ddd] rounded"
                 />
-                <label htmlFor="remember-me" className="ml-2 block text-sm text-[#5f6368] cursor-pointer select-none">
-                  Permanecer conectado
+                <label htmlFor="remember-me" className="ml-2 block text-sm text-[#666]">
+                  Lembrar meus dados
                 </label>
               </div>
-            </div>
 
-            <div className="flex items-center justify-between">
               <button
                 type="button"
-                className="text-sm font-medium text-[#1a73e8] hover:text-[#174ea6] focus:outline-none focus:underline transition-colors duration-200"
+                className="text-sm font-medium text-[#ec0000] hover:text-[#cc0000] focus:outline-none focus:underline"
               >
-                Esqueceu a senha?
+                Esqueceu sua senha?
               </button>
+            </div>
 
-              <div className="flex space-x-3">
-                <button
-                  type="button"
-                  className="px-6 py-2 text-sm font-medium text-[#1a73e8] hover:bg-[#f6fafe] focus:outline-none focus:ring-2 focus:ring-[#1a73e8] focus:ring-offset-2 rounded transition-all duration-200"
-                  onClick={() => window.location.href = '/signup'}
-                >
-                  Criar conta
-                </button>
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="px-6 py-2 text-sm font-medium text-white bg-[#1a73e8] hover:bg-[#174ea6] focus:outline-none focus:ring-2 focus:ring-[#1a73e8] focus:ring-offset-2 rounded disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-                >
-                  {isLoading ? 'Entrando...' : 'Avançar'}
-                </button>
-              </div>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full py-3 px-4 bg-[#ec0000] text-white font-medium rounded-lg hover:bg-[#cc0000] focus:outline-none focus:ring-2 focus:ring-[#ec0000] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+            >
+              {isLoading ? 'Entrando...' : 'Acessar'}
+            </button>
+
+            <div className="text-center">
+              <span className="text-[#666]">Ainda não tem conta? </span>
+              <button
+                type="button"
+                className="text-[#ec0000] font-medium hover:text-[#cc0000] focus:outline-none focus:underline"
+                onClick={() => window.location.href = '/signup'}
+              >
+                Abra a sua conta
+              </button>
             </div>
           </form>
         </div>
+      </main>
 
-        <footer className="mt-8">
-          <div className="flex justify-center items-center space-x-8">
-            <select className="appearance-none bg-transparent border-none text-sm text-[#5f6368] hover:text-[#202124] cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1a73e8] focus:ring-offset-2 rounded px-1 py-0.5 transition-colors duration-200">
-              <option value="pt-BR">Português (Brasil)</option>
-              <option value="en-US">English (United States)</option>
-            </select>
-
-            <nav className="flex items-center space-x-8">
-              <a href="#" className="text-sm text-[#5f6368] hover:text-[#202124] focus:outline-none focus:underline transition-colors duration-200">
-                Ajuda
-              </a>
-              <a href="#" className="text-sm text-[#5f6368] hover:text-[#202124] focus:outline-none focus:underline transition-colors duration-200">
-                Privacidade
-              </a>
-              <a href="#" className="text-sm text-[#5f6368] hover:text-[#202124] focus:outline-none focus:underline transition-colors duration-200">
-                Termos
-              </a>
-            </nav>
+      <footer className="bg-[#333] text-white py-6 px-4">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center text-sm">
+          <div className="flex space-x-6 mb-4 sm:mb-0">
+            <a href="#" className="hover:text-[#ec0000] transition-colors duration-200">
+              Ajuda
+            </a>
+            <a href="#" className="hover:text-[#ec0000] transition-colors duration-200">
+              Segurança
+            </a>
+            <a href="#" className="hover:text-[#ec0000] transition-colors duration-200">
+              Privacidade
+            </a>
           </div>
-        </footer>
-      </div>
+          <p>© 2025 Freedcamp. Todos os direitos reservados.</p>
+        </div>
+      </footer>
     </div>
   )
 }
