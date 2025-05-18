@@ -8,6 +8,9 @@ import "./index.css";
 
 const queryClient = new QueryClient();
 
+console.log("URL Supabase:", import.meta.env.VITE_SUPABASE_URL)
+console.log("Key Supabase:", import.meta.env.VITE_SUPABASE_ANON_KEY)
+
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <BrowserRouter>
