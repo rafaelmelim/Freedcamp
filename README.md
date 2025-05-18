@@ -1,61 +1,61 @@
-# Freedcamp - Project Management Application
+# Freedcamp - Aplicação de Gerenciamento de Projetos
 
-A modern, feature-rich project management application built with React, TypeScript, and Supabase.
+Uma aplicação moderna e rica em recursos para gerenciamento de projetos, construída com React, TypeScript e Supabase.
 
-## Features
+## Funcionalidades
 
-### Project Management
-- Create and manage multiple projects
-- Drag-and-drop project reordering
-- Real-time updates using Supabase
+### Gerenciamento de Projetos
+- Criar e gerenciar múltiplos projetos
+- Reordenação de projetos por arrastar e soltar
+- Atualizações em tempo real usando Supabase
 
-### Task Management
-- Create, edit, and delete tasks
-- Assign priorities (Low, Medium, High)
-- Set due dates
-- Add descriptions
-- Mark tasks as complete
-- Archive tasks for later reference
-- Drag-and-drop task reordering within and between projects
+### Gerenciamento de Tarefas
+- Criar, editar e excluir tarefas
+- Definir prioridades (Baixa, Média, Alta)
+- Estabelecer prazos
+- Adicionar descrições
+- Marcar tarefas como concluídas
+- Arquivar tarefas para referência futura
+- Reordenação de tarefas por arrastar e soltar dentro e entre projetos
 
-### Task Organization
-- Label system with custom colors
-- Task filtering by:
-  - Search term
-  - Completion status
-  - Due date (Overdue, Today, Upcoming)
-  - Priority level
-- Task statistics and analytics
+### Organização de Tarefas
+- Sistema de etiquetas com cores personalizadas
+- Filtragem de tarefas por:
+  - Termo de busca
+  - Status de conclusão
+  - Data de vencimento (Atrasadas, Hoje, Próximas)
+  - Nível de prioridade
+- Estatísticas e análises de tarefas
 
-### Time Tracking
-- Start/stop time tracking for tasks
-- View time entry history
-- Calculate total time spent on tasks
-- Automatic duration calculation
+### Controle de Tempo
+- Iniciar/parar rastreamento de tempo para tarefas
+- Visualizar histórico de registros de tempo
+- Calcular tempo total gasto em tarefas
+- Cálculo automático de duração
 
-### Comments
-- Add comments to tasks
-- Edit and delete your own comments
-- Real-time comment updates
+### Comentários
+- Adicionar comentários às tarefas
+- Editar e excluir seus próprios comentários
+- Atualizações de comentários em tempo real
 
-### Data Management
-- Import projects and tasks via CSV
-- Export tasks to CSV
-- Archive and restore tasks
-- Permanent task deletion
+### Gerenciamento de Dados
+- Importar projetos e tarefas via CSV
+- Exportar tarefas para CSV
+- Arquivar e restaurar tarefas
+- Exclusão permanente de tarefas
 
-### User Management
-- Role-based access control
-- Admin dashboard for user management
-- Assign and manage user roles
-- Update user profiles
+### Gerenciamento de Usuários
+- Controle de acesso baseado em funções
+- Painel administrativo para gerenciamento de usuários
+- Atribuir e gerenciar funções de usuários
+- Atualizar perfis de usuários
 
-### Security
-- Authentication using Supabase Auth
-- Row Level Security (RLS) policies
-- Role-based route protection
+### Segurança
+- Autenticação usando Supabase Auth
+- Políticas de segurança em nível de linha (RLS)
+- Proteção de rotas baseada em funções
 
-## Tech Stack
+## Stack Tecnológica
 
 - React 18
 - TypeScript
@@ -69,75 +69,75 @@ A modern, feature-rich project management application built with React, TypeScri
 - HeadlessUI
 - Date-fns
 
-## Getting Started
+## Como Começar
 
-1. Clone the repository
-2. Install dependencies:
+1. Clone o repositório
+2. Instale as dependências:
    ```bash
    npm install
    ```
-3. Set up environment variables in `.env`:
+3. Configure as variáveis de ambiente em `.env`:
    ```
-   VITE_SUPABASE_URL=your_supabase_url
-   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+   VITE_SUPABASE_URL=sua_url_supabase
+   VITE_SUPABASE_ANON_KEY=sua_chave_anonima_supabase
    ```
-4. Start the development server:
+4. Inicie o servidor de desenvolvimento:
    ```bash
    npm run dev
    ```
 
-## Project Structure
+## Estrutura do Projeto
 
 ```
 src/
-├── components/        # Reusable UI components
-├── contexts/         # React context providers
-├── lib/             # Utility functions and types
-├── pages/           # Page components
-└── main.tsx         # Application entry point
+├── components/        # Componentes UI reutilizáveis
+├── contexts/         # Provedores de contexto React
+├── lib/             # Funções utilitárias e tipos
+├── pages/           # Componentes de página
+└── main.tsx         # Ponto de entrada da aplicação
 ```
 
-### Key Components
+### Componentes Principais
 
-- `BoardPage`: Main project board with task management
-- `AdminPage`: User and role management interface
-- `ArchivedTasksPage`: View and manage archived tasks
-- `TaskDetailsModal`: Task editing and management
-- `TimeTracking`: Task time tracking functionality
-- `TaskStatistics`: Task analytics and metrics
-- `TaskFilters`: Task filtering and search
+- `BoardPage`: Quadro principal com gerenciamento de tarefas
+- `AdminPage`: Interface de gerenciamento de usuários e funções
+- `ArchivedTasksPage`: Visualização e gerenciamento de tarefas arquivadas
+- `TaskDetailsModal`: Edição e gerenciamento de tarefas
+- `TimeTracking`: Funcionalidade de rastreamento de tempo de tarefas
+- `TaskStatistics`: Análises e métricas de tarefas
+- `TaskFilters`: Filtragem e busca de tarefas
 
-## Database Schema
+## Esquema do Banco de Dados
 
-The application uses the following tables:
+A aplicação utiliza as seguintes tabelas:
 
-- `profiles`: User profiles
-- `projects`: Project information
-- `tasks`: Task details
-- `labels`: Task labels
-- `task_labels`: Task-label associations
-- `comments`: Task comments
-- `time_entries`: Time tracking records
-- `roles`: User roles
-- `user_roles`: User-role associations
+- `profiles`: Perfis de usuários
+- `projects`: Informações de projetos
+- `tasks`: Detalhes das tarefas
+- `labels`: Etiquetas de tarefas
+- `task_labels`: Associações entre tarefas e etiquetas
+- `comments`: Comentários das tarefas
+- `time_entries`: Registros de tempo
+- `roles`: Funções de usuários
+- `user_roles`: Associações entre usuários e funções
 
-## Security
+## Segurança
 
-The application implements comprehensive security measures:
+A aplicação implementa medidas abrangentes de segurança:
 
-- Row Level Security (RLS) policies on all tables
-- Role-based access control
-- Protected routes based on user roles
-- Secure authentication flow
+- Políticas de segurança em nível de linha (RLS) em todas as tabelas
+- Controle de acesso baseado em funções
+- Rotas protegidas baseadas em funções de usuário
+- Fluxo seguro de autenticação
 
-## Contributing
+## Contribuindo
 
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
+1. Faça um fork do repositório
+2. Crie um branch para sua feature
+3. Faça commit das suas alterações
+4. Faça push para o branch
+5. Crie um Pull Request
 
-## License
+## Licença
 
-MIT License
+Licença MIT
