@@ -25,21 +25,26 @@ export function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#ec0000]">
-      <header className="bg-white py-4 px-6 shadow-md">
-        <h1 className="text-[#ec0000] text-2xl font-bold">Freedcamp</h1>
+    <div className="min-h-screen flex flex-col">
+      <header className="bg-white py-6 px-4 shadow-lg">
+        <div className="container mx-auto max-w-7xl">
+          <h1 className="text-primary-600 text-3xl font-bold">Freedcamp</h1>
+        </div>
       </header>
 
-      <main className="flex-1 flex items-center justify-center p-4">
-        <div className="w-full max-w-[400px] bg-white rounded-lg shadow-xl p-8">
-          <h2 className="text-2xl font-bold text-[#333] mb-8 text-center">
+      <main className="flex-1 flex items-center justify-center p-4 bg-gradient-to-br from-primary-50 to-primary-100">
+        <section className="w-full max-w-md bg-white rounded-xl shadow-2xl p-8 mx-4">
+          <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">
             Acesse sua conta
           </h2>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div className="space-y-4">
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-[#666] mb-1">
+                <label 
+                  htmlFor="email" 
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
                   Email
                 </label>
                 <input
@@ -53,16 +58,23 @@ export function LoginPage() {
                       message: 'Email inválido'
                     }
                   })}
-                  className="w-full px-4 py-3 border border-[#ddd] rounded-lg text-[#333] placeholder-[#999] focus:outline-none focus:ring-2 focus:ring-[#ec0000] focus:border-transparent transition-all duration-200"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 
+                           placeholder-gray-500 focus:outline-none focus:ring-2 
+                           focus:ring-primary-500 focus:border-transparent transition-all"
                   placeholder="Digite seu email"
                 />
                 {errors.email && (
-                  <p className="mt-1 text-sm text-[#ec0000]">{errors.email.message}</p>
+                  <p className="mt-1 text-sm text-red-600" role="alert">
+                    {errors.email.message}
+                  </p>
                 )}
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-[#666] mb-1">
+                <label 
+                  htmlFor="password" 
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
                   Senha
                 </label>
                 <input
@@ -76,31 +88,37 @@ export function LoginPage() {
                       message: 'A senha deve ter pelo menos 6 caracteres'
                     }
                   })}
-                  className="w-full px-4 py-3 border border-[#ddd] rounded-lg text-[#333] placeholder-[#999] focus:outline-none focus:ring-2 focus:ring-[#ec0000] focus:border-transparent transition-all duration-200"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 
+                           placeholder-gray-500 focus:outline-none focus:ring-2 
+                           focus:ring-primary-500 focus:border-transparent transition-all"
                   placeholder="Digite sua senha"
                 />
                 {errors.password && (
-                  <p className="mt-1 text-sm text-[#ec0000]">{errors.password.message}</p>
+                  <p className="mt-1 text-sm text-red-600" role="alert">
+                    {errors.password.message}
+                  </p>
                 )}
               </div>
             </div>
 
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between flex-wrap gap-4">
               <div className="flex items-center">
                 <input
                   id="remember-me"
                   name="remember-me"
                   type="checkbox"
-                  className="h-4 w-4 text-[#ec0000] focus:ring-2 focus:ring-[#ec0000] border-[#ddd] rounded"
+                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 
+                           border-gray-300 rounded"
                 />
-                <label htmlFor="remember-me" className="ml-2 block text-sm text-[#666]">
+                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
                   Lembrar meus dados
                 </label>
               </div>
 
               <button
                 type="button"
-                className="text-sm font-medium text-[#ec0000] hover:text-[#cc0000] focus:outline-none focus:underline"
+                className="text-sm font-medium text-primary-600 hover:text-primary-800 
+                         focus:outline-none focus:underline transition-colors"
               >
                 Esqueceu sua senha?
               </button>
@@ -109,39 +127,61 @@ export function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3 px-4 bg-[#ec0000] text-white font-medium rounded-lg hover:bg-[#cc0000] focus:outline-none focus:ring-2 focus:ring-[#ec0000] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+              className="w-full py-3 px-4 bg-primary-600 text-white font-medium rounded-lg 
+                       hover:bg-primary-700 focus:outline-none focus:ring-2 
+                       focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 
+                       disabled:cursor-not-allowed transition-all"
             >
-              {isLoading ? 'Entrando...' : 'Acessar'}
+              {isLoading ? (
+                <span className="flex items-center justify-center">
+                  <span className="w-5 h-5 border-2 border-white border-t-transparent 
+                                 rounded-full animate-spin mr-2"></span>
+                  Entrando...
+                </span>
+              ) : (
+                'Acessar'
+              )}
             </button>
 
             <div className="text-center">
-              <span className="text-[#666]">Ainda não tem conta? </span>
+              <span className="text-gray-600">Ainda não tem conta? </span>
               <button
                 type="button"
-                className="text-[#ec0000] font-medium hover:text-[#cc0000] focus:outline-none focus:underline"
-                onClick={() => window.location.href = '/signup'}
+                className="text-primary-600 font-medium hover:text-primary-800 
+                         focus:outline-none focus:underline transition-colors"
               >
                 Abra a sua conta
               </button>
             </div>
           </form>
-        </div>
+        </section>
       </main>
 
-      <footer className="bg-[#333] text-white py-6 px-4">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center text-sm">
-          <div className="flex space-x-6 mb-4 sm:mb-0">
-            <a href="#" className="hover:text-[#ec0000] transition-colors duration-200">
-              Ajuda
-            </a>
-            <a href="#" className="hover:text-[#ec0000] transition-colors duration-200">
-              Segurança
-            </a>
-            <a href="#" className="hover:text-[#ec0000] transition-colors duration-200">
-              Privacidade
-            </a>
-          </div>
-          <p>© 2025 Freedcamp. Todos os direitos reservados.</p>
+      <footer className="bg-gray-900 text-white py-8 px-4">
+        <div className="container mx-auto max-w-7xl flex flex-col md:flex-row 
+                      justify-between items-center space-y-4 md:space-y-0">
+          <nav>
+            <ul className="flex space-x-6">
+              <li>
+                <a href="#" className="hover:text-primary-400 transition-colors">
+                  Ajuda
+                </a>
+              </li>
+              <li>
+                <a href="#" className="hover:text-primary-400 transition-colors">
+                  Segurança
+                </a>
+              </li>
+              <li>
+                <a href="#" className="hover:text-primary-400 transition-colors">
+                  Privacidade
+                </a>
+              </li>
+            </ul>
+          </nav>
+          <p className="text-sm text-gray-400">
+            © 2025 Freedcamp. Todos os direitos reservados.
+          </p>
         </div>
       </footer>
     </div>
