@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { supabase } from '../lib/supabase';
 import { Database } from './database.types';
 
 type Role = Database['public']['Tables']['roles']['Row'];
