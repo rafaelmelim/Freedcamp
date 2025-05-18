@@ -33,7 +33,6 @@ export function LoginPage() {
       <header className="bg-white py-6 px-4 shadow-lg">
         <div className="container mx-auto max-w-7xl">
           <h1 className="text-primary-600 text-3xl font-bold flex items-center gap-2">
-            <img src="/logo.svg" alt="Logo" className="w-8 h-8" />
             Freedcamp
           </h1>
         </div>
