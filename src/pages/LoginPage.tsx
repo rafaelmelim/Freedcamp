@@ -25,23 +25,21 @@ export function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h1 className="text-center text-3xl font-bold text-gray-900 mb-2">
-            Freedcamp
-          </h1>
-          <h2 className="mt-2 text-center text-xl text-gray-600">
-            Fazer login
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Use sua conta Freedcamp
-          </p>
-        </div>
-        <div className="mt-8 bg-white py-8 px-4 shadow-xl rounded-lg sm:px-10">
-          <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
-            <div>
-              <div className="mt-1 relative rounded-md shadow-sm">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[450px] w-full">
+        <div className="bg-white w-full rounded-lg shadow-lg px-8 py-10 space-y-8">
+          <div>
+            <h1 className="text-center text-2xl font-normal text-gray-900">
+              Fazer login
+            </h1>
+            <h2 className="mt-3 text-center text-base text-gray-600">
+              para continuar ao Freedcamp
+            </h2>
+          </div>
+
+          <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
+            <div className="rounded-lg border border-gray-300 p-6 space-y-4">
+              <div>
                 <input
                   id="email"
                   type="email"
@@ -53,21 +51,19 @@ export function LoginPage() {
                       message: 'Email inválido'
                     }
                   })}
-                  className={`appearance-none block w-full px-3 py-3 border ${
+                  className={`block w-full px-3 py-2 border ${
                     errors.email ? 'border-red-300' : 'border-gray-300'
-                  } rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm`}
-                  placeholder="Email"
+                  } rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-base`}
+                  placeholder="Email ou telefone"
                 />
+                {errors.email && (
+                  <p className="mt-2 text-sm text-red-600">
+                    {errors.email.message}
+                  </p>
+                )}
               </div>
-              {errors.email && (
-                <p className="mt-2 text-sm text-red-600">
-                  {errors.email.message}
-                </p>
-              )}
-            </div>
 
-            <div>
-              <div className="mt-1 relative rounded-md shadow-sm">
+              <div>
                 <input
                   id="password"
                   type="password"
@@ -79,77 +75,69 @@ export function LoginPage() {
                       message: 'A senha deve ter pelo menos 6 caracteres'
                     }
                   })}
-                  className={`appearance-none block w-full px-3 py-3 border ${
+                  className={`block w-full px-3 py-2 border ${
                     errors.password ? 'border-red-300' : 'border-gray-300'
-                  } rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm`}
-                  placeholder="Senha"
+                  } rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-base`}
+                  placeholder="Digite sua senha"
                 />
+                {errors.password && (
+                  <p className="mt-2 text-sm text-red-600">
+                    {errors.password.message}
+                  </p>
+                )}
               </div>
-              {errors.password && (
-                <p className="mt-2 text-sm text-red-600">
-                  {errors.password.message}
-                </p>
-              )}
             </div>
 
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between px-2">
               <div className="flex items-center">
                 <input
                   id="remember-me"
                   name="remember-me"
                   type="checkbox"
-                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded cursor-pointer"
                 />
-                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
+                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900 cursor-pointer">
                   Permanecer conectado
                 </label>
               </div>
 
-              <div className="text-sm">
-                <a href="#" className="font-medium text-primary-600 hover:text-primary-500">
-                  Esqueceu a senha?
-                </a>
-              </div>
+              <button
+                type="button"
+                className="text-sm font-medium text-primary-600 hover:text-primary-500"
+              >
+                Esqueceu a senha?
+              </button>
             </div>
 
-            <div>
+            <div className="flex items-center justify-between space-x-4">
+              <button
+                type="button"
+                className="flex-1 py-2 px-4 text-sm font-medium text-primary-700 hover:text-primary-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                onClick={() => window.location.href = '/signup'}
+              >
+                Criar conta
+              </button>
+
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isLoading ? 'Entrando...' : 'Próxima'}
+                {isLoading ? 'Entrando...' : 'Avançar'}
               </button>
             </div>
           </form>
-
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">
-                  Não tem uma conta?
-                </span>
-              </div>
-            </div>
-
-            <div className="mt-6">
-              <a
-                href="#"
-                className="w-full flex justify-center py-3 px-4 border border-primary-300 rounded-md shadow-sm text-sm font-medium text-primary-600 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-              >
-                Criar conta
-              </a>
-            </div>
-          </div>
         </div>
 
-        <div className="flex justify-center space-x-4 text-sm text-gray-600">
-          <a href="#" className="hover:text-gray-900">Ajuda</a>
-          <a href="#" className="hover:text-gray-900">Privacidade</a>
-          <a href="#" className="hover:text-gray-900">Termos</a>
+        <div className="mt-8 flex justify-center space-x-4">
+          <select className="text-sm text-gray-600 bg-transparent border-none cursor-pointer focus:outline-none">
+            <option value="pt-BR">Português (Brasil)</option>
+            <option value="en-US">English (United States)</option>
+          </select>
+          <div className="text-gray-300">|</div>
+          <button className="text-sm text-gray-600 hover:text-gray-900">Ajuda</button>
+          <button className="text-sm text-gray-600 hover:text-gray-900">Privacidade</button>
+          <button className="text-sm text-gray-600 hover:text-gray-900">Termos</button>
         </div>
       </div>
     </div>
