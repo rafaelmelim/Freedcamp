@@ -1,39 +1,46 @@
-import { useState } from 'react'
-import { useForm } from 'react-hook-form'
-import { useAuth } from '../contexts/AuthContext'
-import { toast } from 'react-hot-toast'
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { useAuth } from "../contexts/AuthContext";
+import { toast } from "react-hot-toast";
 
 interface LoginFormData {
-  email: string
-  password: string
+  email: string;
+  password: string;
 }
 
 export function LoginPage() {
-  const { signIn } = useAuth()
-  const [isLoading, setIsLoading] = useState(false)
-  const { register, handleSubmit, formState: { errors } } = useForm<LoginFormData>()
+  const { signIn } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginFormData>();
 
   const onSubmit = async (data: LoginFormData) => {
     try {
-      setIsLoading(true)
-      await signIn(data.email, data.password)
+      setIsLoading(true);
+      await signIn(data.email, data.password);
     } catch (error) {
-      toast.error('Email ou senha inválidos')
+      toast.error("Email ou senha inválidos");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
       <header className="bg-white py-6 px-4 shadow-lg">
         <div className="container mx-auto max-w-7xl">
-          <h1 className="text-primary-600 text-3xl font-bold">Freedcamp</h1>
+          <h1 className="text-primary-600 text-3xl font-bold flex items-center gap-2">
+            <img src="/logo.svg" alt="Logo" className="w-8 h-8" />
+            Freedcamp
+          </h1>
         </div>
       </header>
 
-      <main className="flex-1 flex items-center justify-center p-4 bg-gradient-to-br from-primary-50 to-primary-100">
-        <section className="w-full max-w-md bg-white rounded-xl shadow-2xl p-8 mx-4">
+      <main className="flex-1 flex items-center justify-center min-h-[calc(100vh-96px)] p-4 bg-gradient-to-br from-primary-50 to-primary-100">
+        <section className="w-full max-w-md bg-white rounded-xl shadow-xl p-8 mx-4">
           <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">
             Acesse sua conta
           </h2>
@@ -41,8 +48,8 @@ export function LoginPage() {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div className="space-y-4">
               <div>
-                <label 
-                  htmlFor="email" 
+                <label
+                  htmlFor="email"
                   className="block text-sm font-medium text-gray-700 mb-1"
                 >
                   Email
@@ -51,12 +58,12 @@ export function LoginPage() {
                   id="email"
                   type="email"
                   autoComplete="email"
-                  {...register('email', { 
-                    required: 'Email é obrigatório',
+                  {...register("email", {
+                    required: "Email é obrigatório",
                     pattern: {
                       value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                      message: 'Email inválido'
-                    }
+                      message: "Email inválido",
+                    },
                   })}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 
                            placeholder-gray-500 focus:outline-none focus:ring-2 
@@ -71,8 +78,8 @@ export function LoginPage() {
               </div>
 
               <div>
-                <label 
-                  htmlFor="password" 
+                <label
+                  htmlFor="password"
                   className="block text-sm font-medium text-gray-700 mb-1"
                 >
                   Senha
@@ -81,12 +88,12 @@ export function LoginPage() {
                   id="password"
                   type="password"
                   autoComplete="current-password"
-                  {...register('password', { 
-                    required: 'Senha é obrigatória',
+                  {...register("password", {
+                    required: "Senha é obrigatória",
                     minLength: {
                       value: 6,
-                      message: 'A senha deve ter pelo menos 6 caracteres'
-                    }
+                      message: "A senha deve ter pelo menos 6 caracteres",
+                    },
                   })}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 
                            placeholder-gray-500 focus:outline-none focus:ring-2 
@@ -110,7 +117,10 @@ export function LoginPage() {
                   className="h-4 w-4 text-primary-600 focus:ring-primary-500 
                            border-gray-300 rounded"
                 />
-                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
+                <label
+                  htmlFor="remember-me"
+                  className="ml-2 block text-sm text-gray-700"
+                >
                   Lembrar meus dados
                 </label>
               </div>
@@ -134,12 +144,14 @@ export function LoginPage() {
             >
               {isLoading ? (
                 <span className="flex items-center justify-center">
-                  <span className="w-5 h-5 border-2 border-white border-t-transparent 
-                                 rounded-full animate-spin mr-2"></span>
+                  <span
+                    className="w-5 h-5 border-2 border-white border-t-transparent 
+                                 rounded-full animate-spin mr-2"
+                  ></span>
                   Entrando...
                 </span>
               ) : (
-                'Acessar'
+                "Acessar"
               )}
             </button>
 
@@ -158,22 +170,33 @@ export function LoginPage() {
       </main>
 
       <footer className="bg-gray-900 text-white py-8 px-4">
-        <div className="container mx-auto max-w-7xl flex flex-col md:flex-row 
-                      justify-between items-center space-y-4 md:space-y-0">
+        <div
+          className="container mx-auto max-w-7xl flex flex-col md:flex-row 
+                      justify-between items-center space-y-4 md:space-y-0"
+        >
           <nav>
-            <ul className="flex space-x-6">
+            <ul className="flex space-x-6flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-6 text-center md:text-left">
               <li>
-                <a href="#" className="hover:text-primary-400 transition-colors">
+                <a
+                  href="#"
+                  className="hover:text-primary-400 transition-colors"
+                >
                   Ajuda
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:text-primary-400 transition-colors">
+                <a
+                  href="#"
+                  className="hover:text-primary-400 transition-colors"
+                >
                   Segurança
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:text-primary-400 transition-colors">
+                <a
+                  href="#"
+                  className="hover:text-primary-400 transition-colors"
+                >
                   Privacidade
                 </a>
               </li>
@@ -185,5 +208,5 @@ export function LoginPage() {
         </div>
       </footer>
     </div>
-  )
+  );
 }
