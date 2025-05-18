@@ -33,7 +33,7 @@ export function LoginPage() {
       <header className="bg-white py-6 px-4 shadow-lg">
         <div className="container mx-auto max-w-7xl">
           <h1 className="text-primary-600 text-3xl font-bold flex items-center gap-2">
-            Freedcamp
+            Cloud Operation Center - COC
           </h1>
         </div>
       </header>
