@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useAuth } from "../contexts/AuthContext";
 import { toast } from "react-hot-toast";
@@ -11,16 +11,40 @@ interface LoginFormData {
 export function LoginPage() {
   const { signIn } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm<LoginFormData>();
+
+  useEffect(() => {
+    const savedCredentials = localStorage.getItem('loginCredentials');
+    if (savedCredentials) {
+      const { email, password, remember } = JSON.parse(savedCredentials);
+      if (remember) {
+        setValue('email', email);
+        setValue('password', password);
+        setRememberMe(true);
+      }
+    }
+  }, [setValue]);
 
   const onSubmit = async (data: LoginFormData) => {
     try {
       setIsLoading(true);
       await signIn(data.email, data.password);
+
+      if (rememberMe) {
+        localStorage.setItem('loginCredentials', JSON.stringify({
+          email: data.email,
+          password: data.password,
+          remember: true
+        }));
+      } else {
+        localStorage.removeItem('loginCredentials');
+      }
     } catch (error) {
       toast.error("Email ou senha inválidos");
     } finally {
@@ -109,6 +133,8 @@ export function LoginPage() {
                   id="remember-me"
                   name="remember-me"
                   type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
                   className="h-4 w-4 text-primary-600 focus:ring-primary-500 
                            border-gray-300 rounded"
                 />
