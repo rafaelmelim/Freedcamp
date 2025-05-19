@@ -11,6 +11,70 @@ export type TaskPriority = 'low' | 'medium' | 'high';
 export interface Database {
   public: {
     Tables: {
+      email_settings: {
+        Row: {
+          id: string
+          smtp_host: string
+          smtp_port: number
+          smtp_ssl: boolean
+          smtp_username: string
+          smtp_password: string
+          sender_email: string
+          sender_name: string
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          smtp_host: string
+          smtp_port: number
+          smtp_ssl?: boolean
+          smtp_username: string
+          smtp_password: string
+          sender_email: string
+          sender_name: string
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          smtp_host?: string
+          smtp_port?: number
+          smtp_ssl?: boolean
+          smtp_username?: string
+          smtp_password?: string
+          sender_email?: string
+          sender_name?: string
+          created_at?: string | null
+          updated_at?: string | null
+        }
+      }
+      email_templates: {
+        Row: {
+          id: string
+          type: string
+          subject: string
+          body: string
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          type: string
+          subject: string
+          body: string
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          type?: string
+          subject?: string
+          body?: string
+          created_at?: string | null
+          updated_at?: string | null
+        }
+      }
       profiles: {
         Row: {
           id: string

@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { Database } from '../lib/database.types';
 import { toast } from 'react-hot-toast';
+import { EmailSettings } from '../components/EmailSettings';
 import { Header } from '../components/Header';
 
 type Profile = Database['public']['Tables']['profiles']['Row'];
@@ -111,9 +112,15 @@ export function AdminPage() {
     <div className="min-h-screen bg-gradient-to-br from-primary-500/10 to-primary-700/20">
       <Header />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-8">User Management</h1>
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-2xl font-bold text-gray-900">Admin Panel</h1>
+        </div>
+
+        <div className="grid grid-cols-1 gap-8">
+          <div>
+            <h2 className="text-xl font-semibold text-gray-900 mb-6">User Management</h2>
         
-        <div className="bg-white/80 backdrop-blur-sm shadow-sm rounded-lg overflow-hidden">
+            <div className="bg-white/80 backdrop-blur-sm shadow-sm rounded-lg overflow-hidden">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
@@ -209,6 +216,13 @@ export function AdminPage() {
               ))}
             </tbody>
           </table>
+            </div>
+          </div>
+
+          <div>
+            <h2 className="text-xl font-semibold text-gray-900 mb-6">Email Configuration</h2>
+            <EmailSettings />
+          </div>
         </div>
       </div>
     </div>
