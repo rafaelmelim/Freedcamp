@@ -59,7 +59,7 @@ export function Header() {
 
         {/* Page content */}
         <main className="flex-1 overflow-auto">
-          {/* Your page content will be rendered here */}
+          <></>
         </main>
       </div>
     </div>
