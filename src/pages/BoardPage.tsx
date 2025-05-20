@@ -36,7 +36,7 @@ const priorityColors = {
 };
 
 export function BoardPage() {
-  const { user } = useAuth();
+  const { user, hasRole, signOut } = useAuth();
   const [isAddingProject, setIsAddingProject] = useState(false);
   const [newProjectTitle, setNewProjectTitle] = useState('');
   const [addingTaskToProject, setAddingTaskToProject] = useState<number | null>(null);
