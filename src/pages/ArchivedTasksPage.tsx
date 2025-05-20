@@ -98,74 +98,75 @@ export function ArchivedTasksPage() {
           </nav>
         </aside>
         <main className="flex-1 ml-64 p-8">
-        <div className="flex justify-between items-center mb-8">
-          <h2 className="text-2xl font-bold text-gray-900">Archived Tasks</h2>
-        </div>
+          <div className="flex justify-between items-center mb-8">
+            <h2 className="text-2xl font-bold text-gray-900">Archived Tasks</h2>
+          </div>
 
-        <div className="bg-white/80 backdrop-blur-sm rounded-lg shadow-sm overflow-hidden">
-          <div className="divide-y divide-gray-200">
-            {archivedTasks?.map((task) => (
-              <div key={task.id} className="p-6 hover:bg-gray-50">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span
-                        className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${
-                          priorityColors[task.priority]
-                        }`}
-                      >
-                        {task.priority}
-                      </span>
-                      <h3 className="text-lg font-medium text-gray-900">
-                        {task.title}
-                      </h3>
-                    </div>
-                    <p className="text-sm text-gray-600 mb-2">
-                      Project: {task.project.title}
-                    </p>
-                    {task.description && (
-                      <p className="text-sm text-gray-600 mb-2">{task.description}</p>
-                    )}
-                    {task.due_date && (
-                      <p
-                        className={`text-sm ${
-                          isPast(new Date(task.due_date)) && !isToday(new Date(task.due_date))
-                            ? 'text-red-600'
-                            : isToday(new Date(task.due_date))
-                            ? 'text-orange-600'
-                            : 'text-gray-600'
-                        }`}
-                      >
-                        Due: {format(new Date(task.due_date), 'MMM d, yyyy')}
+          <div className="bg-white/80 backdrop-blur-sm rounded-lg shadow-sm overflow-hidden">
+            <div className="divide-y divide-gray-200">
+              {archivedTasks?.map((task) => (
+                <div key={task.id} className="p-6 hover:bg-gray-50">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span
+                          className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${
+                            priorityColors[task.priority]
+                          }`}
+                        >
+                          {task.priority}
+                        </span>
+                        <h3 className="text-lg font-medium text-gray-900">
+                          {task.title}
+                        </h3>
+                      </div>
+                      <p className="text-sm text-gray-600 mb-2">
+                        Project: {task.project.title}
                       </p>
-                    )}
-                  </div>
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => restoreTask.mutate(task.id)}
-                      className="px-3 py-1 text-sm text-primary-600 hover:text-primary-700"
-                    >
-                      Restore
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (confirm('Are you sure you want to permanently delete this task?')) {
-                          deleteTask.mutate(task.id);
-                        }
-                      }}
-                      className="px-3 py-1 text-sm text-red-600 hover:text-red-700"
-                    >
-                      Delete
-                    </button>
+                      {task.description && (
+                        <p className="text-sm text-gray-600 mb-2">{task.description}</p>
+                      )}
+                      {task.due_date && (
+                        <p
+                          className={`text-sm ${
+                            isPast(new Date(task.due_date)) && !isToday(new Date(task.due_date))
+                              ? 'text-red-600'
+                              : isToday(new Date(task.due_date))
+                              ? 'text-orange-600'
+                              : 'text-gray-600'
+                          }`}
+                        >
+                          Due: {format(new Date(task.due_date), 'MMM d, yyyy')}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => restoreTask.mutate(task.id)}
+                        className="px-3 py-1 text-sm text-primary-600 hover:text-primary-700"
+                      >
+                        Restore
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (confirm('Are you sure you want to permanently delete this task?')) {
+                            deleteTask.mutate(task.id);
+                          }
+                        }}
+                        className="px-3 py-1 text-sm text-red-600 hover:text-red-700"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-            {(!archivedTasks || archivedTasks.length === 0) && (
-              <div className="p-6 text-center text-gray-500">
-                No archived tasks found
-              </div>
-            )}
+              ))}
+              {(!archivedTasks || archivedTasks.length === 0) && (
+                <div className="p-6 text-center text-gray-500">
+                  No archived tasks found
+                </div>
+              )}
+            </div>
           </div>
         </main>
       </div>
