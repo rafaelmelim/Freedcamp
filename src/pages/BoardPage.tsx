@@ -13,7 +13,7 @@ import { TaskStatistics } from '../components/TaskStatistics';
 import { Header } from '../components/Header';
 import { TaskFilters } from '../components/TaskFilters';
 import { TaskDetailsModal } from '../components/TaskDetailsModal';
-import { HomeIcon, ArchiveBoxIcon } from '@heroicons/react/24/outline';
+import { HomeIcon, ArchiveBoxIcon, Cog6ToothIcon, ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
 import { Link } from 'react-router-dom';
 
 type Project = Database['public']['Tables']['projects']['Row'];
@@ -380,6 +380,7 @@ export function BoardPage() {
       <div className="flex h-screen pt-16">
         <aside className="w-64 bg-white border-r border-gray-200 fixed left-0 top-16 bottom-0 overflow-y-auto">
           <nav className="p-4 space-y-2">
+            <div className="pb-4 mb-4 border-b border-gray-200">
             <Link
               to="/board"
               className="flex items-center space-x-2 px-4 py-2 bg-gray-100 text-gray-900 rounded-md"
@@ -394,6 +395,25 @@ export function BoardPage() {
               <ArchiveBoxIcon className="w-5 h-5" />
               <span>Archived</span>
             </Link>
+            </div>
+            <div className="pt-4 mt-4 border-t border-gray-200">
+              {hasRole('admin') && (
+                <Link
+                  to="/admin"
+                  className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md"
+                >
+                  <Cog6ToothIcon className="w-5 h-5" />
+                  <span>Settings</span>
+                </Link>
+              )}
+              <button
+                onClick={() => signOut()}
+                className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md w-full text-left"
+              >
+                <ArrowRightOnRectangleIcon className="w-5 h-5" />
+                <span>Sign out</span>
+              </button>
+            </div>
           </nav>
         </aside>
         <main className="flex-1 ml-64 p-8">

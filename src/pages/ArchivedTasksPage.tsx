@@ -2,7 +2,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format, isPast, isToday } from 'date-fns';
 import { supabase } from '../lib/supabase';
 import { Database } from '../lib/database.types';
+import { Link } from 'react-router-dom';
 import { Header } from '../components/Header';
+import { useAuth } from '../contexts/AuthContext';
+import { HomeIcon, ArchiveBoxIcon, Cog6ToothIcon, ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
 import { toast } from 'react-hot-toast';
 
 type Task = Database['public']['Tables']['tasks']['Row'];
@@ -16,6 +19,7 @@ const priorityColors = {
 
 export function ArchivedTasksPage() {
   const queryClient = useQueryClient();
+  const { signOut, hasRole } = useAuth();
 
   const { data: archivedTasks, isLoading } = useQuery({
     queryKey: ['archived-tasks'],
@@ -81,6 +85,7 @@ export function ArchivedTasksPage() {
       <div className="flex h-screen pt-16">
         <aside className="w-64 bg-white border-r border-gray-200 fixed left-0 top-16 bottom-0 overflow-y-auto">
           <nav className="p-4 space-y-2">
+            <div className="pb-4 mb-4 border-b border-gray-200">
             <Link
               to="/board"
               className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md"
@@ -95,6 +100,25 @@ export function ArchivedTasksPage() {
               <ArchiveBoxIcon className="w-5 h-5" />
               <span>Archived</span>
             </Link>
+            </div>
+            <div className="pt-4 mt-4 border-t border-gray-200">
+              {hasRole('admin') && (
+                <Link
+                  to="/admin"
+                  className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md"
+                >
+                  <Cog6ToothIcon className="w-5 h-5" />
+                  <span>Settings</span>
+                </Link>
+              )}
+              <button
+                onClick={() => signOut()}
+                className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md w-full text-left"
+              >
+                <ArrowRightOnRectangleIcon className="w-5 h-5" />
+                <span>Sign out</span>
+              </button>
+            </div>
           </nav>
         </aside>
         <main className="flex-1 ml-64 p-8">
