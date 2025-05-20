@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { HomeIcon, FolderIcon, ChartBarIcon, CogIcon } from '@heroicons/react/24/outline';
+import { HomeIcon, FolderIcon, ChartBarIcon, CogIcon, ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
 
 const NavButton = ({ to, children }: { to: string; children: React.ReactNode }) => (
   <Link
@@ -38,6 +38,13 @@ export function Header() {
             {hasRole('admin') && (
               <SidebarLink to="/admin" icon={CogIcon}>Settings</SidebarLink>
             )}
+            <button
+              onClick={() => signOut()}
+              className="flex items-center space-x-2 px-4 py-2 text-gray-700 hover:bg-blue-50 rounded-md w-full text-left"
+            >
+              <ArrowRightOnRectangleIcon className="w-5 h-5" />
+              <span>Sign out</span>
+            </button>
           </nav>
         </div>
       </aside>
@@ -46,14 +53,8 @@ export function Header() {
       <div className="flex-1 flex flex-col">
         {/* Top header */}
         <header className="bg-blue-50 shadow-sm">
-          <div className="px-4 py-4 flex justify-end">
-            <button
-              onClick={() => signOut()}
-              className="px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-700 
-                       transition-colors duration-200"
-            >
-              Sign out
-            </button>
+          <div className="px-4 py-4">
+            <h2 className="text-xl font-semibold text-blue-600">My Board</h2>
           </div>
         </header>
 
