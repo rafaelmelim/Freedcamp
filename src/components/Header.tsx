@@ -1,21 +1,11 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { HomeIcon, FolderIcon, ChartBarIcon, CogIcon, ArrowRightOnRectangleIcon, Squares2X2Icon } from '@heroicons/react/24/outline';
+import { HomeIcon, ArchiveBoxIcon, Cog6ToothIcon, ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
 
-const NavButton = ({ to, children }: { to: string; children: React.ReactNode }) => (
+const NavLink = ({ to, icon: Icon, children }: { to: string; icon: React.ElementType; children: React.ReactNode }) => (
   <Link
     to={to}
-    className="px-4 py-2 text-sm font-medium text-white bg-blue-600/20 rounded-md 
-             hover:bg-blue-600/30 transition-colors duration-200"
-  >
-    {children}
-  </Link>
-);
-
-const SidebarLink = ({ to, icon: Icon, children }: { to: string; icon: React.ElementType; children: React.ReactNode }) => (
-  <Link
-    to={to}
-    className="flex items-center space-x-2 px-4 py-2 text-gray-700 hover:bg-blue-50 rounded-md"
+    className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
   >
     <Icon className="w-5 h-5" />
     <span>{children}</span>
@@ -26,46 +16,30 @@ export function Header() {
   const { signOut, hasRole } = useAuth();
 
   return (
-    <div className="flex h-screen">
-      {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-gray-200">
-        <div className="p-4">
-          <div className="flex items-center space-x-2 mb-8">
-            <Squares2X2Icon className="w-6 h-6 text-blue-600" />
-            <h1 className="text-xl font-semibold text-blue-600">My Board</h1>
+    <header className="bg-white border-b border-gray-200 fixed top-0 left-0 right-0 z-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16">
+          <div className="flex items-center space-x-8">
+            <h1 className="text-xl font-semibold text-gray-900">
+              My Board
+            </h1>
+            <nav className="flex items-center space-x-4">
+              <NavLink to="/board" icon={HomeIcon}>Dashboard</NavLink>
+              <NavLink to="/archived" icon={ArchiveBoxIcon}>Archived</NavLink>
+              {hasRole('admin') && (
+                <NavLink to="/admin" icon={Cog6ToothIcon}>Settings</NavLink>
+              )}
+            </nav>
           </div>
-          <nav className="space-y-2">
-            <SidebarLink to="/board" icon={HomeIcon}>Dashboard</SidebarLink>
-            <SidebarLink to="/projects" icon={FolderIcon}>Projects</SidebarLink>
-            <SidebarLink to="/archived" icon={ChartBarIcon}>Archived</SidebarLink>
-            {hasRole('admin') && (
-              <SidebarLink to="/admin" icon={CogIcon}>Settings</SidebarLink>
-            )}
-            <button
-              onClick={() => signOut()}
-              className="flex items-center space-x-2 px-4 py-2 text-gray-700 hover:bg-blue-50 rounded-md w-full text-left"
-            >
-              <ArrowRightOnRectangleIcon className="w-5 h-5" />
-              <span>Sign out</span>
-            </button>
-          </nav>
+          <button
+            onClick={() => signOut()}
+            className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
+          >
+            <ArrowRightOnRectangleIcon className="w-5 h-5" />
+            <span>Sign out</span>
+          </button>
         </div>
-      </aside>
-
-      {/* Main content */}
-      <div className="flex-1 flex flex-col">
-        {/* Top header */}
-        <header className="bg-blue-50 shadow-sm">
-          <div className="px-4 py-4 flex items-center justify-between">
-            <h2 className="text-lg font-medium text-gray-700">Welcome to your workspace</h2>
-          </div>
-        </header>
-
-        {/* Page content */}
-        <main className="flex-1 overflow-auto">
-          <></>
-        </main>
       </div>
-    </div>
+    </header>
   );
 }
