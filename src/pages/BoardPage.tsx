@@ -13,6 +13,8 @@ import { TaskStatistics } from '../components/TaskStatistics';
 import { Header } from '../components/Header';
 import { TaskFilters } from '../components/TaskFilters';
 import { TaskDetailsModal } from '../components/TaskDetailsModal';
+import { HomeIcon, ArchiveBoxIcon } from '@heroicons/react/24/outline';
+import { Link } from 'react-router-dom';
 
 type Project = Database['public']['Tables']['projects']['Row'];
 type Task = Database['public']['Tables']['tasks']['Row'];
@@ -375,8 +377,26 @@ export function BoardPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-500/10 to-primary-700/20">
       <Header />
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="flex h-screen pt-16">
+        <aside className="w-64 bg-white border-r border-gray-200 fixed left-0 top-16 bottom-0 overflow-y-auto">
+          <nav className="p-4 space-y-2">
+            <Link
+              to="/board"
+              className="flex items-center space-x-2 px-4 py-2 bg-gray-100 text-gray-900 rounded-md"
+            >
+              <HomeIcon className="w-5 h-5" />
+              <span>My Board</span>
+            </Link>
+            <Link
+              to="/archived"
+              className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md"
+            >
+              <ArchiveBoxIcon className="w-5 h-5" />
+              <span>Archived</span>
+            </Link>
+          </nav>
+        </aside>
+        <main className="flex-1 ml-64 p-8">
         <div className="flex justify-between items-center mb-8">
           <h2 className="text-2xl font-bold text-gray-900">My Board</h2>
           <div className="flex space-x-4">
@@ -589,7 +609,8 @@ export function BoardPage() {
             }}
           />
         )}
-      </main>
+        </main>
+      </div>
     </div>
   );
 }
