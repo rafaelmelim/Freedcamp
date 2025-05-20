@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { HomeIcon, FolderIcon, ChartBarIcon, CogIcon, ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
+import { HomeIcon, FolderIcon, ChartBarIcon, CogIcon, ArrowRightOnRectangleIcon, Squares2X2Icon } from '@heroicons/react/24/outline';
 
 const NavButton = ({ to, children }: { to: string; children: React.ReactNode }) => (
   <Link
@@ -30,7 +30,10 @@ export function Header() {
       {/* Sidebar */}
       <aside className="w-64 bg-white border-r border-gray-200">
         <div className="p-4">
-          <h1 className="text-xl font-semibold text-blue-600 mb-8">Freedcamp</h1>
+          <div className="flex items-center space-x-2 mb-8">
+            <Squares2X2Icon className="w-6 h-6 text-blue-600" />
+            <h1 className="text-xl font-semibold text-blue-600">My Board</h1>
+          </div>
           <nav className="space-y-2">
             <SidebarLink to="/board" icon={HomeIcon}>Dashboard</SidebarLink>
             <SidebarLink to="/projects" icon={FolderIcon}>Projects</SidebarLink>
@@ -53,8 +56,8 @@ export function Header() {
       <div className="flex-1 flex flex-col">
         {/* Top header */}
         <header className="bg-blue-50 shadow-sm">
-          <div className="px-4 py-4">
-            <h2 className="text-xl font-semibold text-blue-600">My Board</h2>
+          <div className="px-4 py-4 flex items-center justify-between">
+            <h2 className="text-lg font-medium text-gray-700">Welcome to your workspace</h2>
           </div>
         </header>
 
