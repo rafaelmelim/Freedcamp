@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import { Database } from '../lib/database.types';
 import { toast } from 'react-hot-toast';
 import { Link } from 'react-router-dom';
+import { EmailTestForm } from '../components/EmailTestForm';
 import { Header } from '../components/Header';
 import { useAuth } from '../contexts/AuthContext';
 import { HomeIcon, ArchiveBoxIcon, Cog6ToothIcon, ArrowRightOnRectangleIcon, EnvelopeIcon, UsersIcon, ComputerDesktopIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline';
@@ -392,6 +393,9 @@ export function EmailSettingsPage() {
                   </div>
                 </div>
               ))}
+            </div>
+            <div className="mt-8 pt-8 border-t border-gray-200">
+              <EmailTestForm onClose={() => {}} />
             </div>
           </div>
         </main>

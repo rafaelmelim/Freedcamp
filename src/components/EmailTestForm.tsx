@@ -3,13 +3,9 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { Database } from '../lib/database.types';
 import { toast } from 'react-hot-toast';
-import { EnvelopeIcon, CheckCircleIcon, XCircleIcon, PaperAirplaneIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { EnvelopeIcon, CheckCircleIcon, XCircleIcon, PaperAirplaneIcon } from '@heroicons/react/24/outline';
 
 type EmailSettings = Database['public']['Tables']['email_settings']['Row'];
-
-interface EmailTestFormProps {
-  onClose: () => void;
-}
 
 interface TestEmailData {
   email: string;
@@ -17,7 +13,7 @@ interface TestEmailData {
   body: string;
 }
 
-export function EmailTestForm({ onClose }: EmailTestFormProps) {
+export function EmailTestForm() {
   const [testData, setTestData] = useState<TestEmailData>({
     email: '',
     subject: 'Test Email Configuration',
@@ -94,20 +90,9 @@ export function EmailTestForm({ onClose }: EmailTestFormProps) {
   });
 
   return (
-    <div className="bg-white shadow-sm rounded-lg p-6 flex gap-6">
+    <div className="flex gap-6">
       <div className="flex-1">
-        <div className="flex justify-between items-center mb-2">
-          <h3 className="text-lg font-medium text-gray-900">Test Email Configuration</h3>
-          <button
-            onClick={() => {
-              setTestStatus({ step: 'idle' });
-              onClose();
-            }}
-            className="text-gray-400 hover:text-gray-600"
-          >
-            <XMarkIcon className="h-5 w-5" />
-          </button>
-        </div>
+        <h3 className="text-lg font-medium text-gray-900 mb-2">Test Email Configuration</h3>
         <p className="text-sm text-gray-500 mb-6">Send a test email to verify your SMTP settings are working correctly.</p>
         <div className="space-y-4">
           <div>
@@ -164,41 +149,36 @@ export function EmailTestForm({ onClose }: EmailTestFormProps) {
           </div>
         </div>
       </div>
-      <div className="w-64 border-l border-gray-200 pl-6">
+      <div className="w-64 border-l border-gray-200 pl-6 space-y-4">
         <h4 className="text-sm font-medium text-gray-700 mb-4">Status</h4>
-        <div className="space-y-4">
-          {testStatus.step === 'error' ? (
+        <div className="flex items-center space-x-2">
+          <div className={`w-2 h-2 rounded-full ${testStatus.step === 'validating' ? 'bg-primary-600' : 'bg-gray-200'}`} />
+          <span className="text-sm text-gray-600">Validating Settings</span>
+        </div>
+        <div className="flex items-center space-x-2">
+          <div className={`w-2 h-2 rounded-full ${testStatus.step === 'connecting' ? 'bg-primary-600' : 'bg-gray-200'}`} />
+          <span className="text-sm text-gray-600">Connecting to SMTP</span>
+        </div>
+        <div className="flex items-center space-x-2">
+          <div className={`w-2 h-2 rounded-full ${testStatus.step === 'sending' ? 'bg-primary-600' : 'bg-gray-200'}`} />
+          <span className="text-sm text-gray-600">Sending Email</span>
+        </div>
+        {testStatus.step === 'error' && (
+          <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-md">
             <div className="flex items-center text-red-600">
-              <XCircleIcon className="w-5 h-5 mr-2 flex-shrink-0" />
+              <XCircleIcon className="w-5 h-5 mr-2" />
               <span className="text-sm">{testStatus.error}</span>
             </div>
-          ) : testStatus.step === 'complete' ? (
+          </div>
+        )}
+        {testStatus.step === 'complete' && (
+          <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-md">
             <div className="flex items-center text-green-600">
               <CheckCircleIcon className="w-5 h-5 mr-2" />
               <span className="text-sm">Email sent successfully!</span>
             </div>
-          ) : testStatus.step !== 'idle' ? (
-            <div className="space-y-4">
-              <div className="flex items-center text-primary-600">
-                <div className="animate-spin rounded-full h-5 w-5 border-2 border-primary-600 border-t-transparent mr-2" />
-                <span className="text-sm">
-                  {testStatus.step === 'validating' && 'Validating settings...'}
-                  {testStatus.step === 'connecting' && 'Connecting to SMTP server...'}
-                  {testStatus.step === 'sending' && 'Sending email...'}
-                </span>
-              </div>
-              <div className="space-y-2">
-                <div className={`h-1 rounded ${testStatus.step === 'validating' ? 'bg-primary-600' : 'bg-gray-200'}`} />
-                <div className={`h-1 rounded ${testStatus.step === 'connecting' ? 'bg-primary-600' : 'bg-gray-200'}`} />
-                <div className={`h-1 rounded ${testStatus.step === 'sending' ? 'bg-primary-600' : 'bg-gray-200'}`} />
-              </div>
-            </div>
-          ) : (
-            <div className="text-sm text-gray-500">
-              Ready to send test email
-            </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
