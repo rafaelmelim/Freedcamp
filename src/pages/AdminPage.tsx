@@ -7,7 +7,7 @@ import { EmailTestForm } from '../components/EmailTestForm';
 import { Link } from 'react-router-dom';
 import { Header } from '../components/Header';
 import { useAuth } from '../contexts/AuthContext';
-import { HomeIcon, ArchiveBoxIcon, Cog6ToothIcon, ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
+import { HomeIcon, ArchiveBoxIcon, Cog6ToothIcon, ArrowRightOnRectangleIcon, XMarkIcon, EnvelopeIcon, XCircleIcon, CheckCircleIcon, PaperAirplaneIcon } from '@heroicons/react/24/outline';
 
 type EmailSettings = Database['public']['Tables']['email_settings']['Row'];
 type EmailTemplate = Database['public']['Tables']['email_templates']['Row'];
@@ -435,12 +435,6 @@ export function AdminPage() {
         <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-4xl">
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-lg font-medium text-gray-900">Test Email Configuration</h3>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-500"
-            >
-              <XMarkIcon className="h-5 w-5" />
-            </button>
           </div>
 
           <div className="grid grid-cols-2 gap-8">
