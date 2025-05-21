@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { toast } from 'react-hot-toast';
-import { EnvelopeIcon, CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline';
+import { EnvelopeIcon, CheckCircleIcon, XCircleIcon, XMarkIcon } from '@heroicons/react/24/outline';
 
 interface ResetPasswordFormProps {
   onClose: () => void;
@@ -79,24 +79,31 @@ export function ResetPasswordForm({ onClose }: ResetPasswordFormProps) {
   };
 
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <h2 className="text-lg font-medium text-gray-900">Reset Password</h2>
-        <p className="mt-1 text-sm text-gray-500">
-          Enter your email address and we'll send you instructions to reset your password.
-        </p>
-      </div>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md relative">
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+        >
+          <XMarkIcon className="h-5 w-5" />
+        </button>
 
-      <div>
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Reset Password</h2>
+          <p className="text-sm text-gray-500">
+            Enter your email address and we'll send you instructions to reset your password.
+          </p>
+        </div>
+
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div>
             <label
               htmlFor="reset-email"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium text-gray-700 mb-1"
             >
               Email
             </label>
-            <div className="mt-1 flex rounded-md shadow-sm">
+            <div className="flex rounded-md shadow-sm">
               <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500">
                 <EnvelopeIcon className="h-5 w-5" />
               </span>
@@ -145,20 +152,14 @@ export function ResetPasswordForm({ onClose }: ResetPasswordFormProps) {
             </div>
           )}
 
-          <div className="flex justify-end space-x-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900"
-            >
-              Cancel
-            </button>
+          <div className="flex justify-end space-x-3 pt-4">
             <button
               type="submit"
               disabled={isLoading || resetStatus.step === 'complete'}
-              className="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-md 
+              className="w-full py-3 px-4 bg-primary-600 text-white font-medium rounded-lg 
                        hover:bg-primary-700 focus:outline-none focus:ring-2 
-                       focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
+                       focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 
+                       disabled:cursor-not-allowed transition-all"
             >
               {isLoading ? 'Sending...' : 'Send Reset Instructions'}
             </button>
