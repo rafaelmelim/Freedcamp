@@ -436,6 +436,12 @@ export function AdminPage() {
           <div className="flex justify-between items-center mb-6">
             <button
               onClick={() => setTestStatus({ step: 'idle' })}
+              className="text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <XMarkIcon className="h-5 w-5" />
+            </button>
+            <button
+              onClick={() => setTestStatus({ step: 'idle' })}
               className="absolute top-4 left-4 text-gray-400 hover:text-gray-600"
             >
               <XMarkIcon className="h-5 w-5" />
