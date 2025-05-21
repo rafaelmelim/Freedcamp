@@ -5,6 +5,7 @@ import { RoleProtectedRoute } from './components/RoleProtectedRoute'
 import { LoginPage } from './pages/LoginPage'
 import { BoardPage } from './pages/BoardPage'
 import { AdminPage } from './pages/AdminPage'
+import { EmailSettingsPage } from './pages/EmailSettingsPage'
 import { ArchivedTasksPage } from './pages/ArchivedTasksPage'
 
 function App() {
@@ -25,6 +26,14 @@ function App() {
           element={
             <RoleProtectedRoute requiredRole="admin">
               <AdminPage />
+            </RoleProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/email"
+          element={
+            <RoleProtectedRoute requiredRole="admin">
+              <EmailSettingsPage />
             </RoleProtectedRoute>
           }
         />
