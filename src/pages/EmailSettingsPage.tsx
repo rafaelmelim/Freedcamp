@@ -7,7 +7,7 @@ import { Link } from 'react-router-dom';
 import { EmailTestForm } from '../components/EmailTestForm';
 import { Header } from '../components/Header';
 import { useAuth } from '../contexts/AuthContext';
-import { HomeIcon, ArchiveBoxIcon, Cog6ToothIcon, ArrowRightOnRectangleIcon, EnvelopeIcon, UsersIcon, ComputerDesktopIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline';
+import { HomeIcon, ArchiveBoxIcon, Cog6ToothIcon, ArrowRightOnRectangleIcon, EnvelopeIcon, UsersIcon, ComputerDesktopIcon, ArrowDownTrayIcon, UserCircleIcon } from '@heroicons/react/24/outline';
 
 type EmailSettings = Database['public']['Tables']['email_settings']['Row'];
 type EmailTemplate = Database['public']['Tables']['email_templates']['Row'];
@@ -164,6 +164,13 @@ export function EmailSettingsPage() {
                   >
                     <EnvelopeIcon className="w-5 h-5" />
                     <span>E-mail</span>
+                  </Link>
+                  <Link
+                    to="/admin/user-profiles"
+                    className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md"
+                  >
+                    <UserCircleIcon className="w-5 h-5" />
+                    <span>Perfis de Usuários</span>
                   </Link>
                   <Link
                     to="/admin/users"
