@@ -41,7 +41,7 @@ export function ResetPasswordForm({ onClose }: ResetPasswordFormProps) {
         .from('email_templates')
         .select('*')
         .eq('type', 'reset_password')
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       return data;
@@ -53,9 +53,13 @@ export function ResetPasswordForm({ onClose }: ResetPasswordFormProps) {
       setIsLoading(true);
       setResetStatus({ step: 'validating' });
 
-      // Validate email settings
+      // Validate email settings and template
       if (!emailSettings?.smtp_host || !emailSettings?.smtp_port || !emailSettings?.smtp_username) {
         throw new Error('Email settings not configured. Please contact the administrator.');
+      }
+
+      if (!resetTemplate) {
+        throw new Error('Reset password email template not configured. Please contact the administrator.');
       }
 
       setResetStatus({ step: 'sending' });
