@@ -77,7 +77,10 @@ export function BoardPage() {
         .order('position');
 
       if (error) throw error;
-      return data as (Task & { task_labels: { label: Label }[] })[];
+      return (data || []).map(task => ({
+        ...task,
+        task_labels: task.task_labels || []
+      })) as (Task & { task_labels: { label: Label }[] })[];
     },
   });
 
@@ -592,6 +595,7 @@ export function BoardPage() {
                                           )}
                                         </div>
                                       </div>
+                                    
                                     </div>
                                   )}
                                 </Draggable>

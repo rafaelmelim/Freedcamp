@@ -11,7 +11,7 @@ type Task = Database['public']['Tables']['tasks']['Row'];
 type Label = Database['public']['Tables']['labels']['Row'];
 
 interface TaskDetailsModalProps {
-  task: Task & { task_labels: { label: Label }[] };
+  task: Task & { task_labels?: { label: Label }[] };
   isOpen: boolean;
   onClose: () => void;
   onUpdate: (taskId: number, data: Partial<Task>, labels: Label[]) => void;
@@ -43,7 +43,7 @@ export function TaskDetailsModal({
   });
 
   const [selectedLabels, setSelectedLabels] = useState<Label[]>(
-    task.task_labels.map(tl => tl.label)
+    (task.task_labels || []).map(tl => tl.label)
   );
 
   const handleToggleLabel = (label: Label) => {
