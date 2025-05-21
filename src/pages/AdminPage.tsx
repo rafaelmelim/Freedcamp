@@ -46,18 +46,18 @@ export function AdminPage() {
                     <span>E-mail</span>
                   </Link>
                   <Link
+                    to="/admin/user-profiles"
+                    className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md"
+                  >
+                    <UserCircleIcon className="w-5 h-5" />
+                    <span>Perfis de Usuários</span>
+                  </Link>
+                  <Link
                     to="/admin/users"
                     className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md"
                   >
                     <UsersIcon className="w-5 h-5" />
                     <span>Usuários</span>
-                  </Link>
-                  <Link
-                    to="/admin/user-profiles"
-                    className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md ml-4 group"
-                  >
-                    <UserCircleIcon className="w-5 h-5" />
-                    <span>Perfis de Usuários</span>
                   </Link>
                   <Link
                     to="/admin/system"
