@@ -25,7 +25,7 @@ const priorityColors: Record<TaskPriority, string> = {
   low: 'bg-blue-100 text-blue-800 ring-blue-600/20',
 };
 
-export function TaskDetailsModal({
+function TaskDetailsModal({
   task,
   isOpen,
   onClose,
