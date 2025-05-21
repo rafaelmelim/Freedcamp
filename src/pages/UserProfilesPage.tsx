@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Header } from '../components/Header';
 import { useAuth } from '../contexts/AuthContext';
-import { HomeIcon, ArchiveBoxIcon, Cog6ToothIcon, ArrowRightOnRectangleIcon, EnvelopeIcon, UsersIcon, ComputerDesktopIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline';
+import { HomeIcon, ArchiveBoxIcon, Cog6ToothIcon, ArrowRightOnRectangleIcon, EnvelopeIcon, UsersIcon, ComputerDesktopIcon, ArrowDownTrayIcon, UserCircleIcon } from '@heroicons/react/24/outline';
 
 export function UserProfilesPage() {
   const { signOut, hasRole } = useAuth();
@@ -54,8 +54,9 @@ export function UserProfilesPage() {
                   </Link>
                   <Link
                     to="/admin/user-profiles"
-                    className="flex items-center space-x-2 px-4 py-2 bg-gray-100 text-gray-900 rounded-md ml-4"
+                    className="flex items-center space-x-2 px-4 py-2 bg-gray-100 text-gray-900 rounded-md ml-4 group"
                   >
+                    <UserCircleIcon className="w-5 h-5" />
                     <span>Perfis de Usuários</span>
                   </Link>
                   <Link
