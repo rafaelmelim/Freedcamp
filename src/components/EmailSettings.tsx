@@ -143,9 +143,7 @@ export function EmailSettings() {
         body: data,
       });
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
       
       setTestStatus({ step: 'complete' });
     },
