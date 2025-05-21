@@ -25,48 +25,98 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate()
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null)
-      if (session?.user) {
-        getUserRoles(session.user.id).then(setRoles)
+    // Initialize auth state
+    const initAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        
+        if (session?.user) {
+          setUser(session.user)
+          try {
+            const userRoles = await getUserRoles(session.user.id)
+            setRoles(userRoles)
+          } catch (error) {
+            console.error('Error fetching user roles:', error)
+            // Clear session on role fetch error to prevent inconsistent state
+            await supabase.auth.signOut()
+            setUser(null)
+            setRoles([])
+          }
+        } else {
+          setUser(null)
+          setRoles([])
+        }
+      } catch (error) {
+        console.error('Error initializing auth:', error)
+        setUser(null)
+        setRoles([])
+      } finally {
+        setLoading(false)
       }
-      setLoading(false)
-    })
+    }
+
+    initAuth()
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      setUser(session?.user ?? null)
-      if (session?.user) {
-        const userRoles = await getUserRoles(session.user.id)
-        setRoles(userRoles)
-      } else {
+      try {
+        if (session?.user) {
+          setUser(session.user)
+          const userRoles = await getUserRoles(session.user.id)
+          setRoles(userRoles)
+        } else {
+          setUser(null)
+          setRoles([])
+        }
+      } catch (error) {
+        console.error('Error in auth state change:', error)
+        setUser(null)
         setRoles([])
       }
     })
 
-    return () => subscription.unsubscribe()
+    return () => {
+      subscription.unsubscribe()
+    }
   }, [])
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
 
-    if (error) {
+      if (error) {
+        throw error
+      }
+
+      navigate('/board')
+    } catch (error) {
+      console.error('Sign in error:', error)
       throw error
     }
-
-    navigate('/board')
   }
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut()
-    if (error) {
+    try {
+      // Clear any stored auth data first
+      localStorage.removeItem('sb-' + import.meta.env.VITE_SUPABASE_PROJECT_ID + '-auth-token')
+      
+      const { error } = await supabase.auth.signOut()
+      if (error) {
+        throw error
+      }
+
+      // Clear state after successful signout
+      setUser(null)
+      setRoles([])
+      navigate('/login')
+    } catch (error) {
+      console.error('Sign out error:', error)
       throw error
     }
-    navigate('/login')
   }
 
   const hasRole = (roleName: string) => {
