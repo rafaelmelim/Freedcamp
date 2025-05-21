@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { Database } from '../lib/database.types';
 import { toast } from 'react-hot-toast';
-import { EnvelopeIcon, CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline';
+import { EnvelopeIcon, CheckCircleIcon, XCircleIcon, PaperAirplaneIcon } from '@heroicons/react/24/outline';
 
 type EmailSettings = Database['public']['Tables']['email_settings']['Row'];
 type EmailTemplate = Database['public']['Tables']['email_templates']['Row'];
@@ -12,6 +12,13 @@ interface TestEmailData {
   email: string;
   subject: string;
   body: string;
+  status: {
+    validatingSettings: boolean;
+    connectingSmtp: boolean;
+    sendingEmail: boolean;
+    success: boolean;
+    error: string | null;
+  };
 }
 
 const defaultSettings: Partial<EmailSettings> = {
@@ -34,6 +41,13 @@ export function EmailSettings() {
     email: '',
     subject: 'Test Email Configuration',
     body: 'This is a test email to verify your SMTP configuration.',
+    status: {
+      validatingSettings: false,
+      connectingSmtp: false,
+      sendingEmail: false,
+      success: false,
+      error: null
+    }
   });
   const queryClient = useQueryClient();
 
@@ -125,19 +139,45 @@ export function EmailSettings() {
 
   const testEmailConfig = useMutation({
     mutationFn: async (data: TestEmailData) => {
-      setTestStatus({ step: 'validating' });
+      // Reset status
+      setTestData(prev => ({
+        ...prev,
+        status: {
+          validatingSettings: true,
+          connectingSmtp: false,
+          sendingEmail: false,
+          success: false,
+          error: null
+        }
+      }));
       
       // Validate settings
       if (!settings?.smtp_host || !settings?.smtp_port || !settings?.smtp_username || !settings?.smtp_password) {
         throw new Error('Please configure SMTP settings before sending test email');
       }
       
-      setTestStatus({ step: 'connecting' });
+      // Update status to connecting
+      setTestData(prev => ({
+        ...prev,
+        status: {
+          ...prev.status,
+          validatingSettings: false,
+          connectingSmtp: true
+        }
+      }));
       
       // Small delay to show the connecting state
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      setTestStatus({ step: 'sending' });
+      // Update status to sending
+      setTestData(prev => ({
+        ...prev,
+        status: {
+          ...prev.status,
+          connectingSmtp: false,
+          sendingEmail: true
+        }
+      }));
       
       const { error } = await supabase.functions.invoke('test-email', {
         body: data,
@@ -145,26 +185,46 @@ export function EmailSettings() {
 
       if (error) throw error;
       
-      setTestStatus({ step: 'complete' });
+      // Update status to success
+      setTestData(prev => ({
+        ...prev,
+        status: {
+          ...prev.status,
+          sendingEmail: false,
+          success: true
+        }
+      }));
     },
     onSuccess: () => {
       toast.success('Test email sent successfully');
-      setTestData({
-        email: '',
-        subject: 'Test Email Configuration',
-        body: 'This is a test email to verify your SMTP configuration.',
-      });
       
       // Reset status after 3 seconds
       setTimeout(() => {
-        setTestStatus({ step: 'idle' });
+        setTestData({
+          email: '',
+          subject: 'Test Email Configuration',
+          body: 'This is a test email to verify your SMTP configuration.',
+          status: {
+            validatingSettings: false,
+            connectingSmtp: false,
+            sendingEmail: false,
+            success: false,
+            error: null
+          }
+        });
       }, 3000);
     },
     onError: (error: Error) => {
-      setTestStatus({ 
-        step: 'error',
-        error: error.message || 'Failed to send test email'
-      });
+      setTestData(prev => ({
+        ...prev,
+        status: {
+          validatingSettings: false,
+          connectingSmtp: false,
+          sendingEmail: false,
+          success: false,
+          error: error.message || 'Failed to send test email'
+        }
+      }));
       toast.error(error.message || 'Failed to send test email');
     },
   });
@@ -410,26 +470,37 @@ export function EmailSettings() {
           
           <div className="flex justify-end">
             <div className="flex-1">
-              {testStatus.step !== 'idle' && (
+              {(testData.status.validatingSettings || 
+                testData.status.connectingSmtp || 
+                testData.status.sendingEmail || 
+                testData.status.success || 
+                testData.status.error) && (
                 <div className="flex items-center space-x-2">
-                  {testStatus.step === 'error' ? (
+                  {testData.status.error ? (
                     <div className="flex items-center text-red-600">
                       <XCircleIcon className="w-5 h-5 mr-2" />
-                      <span className="text-sm">{testStatus.error}</span>
+                      <span className="text-sm">{testData.status.error}</span>
                     </div>
-                  ) : testStatus.step === 'complete' ? (
+                  ) : testData.status.success ? (
                     <div className="flex items-center text-green-600">
                       <CheckCircleIcon className="w-5 h-5 mr-2" />
                       <span className="text-sm">Email sent successfully!</span>
                     </div>
                   ) : (
-                    <div className="flex items-center text-primary-600">
-                      <div className="animate-spin rounded-full h-5 w-5 border-2 border-primary-600 border-t-transparent mr-2" />
-                      <span className="text-sm">
-                        {testStatus.step === 'validating' && 'Validating settings...'}
-                        {testStatus.step === 'connecting' && 'Connecting to SMTP server...'}
-                        {testStatus.step === 'sending' && 'Sending email...'}
-                      </span>
+                    <div className="space-y-2">
+                      <div className="flex items-center text-primary-600">
+                        <div className="animate-spin rounded-full h-5 w-5 border-2 border-primary-600 border-t-transparent mr-2" />
+                        <span className="text-sm">
+                          {testData.status.validatingSettings && 'Validating settings...'}
+                          {testData.status.connectingSmtp && 'Connecting to SMTP server...'}
+                          {testData.status.sendingEmail && 'Sending email...'}
+                        </span>
+                      </div>
+                      <div className="flex space-x-2">
+                        <div className={`h-1 flex-1 rounded ${testData.status.validatingSettings ? 'bg-primary-600' : 'bg-gray-200'}`} />
+                        <div className={`h-1 flex-1 rounded ${testData.status.connectingSmtp ? 'bg-primary-600' : 'bg-gray-200'}`} />
+                        <div className={`h-1 flex-1 rounded ${testData.status.sendingEmail ? 'bg-primary-600' : 'bg-gray-200'}`} />
+                      </div>
                     </div>
                   )}
                 </div>
@@ -437,9 +508,10 @@ export function EmailSettings() {
             </div>
             <button
               onClick={() => testEmailConfig.mutate(testData)}
-              disabled={!testData.email || testStatus.step !== 'idle'}
-              className="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
+              disabled={!testData.email || testData.status.validatingSettings || testData.status.connectingSmtp || testData.status.sendingEmail}
+              className="flex items-center px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
             >
+              <PaperAirplaneIcon className="h-4 w-4 mr-2" />
               Send Test Email
             </button>
           </div>
