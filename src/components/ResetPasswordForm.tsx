@@ -3,9 +3,6 @@ import { useForm } from 'react-hook-form';
 import { supabase } from '../lib/supabase';
 import { toast } from 'react-hot-toast';
 import { EnvelopeIcon, CheckCircleIcon, XCircleIcon, XMarkIcon } from '@heroicons/react/24/outline';
-import { supabase } from '../lib/supabase';
-import { toast } from 'react-hot-toast';
-import { EnvelopeIcon, CheckCircleIcon, XCircleIcon, XMarkIcon } from '@heroicons/react/24/outline';
 
 interface ResetPasswordFormProps {
   onClose: () => void;
