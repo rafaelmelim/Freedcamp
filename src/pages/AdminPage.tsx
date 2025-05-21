@@ -53,7 +53,7 @@ export function EmailSettings() {
         .from('email_settings')
         .upsert([{ 
           id: settings?.id || '', 
-          ...settings, 
+          ...(settings || {}), 
           ...newSettings,
           updated_at: new Date().toISOString()
         }]);
