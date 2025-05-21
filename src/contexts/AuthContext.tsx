@@ -101,17 +101,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     try {
-      // Clear any stored auth data first
-      localStorage.removeItem('sb-' + import.meta.env.VITE_SUPABASE_PROJECT_ID + '-auth-token')
+      // Clear state before signout to prevent race conditions
+      setUser(null)
+      setRoles([])
+
+      // Clear any stored auth data
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID
+      localStorage.removeItem(`sb-${projectId}-auth-token`)
       
+      // Sign out from Supabase
       const { error } = await supabase.auth.signOut()
       if (error) {
         throw error
       }
 
-      // Clear state after successful signout
-      setUser(null)
-      setRoles([])
       navigate('/login')
     } catch (error) {
       console.error('Sign out error:', error)
