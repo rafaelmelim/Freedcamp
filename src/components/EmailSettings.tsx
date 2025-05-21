@@ -51,12 +51,18 @@ export function EmailSettings() {
     mutationFn: async (newSettings: Partial<EmailSettings>) => {
       const { error } = await supabase
         .from('email_settings')
-        .upsert([{ id: settings?.id || '', ...settings, ...newSettings }]);
+        .upsert([{ 
+          id: settings?.id || '', 
+          ...settings, 
+          ...newSettings,
+          updated_at: new Date().toISOString()
+        }]);
 
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['email-settings'] });
+      toast.success('Email settings saved successfully');
     },
     onError: () => {
       toast.error('Failed to update email settings');
@@ -67,12 +73,16 @@ export function EmailSettings() {
     mutationFn: async (template: Partial<EmailTemplate>) => {
       const { error } = await supabase
         .from('email_templates')
-        .upsert([template]);
+        .upsert([{
+          ...template,
+          updated_at: new Date().toISOString()
+        }]);
 
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['email-templates'] });
+      toast.success('Email template saved successfully');
     },
     onError: () => {
       toast.error('Failed to update email template');
@@ -113,31 +123,39 @@ export function EmailSettings() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                SMTP Server
+                SMTP Server *
               </label>
               <p className="text-xs text-gray-500 mb-1">The hostname of your SMTP server (e.g., smtp.gmail.com)</p>
               <div className="flex">
                 <input
                 type="text"
-                value={settings?.smtp_host || ''}
-                onChange={(e) => updateSettings.mutate({ smtp_host: e.target.value })}
+                defaultValue={settings?.smtp_host || ''}
+                onChange={(e) => {
+                  const newSettings = { ...settings, smtp_host: e.target.value };
+                  settings = newSettings;
+                }}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
                 placeholder="smtp.example.com"
+                required
               />
               </div>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                Port
+                Port *
               </label>
               <p className="text-xs text-gray-500 mb-1">SMTP port number (usually 465 for SSL or 587 for TLS)</p>
               <div className="flex">
                 <input
                 type="number"
-                value={settings?.smtp_port || ''}
-                onChange={(e) => updateSettings.mutate({ smtp_port: parseInt(e.target.value) })}
+                defaultValue={settings?.smtp_port || ''}
+                onChange={(e) => {
+                  const newSettings = { ...settings, smtp_port: parseInt(e.target.value) };
+                  settings = newSettings;
+                }}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
                 placeholder="587"
+                required
               />
               </div>
             </div>
@@ -147,8 +165,11 @@ export function EmailSettings() {
             <label className="flex items-center">
               <input
                 type="checkbox"
-                checked={settings?.smtp_ssl || false}
-                onChange={(e) => updateSettings.mutate({ smtp_ssl: e.target.checked })}
+                defaultChecked={settings?.smtp_ssl || false}
+                onChange={(e) => {
+                  const newSettings = { ...settings, smtp_ssl: e.target.checked };
+                  settings = newSettings;
+                }}
                 className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
               />
               <span className="ml-2">
@@ -161,31 +182,39 @@ export function EmailSettings() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                Username
+                Username *
               </label>
               <p className="text-xs text-gray-500 mb-1">Your SMTP account username or email address</p>
               <div className="flex">
                 <input
                 type="text"
-                value={settings?.smtp_username || ''}
-                onChange={(e) => updateSettings.mutate({ smtp_username: e.target.value })}
+                defaultValue={settings?.smtp_username || ''}
+                onChange={(e) => {
+                  const newSettings = { ...settings, smtp_username: e.target.value };
+                  settings = newSettings;
+                }}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
                 placeholder="user@example.com"
+                required
               />
               </div>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                Password
+                Password *
               </label>
               <p className="text-xs text-gray-500 mb-1">Your SMTP account password or app-specific password</p>
               <div className="flex">
                 <input
                 type="password"
-                value={settings?.smtp_password || ''}
-                onChange={(e) => updateSettings.mutate({ smtp_password: e.target.value })}
+                defaultValue={settings?.smtp_password || ''}
+                onChange={(e) => {
+                  const newSettings = { ...settings, smtp_password: e.target.value };
+                  settings = newSettings;
+                }}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
                 placeholder="••••••••"
+                required
               />
               </div>
             </div>
@@ -194,7 +223,7 @@ export function EmailSettings() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                Sender Email
+                Sender Email *
               </label>
               <p className="text-xs text-gray-500 mb-1">The email address that will appear in the "From" field</p>
               <div className="flex">
