@@ -37,14 +37,13 @@ export function ResetPasswordForm({ onClose }: ResetPasswordFormProps) {
   const { data: resetTemplate } = useQuery({
     queryKey: ['reset-template'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: templates, error: templatesError } = await supabase
         .from('email_templates')
         .select('*')
-        .eq('type', 'reset_password')
-        .maybeSingle();
+        .eq('type', 'reset_password');
 
-      if (error) throw error;
-      return data;
+      if (templatesError) throw templatesError;
+      return templates?.[0] || null;
     },
   });
 
@@ -52,15 +51,6 @@ export function ResetPasswordForm({ onClose }: ResetPasswordFormProps) {
     try {
       setIsLoading(true);
       setResetStatus({ step: 'validating' });
-
-      // Validate email settings and template
-      if (!emailSettings?.smtp_host || !emailSettings?.smtp_port || !emailSettings?.smtp_username) {
-        throw new Error('Email settings not configured. Please contact the administrator.');
-      }
-
-      if (!resetTemplate) {
-        throw new Error('Reset password email template not configured. Please contact the administrator.');
-      }
 
       setResetStatus({ step: 'sending' });
 

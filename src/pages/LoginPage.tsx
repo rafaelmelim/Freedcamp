@@ -14,7 +14,7 @@ export function LoginPage() {
   const { signIn } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  const [showResetPassword, setShowResetPassword] = useState(false);
+  const [showResetPassword, setShowResetPassword] = useState<boolean>(false);
   const [showSignUp, setShowSignUp] = useState(false);
   const {
     register,
