@@ -5,29 +5,73 @@ import { Database } from '../lib/database.types';
 import { toast } from 'react-hot-toast';
 import { Link } from 'react-router-dom';
 import { HomeIcon, ArchiveBoxIcon, Cog6ToothIcon, ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
-import { EmailSettings } from '../components/EmailSettings';
 import { Header } from '../components/Header';
 import { useAuth } from '../contexts/AuthContext';
 
 type Profile = Database['public']['Tables']['profiles']['Row'];
 type Role = Database['public']['Tables']['roles']['Row'];
 type UserRole = Database['public']['Tables']['user_roles']['Row'];
+type EmailSettings = Database['public']['Tables']['email_settings']['Row'];
 
 export function AdminPage() {
   const { signOut, hasRole } = useAuth();
   const queryClient = useQueryClient();
+  const [formSettings, setFormSettings] = useState<Partial<EmailSettings>>({
+    smtp_host: '',
+    smtp_port: 587,
+    smtp_ssl: true,
+    smtp_username: '',
+    smtp_password: '',
+    sender_email: '',
+    sender_name: '',
+  });
 
-  const { data: profiles, isLoading: isLoadingProfiles } = useQuery({
-    queryKey: ['profiles'],
+  const { data: emailSettings } = useQuery({
+    queryKey: ['emailSettings'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('profiles')
-        .select('*');
+        .from('email_settings')
+        .select('*')
+        .limit(1)
+        .single();
 
       if (error) throw error;
       return data;
     },
   });
+
+  const updateSettings = useMutation({
+    mutationFn: async (settings: Partial<EmailSettings>) => {
+      if (emailSettings?.id) {
+        const { error } = await supabase
+          .from('email_settings')
+          .update(settings)
+          .eq('id', emailSettings.id);
+
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('email_settings')
+          .insert([settings]);
+
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['emailSettings'] });
+      toast.success('Email settings updated successfully');
+    },
+    onError: (error) => {
+      toast.error('Failed to update email settings');
+      console.error('Error updating email settings:', error);
+    },
+  });
+
+  useEffect(() => {
+    if (emailSettings) {
+      setFormSettings(emailSettings);
+    }
+  }, [emailSettings]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-500/10 to-primary-700/20">
