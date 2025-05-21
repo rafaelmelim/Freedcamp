@@ -1,227 +1,412 @@
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { Database } from '../lib/database.types';
 import { toast } from 'react-hot-toast';
-import { EmailSettings } from '../components/EmailSettings';
-import { Header } from '../components/Header';
+import { EnvelopeIcon } from '@heroicons/react/24/outline';
 
-type Profile = Database['public']['Tables']['profiles']['Row'];
-type Role = Database['public']['Tables']['roles']['Row'];
-type UserRole = Database['public']['Tables']['user_roles']['Row'];
+type EmailSettings = Database['public']['Tables']['email_settings']['Row'];
+type EmailTemplate = Database['public']['Tables']['email_templates']['Row'];
 
-export function AdminPage() {
+interface TestEmailData {
+  email: string;
+  subject: string;
+  body: string;
+}
+
+export function EmailSettings() {
+  const [testData, setTestData] = useState<TestEmailData>({
+    email: '',
+    subject: 'Test Email Configuration',
+    body: 'This is a test email to verify your SMTP configuration.',
+  });
   const queryClient = useQueryClient();
 
-  const { data: profiles, isLoading: isLoadingProfiles } = useQuery({
-    queryKey: ['profiles'],
+  const { data: settings, isLoading: isLoadingSettings } = useQuery({
+    queryKey: ['email-settings'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('profiles')
+        .from('email_settings')
         .select('*')
-        .order('created_at');
+        .single();
 
       if (error) throw error;
-      return data as Profile[];
+      return data;
     },
   });
 
-  const { data: roles, isLoading: isLoadingRoles } = useQuery({
-    queryKey: ['roles'],
+  const { data: templates, isLoading: isLoadingTemplates } = useQuery({
+    queryKey: ['email-templates'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('roles')
-        .select('*')
-        .order('name');
-
-      if (error) throw error;
-      return data as Role[];
-    },
-  });
-
-  const { data: userRoles, isLoading: isLoadingUserRoles } = useQuery({
-    queryKey: ['user_roles'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('user_roles')
+        .from('email_templates')
         .select('*');
 
       if (error) throw error;
-      return data as UserRole[];
+      return data;
     },
   });
 
-  const assignRoleMutation = useMutation({
-    mutationFn: async ({ profileId, roleId }: { profileId: string; roleId: number }) => {
+  const updateSettings = useMutation({
+    mutationFn: async (newSettings: Partial<EmailSettings>) => {
       const { error } = await supabase
-        .from('user_roles')
-        .insert([{ profile_id: profileId, role_id: roleId }]);
+        .upsert([{ 
+          id: settings?.id || '', 
+          ...settings, 
+          ...newSettings,
+          updated_at: new Date().toISOString()
+        .from('email_settings')
+        .upsert([{ 
+          id: settings?.id || '', 
+          ...settings, 
+          ...newSettings,
+          updated_at: new Date().toISOString()
+        }]);
 
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['user_roles'] });
-      toast.success('Role assigned successfully');
+      queryClient.invalidateQueries({ queryKey: ['email-settings'] });
+      toast.success('Email settings saved successfully');
+      toast.success('Email settings saved successfully');
     },
     onError: () => {
-      toast.error('Failed to assign role');
+      toast.error('Failed to update email settings');
     },
   });
 
-  const removeRoleMutation = useMutation({
-    mutationFn: async ({ profileId, roleId }: { profileId: string; roleId: number }) => {
+  const updateTemplate = useMutation({
+    mutationFn: async (template: Partial<EmailTemplate>) => {
       const { error } = await supabase
-        .from('user_roles')
-        .delete()
-        .eq('profile_id', profileId)
-        .eq('role_id', roleId);
+        .from('email_templates')
+        .upsert([{
+          ...template,
+          updated_at: new Date().toISOString()
+        .upsert([{
+          ...template,
+          updated_at: new Date().toISOString()
+        }]);
 
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['user_roles'] });
-      toast.success('Role removed successfully');
+      queryClient.invalidateQueries({ queryKey: ['email-templates'] });
+      toast.success('Email template saved successfully');
+      toast.success('Email template saved successfully');
     },
     onError: () => {
-      toast.error('Failed to remove role');
+      toast.error('Failed to update email template');
     },
   });
 
-  const updateProfileMutation = useMutation({
-    mutationFn: async ({ id, name }: { id: string; name: string }) => {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ name })
-        .eq('id', id);
+  const testEmailConfig = useMutation({
+    mutationFn: async (data: TestEmailData) => {
+      const { error } = await supabase.functions.invoke('test-email', {
+        body: data,
+      });
 
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['profiles'] });
-      toast.success('Profile updated successfully');
+      toast.success('Test email sent successfully');
+      setTestData({
+        email: '',
+        subject: 'Test Email Configuration',
+        body: 'This is a test email to verify your SMTP configuration.',
+      });
     },
     onError: () => {
-      toast.error('Failed to update profile');
+      toast.error('Failed to send test email');
     },
   });
 
-  if (isLoadingProfiles || isLoadingRoles || isLoadingUserRoles) {
+  if (isLoadingSettings || isLoadingTemplates) {
     return <div>Loading...</div>;
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-500/10 to-primary-700/20">
-      <Header />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">Admin Panel</h1>
-        </div>
-
-        <div className="grid grid-cols-1 gap-8">
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">User Management</h2>
-        
-            <div className="bg-white/80 backdrop-blur-sm shadow-sm rounded-lg overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Name
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Email
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Roles
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {profiles?.map((profile) => (
-                <tr key={profile.id}>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    <input
-                      type="text"
-                      defaultValue={profile.name}
-                      onBlur={(e) => {
-                        const newName = e.target.value.trim();
-                        if (newName && newName !== profile.name) {
-                          updateProfileMutation.mutate({
-                            id: profile.id,
-                            name: newName,
-                          });
-                        }
-                      }}
-                      className="w-full px-2 py-1 border border-transparent rounded-md focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
-                    />
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {profile.email}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <div className="flex flex-wrap gap-2">
-                      {roles?.filter(role => 
-                        userRoles?.some(ur => 
-                          ur.profile_id === profile.id && ur.role_id === role.id
-                        )
-                      ).map(role => (
-                        <span
-                          key={role.id}
-                          className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800"
-                        >
-                          {role.name}
-                          <button
-                            onClick={() => removeRoleMutation.mutate({
-                              profileId: profile.id,
-                              roleId: role.id,
-                            })}
-                            className="ml-1 text-primary-600 hover:text-primary-900"
-                          >
-                            ×
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <select
-                      onChange={(e) => {
-                        const roleId = parseInt(e.target.value);
-                        if (roleId) {
-                          assignRoleMutation.mutate({
-                            profileId: profile.id,
-                            roleId,
-                          });
-                          e.target.value = '';
-                        }
-                      }}
-                      className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md"
-                      defaultValue=""
-                    >
-                      <option value="">Assign role...</option>
-                      {roles?.filter(role =>
-                        !userRoles?.some(ur =>
-                          ur.profile_id === profile.id && ur.role_id === role.id
-                        )
-                      ).map(role => (
-                        <option key={role.id} value={role.id}>
-                          {role.name}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+    <div className="space-y-8">
+      <div className="bg-white shadow-sm rounded-lg p-6">
+        <h3 className="text-lg font-medium text-gray-900 mb-2">SMTP Configuration</h3>
+        <p className="text-sm text-gray-500 mb-6">Configure your email server settings to enable sending emails from your application.</p>
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                SMTP Server *
+              </label>
+              <p className="text-xs text-gray-500 mb-1">The hostname of your SMTP server (e.g., smtp.gmail.com)</p>
+              <div className="flex">
+                <input
+                type="text"
+                defaultValue={settings?.smtp_host || ''}
+                onChange={(e) => {
+                  const newSettings = { ...settings, smtp_host: e.target.value };
+                defaultValue={settings?.smtp_host || ''}
+                onChange={(e) => {
+                  const newSettings = { ...settings, smtp_host: e.target.value };
+                  settings = newSettings;
+                }}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                placeholder="smtp.example.com"
+                required
+                required
+              />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Port *
+              </label>
+              <p className="text-xs text-gray-500 mb-1">SMTP port number (usually 465 for SSL or 587 for TLS)</p>
+              <div className="flex">
+                <input
+                type="number"
+                defaultValue={settings?.smtp_port || ''}
+                onChange={(e) => {
+                  const newSettings = { ...settings, smtp_port: parseInt(e.target.value) };
+                defaultValue={settings?.smtp_port || ''}
+                onChange={(e) => {
+                  const newSettings = { ...settings, smtp_port: parseInt(e.target.value) };
+                  settings = newSettings;
+                }}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                placeholder="587"
+                required
+                required
+              />
+              </div>
             </div>
           </div>
 
           <div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">Email Configuration</h2>
-            <EmailSettings />
+            <label className="flex items-center">
+              <input
+                type="checkbox"
+                defaultChecked={settings?.smtp_ssl || false}
+                onChange={(e) => {
+                  const newSettings = { ...settings, smtp_ssl: e.target.checked };
+                defaultChecked={settings?.smtp_ssl || false}
+                onChange={(e) => {
+                  const newSettings = { ...settings, smtp_ssl: e.target.checked };
+                  settings = newSettings;
+                }}
+                className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+              />
+              <span className="ml-2">
+                <span className="text-sm text-gray-700">Use SSL/TLS</span>
+                <p className="text-xs text-gray-500">Enable secure connection to your SMTP server</p>
+              </span>
+            </label>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Username *
+              </label>
+              <p className="text-xs text-gray-500 mb-1">Your SMTP account username or email address</p>
+              <div className="flex">
+                <input
+                type="text"
+                defaultValue={settings?.smtp_username || ''}
+                onChange={(e) => {
+                  const newSettings = { ...settings, smtp_username: e.target.value };
+                defaultValue={settings?.smtp_username || ''}
+                onChange={(e) => {
+                  const newSettings = { ...settings, smtp_username: e.target.value };
+                  settings = newSettings;
+                }}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                placeholder="user@example.com"
+                required
+                required
+              />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Password *
+              </label>
+              <p className="text-xs text-gray-500 mb-1">Your SMTP account password or app-specific password</p>
+              <div className="flex">
+                <input
+                type="password"
+                defaultValue={settings?.smtp_password || ''}
+                onChange={(e) => {
+                  const newSettings = { ...settings, smtp_password: e.target.value };
+                defaultValue={settings?.smtp_password || ''}
+                onChange={(e) => {
+                  const newSettings = { ...settings, smtp_password: e.target.value };
+                  settings = newSettings;
+                }}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                placeholder="••••••••"
+                required
+                required
+              />
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Sender Email *
+              </label>
+              <p className="text-xs text-gray-500 mb-1">The email address that will appear in the "From" field</p>
+              <div className="flex">
+                <input
+                type="email"
+                value={settings?.sender_email || ''}
+                onChange={(e) => updateSettings.mutate({ sender_email: e.target.value })}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                placeholder="noreply@example.com"
+              />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Sender Name
+              </label>
+              <p className="text-xs text-gray-500 mb-1">The name that will appear in the "From" field</p>
+              <div className="flex">
+                <input
+                type="text"
+                value={settings?.sender_name || ''}
+                onChange={(e) => updateSettings.mutate({ sender_name: e.target.value })}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                placeholder="Your Company Name"
+              />
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex justify-end pt-4">
+            <button
+              onClick={() => {
+                updateSettings.mutate(settings || {});
+                toast.success('Email settings saved successfully');
+              }}
+              className="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+            >
+              Save Settings
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white shadow-sm rounded-lg p-6">
+        <h3 className="text-lg font-medium text-gray-900 mb-6">Email Templates</h3>
+        <div className="space-y-6">
+          {templates?.map((template) => (
+            <div key={template.id} className="space-y-4">
+              <h4 className="text-sm font-medium text-gray-700">
+                {template.type === 'reset_password' ? 'Reset Password Email' : 'Registration Email'}
+              </h4>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Subject
+                </label>
+                <div className="flex">
+                  <input
+                  type="text"
+                  value={template.subject}
+                  onChange={(e) => {
+                    const newTemplate = { ...template, subject: e.target.value };
+                    updateTemplate.mutate(newTemplate);
+                  }}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Body
+                </label>
+                <div className="flex">
+                  <textarea
+                  value={template.body}
+                  onChange={(e) => {
+                    const newTemplate = { ...template, body: e.target.value };
+                    updateTemplate.mutate(newTemplate);
+                  }}
+                  rows={6}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                  placeholder="Available variables: {{name}}, {{link}}"
+                />
+                </div>
+              </div>
+              <div className="flex justify-end">
+                <button
+                  onClick={() => {
+                    updateTemplate.mutate(template);
+                    toast.success('Template saved successfully');
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                >
+                  Save Template
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="bg-white shadow-sm rounded-lg p-6">
+        <h3 className="text-lg font-medium text-gray-900 mb-2">Test Email Configuration</h3>
+        <p className="text-sm text-gray-500 mb-6">Send a test email to verify your SMTP settings are working correctly.</p>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Recipient Email
+            </label>
+            <div className="mt-1 flex rounded-md shadow-sm">
+              <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500">
+                <EnvelopeIcon className="h-5 w-5" />
+              </span>
+              <input
+                type="email"
+                value={testData.email}
+                onChange={(e) => setTestData({ ...testData, email: e.target.value })}
+                placeholder="test@example.com"
+                className="flex-1 rounded-none rounded-r-md border-gray-300 focus:border-primary-500 focus:ring-primary-500"
+              />
+            </div>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Subject
+            </label>
+            <input
+              type="text"
+              value={testData.subject}
+              onChange={(e) => setTestData({ ...testData, subject: e.target.value })}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Message
+            </label>
+            <textarea
+              value={testData.body}
+              onChange={(e) => setTestData({ ...testData, body: e.target.value })}
+              rows={4}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+            />
+          </div>
+          
+          <div className="flex justify-end">
+            <button
+              onClick={() => testEmailConfig.mutate(testData)}
+              disabled={!testData.email || testEmailConfig.isPending}
+              className="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
+            >
+              {testEmailConfig.isPending ? 'Sending...' : 'Send Test Email'}
+            </button>
           </div>
         </div>
       </div>
