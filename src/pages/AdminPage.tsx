@@ -434,6 +434,12 @@ export function AdminPage() {
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
         <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-4xl">
           <div className="flex justify-between items-center mb-6">
+            <button
+              onClick={() => setTestStatus({ step: 'idle' })}
+              className="absolute top-4 left-4 text-gray-400 hover:text-gray-600"
+            >
+              <XMarkIcon className="h-5 w-5" />
+            </button>
             <h3 className="text-lg font-medium text-gray-900">Test Email Configuration</h3>
           </div>
 
