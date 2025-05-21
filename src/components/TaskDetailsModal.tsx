@@ -208,3 +208,5 @@ function TaskDetailsModal({
     </Transition>
   );
 }
+
+export { TaskDetailsModal }
