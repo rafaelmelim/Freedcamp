@@ -7,12 +7,11 @@ import { toast } from 'react-hot-toast';
 type Label = Database['public']['Tables']['labels']['Row'];
 
 interface LabelPickerProps {
-  taskId: number;
   selectedLabels: Label[];
   onToggleLabel: (label: Label) => void;
 }
 
-export function LabelPicker({ taskId, selectedLabels, onToggleLabel }: LabelPickerProps) {
+export function LabelPicker({ selectedLabels, onToggleLabel }: LabelPickerProps) {
   const [isCreating, setIsCreating] = useState(false);
   const [newLabelName, setNewLabelName] = useState('');
   const [newLabelColor, setNewLabelColor] = useState('#3B82F6');
