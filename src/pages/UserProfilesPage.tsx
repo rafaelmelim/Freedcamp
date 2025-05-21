@@ -3,7 +3,7 @@ import { Header } from '../components/Header';
 import { useAuth } from '../contexts/AuthContext';
 import { HomeIcon, ArchiveBoxIcon, Cog6ToothIcon, ArrowRightOnRectangleIcon, EnvelopeIcon, UsersIcon, ComputerDesktopIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline';
 
-export function AdminPage() {
+export function UserProfilesPage() {
   const { signOut, hasRole } = useAuth();
 
   return (
@@ -32,7 +32,7 @@ export function AdminPage() {
               {hasRole('admin') && (<>
                 <Link
                   to="/admin"
-                  className="flex items-center space-x-2 px-4 py-2 bg-gray-100 text-gray-900 rounded-md"
+                  className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md"
                 >
                   <Cog6ToothIcon className="w-5 h-5" />
                   <span>Settings</span>
@@ -54,7 +54,7 @@ export function AdminPage() {
                   </Link>
                   <Link
                     to="/admin/user-profiles"
-                    className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md ml-4"
+                    className="flex items-center space-x-2 px-4 py-2 bg-gray-100 text-gray-900 rounded-md ml-4"
                   >
                     <span>Perfis de Usuários</span>
                   </Link>
@@ -85,8 +85,8 @@ export function AdminPage() {
           </nav>
         </aside>
         <main className="flex-1 ml-64 p-8 space-y-8">
-          <h2 className="text-2xl font-bold text-gray-900">Settings</h2>
-          <p className="text-gray-600">Select a settings category from the menu on the left.</p>
+          <h2 className="text-2xl font-bold text-gray-900">Perfis de Usuários</h2>
+          <p className="text-gray-600">Gerencie os perfis de acesso dos usuários do sistema.</p>
         </main>
       </div>
     </div>
