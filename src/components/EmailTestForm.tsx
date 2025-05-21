@@ -3,9 +3,13 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { Database } from '../lib/database.types';
 import { toast } from 'react-hot-toast';
-import { EnvelopeIcon, CheckCircleIcon, XCircleIcon, PaperAirplaneIcon } from '@heroicons/react/24/outline';
+import { EnvelopeIcon, CheckCircleIcon, XCircleIcon, PaperAirplaneIcon, XMarkIcon } from '@heroicons/react/24/outline';
 
 type EmailSettings = Database['public']['Tables']['email_settings']['Row'];
+
+interface EmailTestFormProps {
+  onClose: () => void;
+}
 
 interface TestEmailData {
   email: string;
@@ -13,7 +17,7 @@ interface TestEmailData {
   body: string;
 }
 
-export function EmailTestForm() {
+export function EmailTestForm({ onClose }: EmailTestFormProps) {
   const [testData, setTestData] = useState<TestEmailData>({
     email: '',
     subject: 'Test Email Configuration',
@@ -92,7 +96,18 @@ export function EmailTestForm() {
   return (
     <div className="bg-white shadow-sm rounded-lg p-6 flex gap-6">
       <div className="flex-1">
-        <h3 className="text-lg font-medium text-gray-900 mb-2">Test Email Configuration</h3>
+        <div className="flex justify-between items-center mb-2">
+          <h3 className="text-lg font-medium text-gray-900">Test Email Configuration</h3>
+          <button
+            onClick={() => {
+              setTestStatus({ step: 'idle' });
+              onClose();
+            }}
+            className="text-gray-400 hover:text-gray-600"
+          >
+            <XMarkIcon className="h-5 w-5" />
+          </button>
+        </div>
         <p className="text-sm text-gray-500 mb-6">Send a test email to verify your SMTP settings are working correctly.</p>
         <div className="space-y-4">
           <div>
