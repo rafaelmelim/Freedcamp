@@ -3,11 +3,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { Database } from '../lib/database.types';
 import { toast } from 'react-hot-toast';
-import { Link } from 'react-router-dom';
 import { EmailTestForm } from '../components/EmailTestForm';
-import { HomeIcon, ArchiveBoxIcon, Cog6ToothIcon, ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
 import { Header } from '../components/Header';
-import { useAuth } from '../contexts/AuthContext';
 
 type EmailSettings = Database['public']['Tables']['email_settings']['Row'];
 type EmailTemplate = Database['public']['Tables']['email_templates']['Row'];
@@ -28,7 +25,7 @@ const defaultSettings: Partial<EmailSettings> = {
   sender_name: '',
 };
 
-export function EmailSettings() {
+export function AdminPage() {
   const [formSettings, setFormSettings] = useState<Partial<EmailSettings>>(defaultSettings);
   const [testStatus, setTestStatus] = useState<{
     step: 'idle' | 'validating' | 'connecting' | 'sending' | 'complete' | 'error';
