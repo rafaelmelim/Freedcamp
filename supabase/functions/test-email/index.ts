@@ -2,6 +2,12 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'npm:@supabase/supabase-js@2.39.3'
 import { SMTPClient } from 'npm:emailjs@4.0.3'
 
+interface TestEmailRequest {
+  email: string
+  subject: string
+  body: string
+}
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -18,7 +24,7 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const { email } = await req.json()
+    const { email, subject, body }: TestEmailRequest = await req.json()
 
     const { data: settings, error: settingsError } = await supabaseClient
       .from('email_settings')
@@ -36,10 +42,10 @@ serve(async (req) => {
     })
 
     await client.send({
-      text: 'This is a test email from your application.',
+      text: body,
       from: `${settings.sender_name} <${settings.sender_email}>`,
       to: email,
-      subject: 'Test Email Configuration',
+      subject: subject,
     })
 
     return new Response(

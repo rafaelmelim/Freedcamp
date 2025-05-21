@@ -1,14 +1,25 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
-import { Database } from '../lib/database.types';
 import { toast } from 'react-hot-toast';
+import { Database } from '../lib/database.types';
+import { EnvelopeIcon } from '@heroicons/react/24/outline';
 
 type EmailSettings = Database['public']['Tables']['email_settings']['Row'];
 type EmailTemplate = Database['public']['Tables']['email_templates']['Row'];
 
+interface TestEmailData {
+  email: string;
+  subject: string;
+  body: string;
+}
+
 export function EmailSettings() {
-  const [testEmail, setTestEmail] = useState('');
+  const [testData, setTestData] = useState<TestEmailData>({
+    email: '',
+    subject: 'Test Email Configuration',
+    body: 'This is a test email to verify your SMTP configuration.',
+  });
   const queryClient = useQueryClient();
 
   const { data: settings, isLoading: isLoadingSettings } = useQuery({
@@ -71,16 +82,20 @@ export function EmailSettings() {
   });
 
   const testEmailConfig = useMutation({
-    mutationFn: async (email: string) => {
+    mutationFn: async (data: TestEmailData) => {
       const { error } = await supabase.functions.invoke('test-email', {
-        body: { email },
+        body: data,
       });
 
       if (error) throw error;
     },
     onSuccess: () => {
       toast.success('Test email sent successfully');
-      setTestEmail('');
+      setTestData({
+        email: '',
+        subject: 'Test Email Configuration',
+        body: 'This is a test email to verify your SMTP configuration.',
+      });
     },
     onError: () => {
       toast.error('Failed to send test email');
@@ -94,29 +109,34 @@ export function EmailSettings() {
   return (
     <div className="space-y-8">
       <div className="bg-white shadow-sm rounded-lg p-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-6">SMTP Configuration</h3>
+        <h3 className="text-lg font-medium text-gray-900 mb-2">SMTP Configuration</h3>
+        <p className="text-sm text-gray-500 mb-6">Configure your email server settings to enable sending emails from your application.</p>
         <form className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700">
                 SMTP Server
               </label>
+              <p className="text-xs text-gray-500 mb-1">The hostname of your SMTP server (e.g., smtp.gmail.com)</p>
               <input
                 type="text"
                 value={settings?.smtp_host || ''}
                 onChange={(e) => updateSettings.mutate({ smtp_host: e.target.value })}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                placeholder="smtp.example.com"
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">
                 Port
               </label>
+              <p className="text-xs text-gray-500 mb-1">SMTP port number (usually 465 for SSL or 587 for TLS)</p>
               <input
                 type="number"
                 value={settings?.smtp_port || ''}
                 onChange={(e) => updateSettings.mutate({ smtp_port: parseInt(e.target.value) })}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                placeholder="587"
               />
             </div>
           </div>
@@ -129,7 +149,10 @@ export function EmailSettings() {
                 onChange={(e) => updateSettings.mutate({ smtp_ssl: e.target.checked })}
                 className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
               />
-              <span className="ml-2 text-sm text-gray-700">Use SSL/TLS</span>
+              <span className="ml-2">
+                <span className="text-sm text-gray-700">Use SSL/TLS</span>
+                <p className="text-xs text-gray-500">Enable secure connection to your SMTP server</p>
+              </span>
             </label>
           </div>
 
@@ -138,22 +161,26 @@ export function EmailSettings() {
               <label className="block text-sm font-medium text-gray-700">
                 Username
               </label>
+              <p className="text-xs text-gray-500 mb-1">Your SMTP account username or email address</p>
               <input
                 type="text"
                 value={settings?.smtp_username || ''}
                 onChange={(e) => updateSettings.mutate({ smtp_username: e.target.value })}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                placeholder="user@example.com"
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">
                 Password
               </label>
+              <p className="text-xs text-gray-500 mb-1">Your SMTP account password or app-specific password</p>
               <input
                 type="password"
                 value={settings?.smtp_password || ''}
                 onChange={(e) => updateSettings.mutate({ smtp_password: e.target.value })}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                placeholder="••••••••"
               />
             </div>
           </div>
@@ -163,22 +190,26 @@ export function EmailSettings() {
               <label className="block text-sm font-medium text-gray-700">
                 Sender Email
               </label>
+              <p className="text-xs text-gray-500 mb-1">The email address that will appear in the "From" field</p>
               <input
                 type="email"
                 value={settings?.sender_email || ''}
                 onChange={(e) => updateSettings.mutate({ sender_email: e.target.value })}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                placeholder="noreply@example.com"
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">
                 Sender Name
               </label>
+              <p className="text-xs text-gray-500 mb-1">The name that will appear in the "From" field</p>
               <input
                 type="text"
                 value={settings?.sender_name || ''}
                 onChange={(e) => updateSettings.mutate({ sender_name: e.target.value })}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                placeholder="Your Company Name"
               />
             </div>
           </div>
@@ -228,22 +259,60 @@ export function EmailSettings() {
       </div>
 
       <div className="bg-white shadow-sm rounded-lg p-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-6">Test Configuration</h3>
-        <div className="flex gap-4">
-          <input
-            type="email"
-            value={testEmail}
-            onChange={(e) => setTestEmail(e.target.value)}
-            placeholder="Enter test email address"
-            className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
-          />
-          <button
-            onClick={() => testEmailConfig.mutate(testEmail)}
-            disabled={!testEmail || testEmailConfig.isPending}
-            className="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
-          >
-            {testEmailConfig.isPending ? 'Sending...' : 'Send Test Email'}
-          </button>
+        <h3 className="text-lg font-medium text-gray-900 mb-2">Test Email Configuration</h3>
+        <p className="text-sm text-gray-500 mb-6">Send a test email to verify your SMTP settings are working correctly.</p>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Recipient Email
+            </label>
+            <div className="mt-1 flex rounded-md shadow-sm">
+              <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500">
+                <EnvelopeIcon className="h-5 w-5" />
+              </span>
+              <input
+                type="email"
+                value={testData.email}
+                onChange={(e) => setTestData({ ...testData, email: e.target.value })}
+                placeholder="test@example.com"
+                className="flex-1 rounded-none rounded-r-md border-gray-300 focus:border-primary-500 focus:ring-primary-500"
+              />
+            </div>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Subject
+            </label>
+            <input
+              type="text"
+              value={testData.subject}
+              onChange={(e) => setTestData({ ...testData, subject: e.target.value })}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Message
+            </label>
+            <textarea
+              value={testData.body}
+              onChange={(e) => setTestData({ ...testData, body: e.target.value })}
+              rows={4}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+            />
+          </div>
+          
+          <div className="flex justify-end">
+            <button
+              onClick={() => testEmailConfig.mutate(testData)}
+              disabled={!testData.email || testEmailConfig.isPending}
+              className="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
+            >
+              {testEmailConfig.isPending ? 'Sending...' : 'Send Test Email'}
+            </button>
+          </div>
         </div>
       </div>
     </div>
