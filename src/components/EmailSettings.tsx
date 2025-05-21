@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
-import { toast } from 'react-hot-toast';
 import { Database } from '../lib/database.types';
+import { toast } from 'react-hot-toast';
 import { EnvelopeIcon } from '@heroicons/react/24/outline';
 
 type EmailSettings = Database['public']['Tables']['email_settings']['Row'];
@@ -51,13 +51,12 @@ export function EmailSettings() {
     mutationFn: async (newSettings: Partial<EmailSettings>) => {
       const { error } = await supabase
         .from('email_settings')
-        .upsert([{ ...settings, ...newSettings }]);
+        .upsert([{ id: settings?.id || '', ...settings, ...newSettings }]);
 
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['email-settings'] });
-      toast.success('Email settings updated successfully');
     },
     onError: () => {
       toast.error('Failed to update email settings');
@@ -74,7 +73,6 @@ export function EmailSettings() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['email-templates'] });
-      toast.success('Email template updated successfully');
     },
     onError: () => {
       toast.error('Failed to update email template');
@@ -111,33 +109,37 @@ export function EmailSettings() {
       <div className="bg-white shadow-sm rounded-lg p-6">
         <h3 className="text-lg font-medium text-gray-900 mb-2">SMTP Configuration</h3>
         <p className="text-sm text-gray-500 mb-6">Configure your email server settings to enable sending emails from your application.</p>
-        <form className="space-y-4">
+        <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700">
                 SMTP Server
               </label>
               <p className="text-xs text-gray-500 mb-1">The hostname of your SMTP server (e.g., smtp.gmail.com)</p>
-              <input
+              <div className="flex">
+                <input
                 type="text"
                 value={settings?.smtp_host || ''}
                 onChange={(e) => updateSettings.mutate({ smtp_host: e.target.value })}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
                 placeholder="smtp.example.com"
               />
+              </div>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">
                 Port
               </label>
               <p className="text-xs text-gray-500 mb-1">SMTP port number (usually 465 for SSL or 587 for TLS)</p>
-              <input
+              <div className="flex">
+                <input
                 type="number"
                 value={settings?.smtp_port || ''}
                 onChange={(e) => updateSettings.mutate({ smtp_port: parseInt(e.target.value) })}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
                 placeholder="587"
               />
+              </div>
             </div>
           </div>
 
@@ -162,26 +164,30 @@ export function EmailSettings() {
                 Username
               </label>
               <p className="text-xs text-gray-500 mb-1">Your SMTP account username or email address</p>
-              <input
+              <div className="flex">
+                <input
                 type="text"
                 value={settings?.smtp_username || ''}
                 onChange={(e) => updateSettings.mutate({ smtp_username: e.target.value })}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
                 placeholder="user@example.com"
               />
+              </div>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">
                 Password
               </label>
               <p className="text-xs text-gray-500 mb-1">Your SMTP account password or app-specific password</p>
-              <input
+              <div className="flex">
+                <input
                 type="password"
                 value={settings?.smtp_password || ''}
                 onChange={(e) => updateSettings.mutate({ smtp_password: e.target.value })}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
                 placeholder="••••••••"
               />
+              </div>
             </div>
           </div>
 
@@ -191,29 +197,45 @@ export function EmailSettings() {
                 Sender Email
               </label>
               <p className="text-xs text-gray-500 mb-1">The email address that will appear in the "From" field</p>
-              <input
+              <div className="flex">
+                <input
                 type="email"
                 value={settings?.sender_email || ''}
                 onChange={(e) => updateSettings.mutate({ sender_email: e.target.value })}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
                 placeholder="noreply@example.com"
               />
+              </div>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">
                 Sender Name
               </label>
               <p className="text-xs text-gray-500 mb-1">The name that will appear in the "From" field</p>
-              <input
+              <div className="flex">
+                <input
                 type="text"
                 value={settings?.sender_name || ''}
                 onChange={(e) => updateSettings.mutate({ sender_name: e.target.value })}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
                 placeholder="Your Company Name"
               />
+              </div>
             </div>
           </div>
-        </form>
+          
+          <div className="flex justify-end pt-4">
+            <button
+              onClick={() => {
+                updateSettings.mutate(settings || {});
+                toast.success('Email settings saved successfully');
+              }}
+              className="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+            >
+              Save Settings
+            </button>
+          </div>
+        </div>
       </div>
 
       <div className="bg-white shadow-sm rounded-lg p-6">
@@ -225,33 +247,48 @@ export function EmailSettings() {
                 {template.type === 'reset_password' ? 'Reset Password Email' : 'Registration Email'}
               </h4>
               <div>
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Subject
                 </label>
-                <input
+                <div className="flex">
+                  <input
                   type="text"
                   value={template.subject}
-                  onChange={(e) => updateTemplate.mutate({
-                    ...template,
-                    subject: e.target.value,
-                  })}
+                  onChange={(e) => {
+                    const newTemplate = { ...template, subject: e.target.value };
+                    updateTemplate.mutate(newTemplate);
+                  }}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
                 />
+                </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Body
                 </label>
-                <textarea
+                <div className="flex">
+                  <textarea
                   value={template.body}
-                  onChange={(e) => updateTemplate.mutate({
-                    ...template,
-                    body: e.target.value,
-                  })}
+                  onChange={(e) => {
+                    const newTemplate = { ...template, body: e.target.value };
+                    updateTemplate.mutate(newTemplate);
+                  }}
                   rows={6}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
                   placeholder="Available variables: {{name}}, {{link}}"
                 />
+                </div>
+              </div>
+              <div className="flex justify-end">
+                <button
+                  onClick={() => {
+                    updateTemplate.mutate(template);
+                    toast.success('Template saved successfully');
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                >
+                  Save Template
+                </button>
               </div>
             </div>
           ))}
