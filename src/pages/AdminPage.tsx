@@ -2,7 +2,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { Database } from '../lib/database.types';
 import { toast } from 'react-hot-toast';
-import { Dialog } from '@headlessui/react';
 import { EmailSettings } from '../components/EmailSettings';
 import { Header } from '../components/Header';
 
@@ -12,7 +11,6 @@ type UserRole = Database['public']['Tables']['user_roles']['Row'];
 
 export function AdminPage() {
   const queryClient = useQueryClient();
-  const [isEmailSettingsOpen, setIsEmailSettingsOpen] = useState(false);
 
   const { data: profiles, isLoading: isLoadingProfiles } = useQuery({
     queryKey: ['profiles'],
@@ -220,41 +218,11 @@ export function AdminPage() {
           </table>
             </div>
           </div>
-          
-          <button
-            onClick={() => setIsEmailSettingsOpen(true)}
-            className="mt-8 px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-          >
-            Configure Email Settings
-          </button>
 
-          <Dialog
-            open={isEmailSettingsOpen}
-            onClose={() => setIsEmailSettingsOpen(false)}
-            className="relative z-50"
-          >
-            <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
-
-            <div className="fixed inset-0 flex items-center justify-center p-4">
-              <Dialog.Panel className="mx-auto max-w-4xl w-full bg-white rounded-xl shadow-xl p-6 max-h-[90vh] overflow-y-auto">
-                <div className="flex justify-between items-center mb-6">
-                  <Dialog.Title className="text-xl font-semibold text-gray-900">
-                    Email Configuration
-                  </Dialog.Title>
-                  <button
-                    onClick={() => setIsEmailSettingsOpen(false)}
-                    className="text-gray-400 hover:text-gray-500"
-                  >
-                    <span className="sr-only">Close</span>
-                    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-                <EmailSettings />
-              </Dialog.Panel>
-            </div>
-          </Dialog>
+          <div>
+            <h2 className="text-xl font-semibold text-gray-900 mb-6">Email Configuration</h2>
+            <EmailSettings />
+          </div>
         </div>
       </div>
     </div>
