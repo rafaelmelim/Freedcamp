@@ -4,36 +4,68 @@ import { supabase } from '../lib/supabase';
 import { Database } from '../lib/database.types';
 import { toast } from 'react-hot-toast';
 import { Link } from 'react-router-dom';
+import { EmailTestForm } from '../components/EmailTestForm';
 import { HomeIcon, ArchiveBoxIcon, Cog6ToothIcon, ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
 import { Header } from '../components/Header';
 import { useAuth } from '../contexts/AuthContext';
 
-type Profile = Database['public']['Tables']['profiles']['Row'];
-type Role = Database['public']['Tables']['roles']['Row'];
-type UserRole = Database['public']['Tables']['user_roles']['Row'];
 type EmailSettings = Database['public']['Tables']['email_settings']['Row'];
+type EmailTemplate = Database['public']['Tables']['email_templates']['Row'];
 
-export function AdminPage() {
-  const { signOut, hasRole } = useAuth();
-  const queryClient = useQueryClient();
-  const [formSettings, setFormSettings] = useState<Partial<EmailSettings>>({
-    smtp_host: '',
-    smtp_port: 587,
-    smtp_ssl: true,
-    smtp_username: '',
-    smtp_password: '',
-    sender_email: '',
-    sender_name: '',
+interface TestEmailData {
+  email: string;
+  subject: string;
+  body: string;
+}
+
+const defaultSettings: Partial<EmailSettings> = {
+  smtp_host: '',
+  smtp_port: 587,
+  smtp_ssl: true,
+  smtp_username: '',
+  smtp_password: '',
+  sender_email: '',
+  sender_name: '',
+};
+
+export function EmailSettings() {
+  const [formSettings, setFormSettings] = useState<Partial<EmailSettings>>(defaultSettings);
+  const [testStatus, setTestStatus] = useState<{
+    step: 'idle' | 'validating' | 'connecting' | 'sending' | 'complete' | 'error';
+    error?: string;
+  }>({ step: 'idle' });
+  const [testData, setTestData] = useState<TestEmailData>({
+    email: '',
+    subject: 'Test Email Configuration',
+    body: 'This is a test email to verify your SMTP configuration.',
   });
+  const queryClient = useQueryClient();
 
-  const { data: emailSettings } = useQuery({
-    queryKey: ['emailSettings'],
+  const { data: settings, isLoading: isLoadingSettings } = useQuery({
+    queryKey: ['email-settings'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('email_settings')
         .select('*')
-        .limit(1)
-        .single();
+        .limit(1);
+
+      if (error) throw error;
+      return data?.[0] || null;
+    },
+  });
+
+  useEffect(() => {
+    if (settings) {
+      setFormSettings(settings);
+    }
+  }, [settings]);
+
+  const { data: templates, isLoading: isLoadingTemplates } = useQuery({
+    queryKey: ['email-templates'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('email_templates')
+        .select('*');
 
       if (error) throw error;
       return data;
@@ -41,227 +73,300 @@ export function AdminPage() {
   });
 
   const updateSettings = useMutation({
-    mutationFn: async (settings: Partial<EmailSettings>) => {
-      if (emailSettings?.id) {
+    mutationFn: async (newSettings: Partial<EmailSettings>) => {
+      if (settings?.id) {
+        // Update existing settings
         const { error } = await supabase
           .from('email_settings')
-          .update(settings)
-          .eq('id', emailSettings.id);
+          .update({
+            ...newSettings,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', settings.id);
 
         if (error) throw error;
       } else {
+        // Insert new settings
         const { error } = await supabase
           .from('email_settings')
-          .insert([settings]);
+          .insert([{
+            ...newSettings,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          }]);
 
         if (error) throw error;
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['emailSettings'] });
-      toast.success('Email settings updated successfully');
+      queryClient.invalidateQueries({ queryKey: ['email-settings'] });
+      toast.success('Email settings saved successfully');
     },
-    onError: (error) => {
+    onError: () => {
       toast.error('Failed to update email settings');
-      console.error('Error updating email settings:', error);
     },
   });
 
-  useEffect(() => {
-    if (emailSettings) {
-      setFormSettings(emailSettings);
-    }
-  }, [emailSettings]);
+  const updateTemplate = useMutation({
+    mutationFn: async (template: Partial<EmailTemplate>) => {
+      const { error } = await supabase
+        .from('email_templates')
+        .upsert([{
+          ...template,
+          updated_at: new Date().toISOString()
+        }]);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['email-templates'] });
+      toast.success('Email template saved successfully');
+    },
+    onError: () => {
+      toast.error('Failed to update email template');
+    },
+  });
+
+  const testEmailConfig = useMutation({
+    mutationFn: async (data: TestEmailData) => {
+      setTestStatus({ step: 'validating' });
+      
+      // Validate settings
+      if (!settings?.smtp_host || !settings?.smtp_port || !settings?.smtp_username || !settings?.smtp_password) {
+        throw new Error('Please configure SMTP settings before sending test email');
+      }
+      
+      setTestStatus({ step: 'connecting' });
+      
+      // Small delay to show the connecting state
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      setTestStatus({ step: 'sending' });
+      
+      const { error } = await supabase.functions.invoke('test-email', {
+        body: data,
+      });
+
+      if (error) throw error;
+      
+      setTestStatus({ step: 'complete' });
+    },
+    onSuccess: () => {
+      toast.success('Test email sent successfully');
+      setTestData({
+        email: '',
+        subject: 'Test Email Configuration',
+        body: 'This is a test email to verify your SMTP configuration.',
+      });
+      
+      // Reset status after 3 seconds
+      setTimeout(() => {
+        setTestStatus({ step: 'idle' });
+      }, 3000);
+    },
+    onError: (error: Error) => {
+      setTestStatus({ 
+        step: 'error',
+        error: error.message || 'Failed to send test email'
+      });
+      toast.error(error.message || 'Failed to send test email');
+    },
+  });
+
+  if (isLoadingSettings || isLoadingTemplates) {
+    return <div>Loading...</div>;
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-500/10 to-primary-700/20">
-      <Header />
-      <div className="flex h-screen pt-16">
-        <aside className="w-64 bg-white border-r border-gray-200 fixed left-0 top-16 bottom-0 overflow-y-auto">
-          <nav className="p-4 space-y-2">
-            <div className="pb-4 mb-4 border-b border-gray-200">
-              <Link
-                to="/board"
-                className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md"
-              >
-                <HomeIcon className="w-5 h-5" />
-                <span>My Board</span>
-              </Link>
-              <Link
-                to="/archived"
-                className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md"
-              >
-                <ArchiveBoxIcon className="w-5 h-5" />
-                <span>Archived</span>
-              </Link>
+    <div className="space-y-8">
+      <div className="bg-white shadow-sm rounded-lg p-6">
+        <h3 className="text-lg font-medium text-gray-900 mb-2">SMTP Configuration</h3>
+        <p className="text-sm text-gray-500 mb-6">Configure your email server settings to enable sending emails from your application.</p>
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                SMTP Server *
+              </label>
+              <p className="text-xs text-gray-500 mb-1">The hostname of your SMTP server (e.g., smtp.gmail.com)</p>
+              <div className="flex">
+                <input
+                  type="text"
+                  value={formSettings.smtp_host}
+                  onChange={(e) => setFormSettings({ ...formSettings, smtp_host: e.target.value })}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                  placeholder="smtp.example.com"
+                  required
+                />
+              </div>
             </div>
-            <div className="pt-4 mt-4 border-t border-gray-200">
-              {hasRole('admin') && (
-                <Link
-                  to="/admin"
-                  className="flex items-center space-x-2 px-4 py-2 bg-gray-100 text-gray-900 rounded-md"
-                >
-                  <Cog6ToothIcon className="w-5 h-5" />
-                  <span>Settings</span>
-                </Link>
-              )}
-              <button
-                onClick={() => signOut()}
-                className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md w-full text-left"
-              >
-                <ArrowRightOnRectangleIcon className="w-5 h-5" />
-                <span>Sign out</span>
-              </button>
-            </div>
-          </nav>
-        </aside>
-        <main className="flex-1 ml-64 p-8">
-          <div className="flex justify-between items-center mb-8">
-            <h1 className="text-2xl font-bold text-gray-900">Admin Panel</h1>
-            <Link
-              to="/board"
-              className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 bg-white rounded-md shadow-sm hover:bg-gray-50"
-            >
-              Close
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-1 gap-8">
-            <div className="bg-white shadow-sm rounded-lg p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-2">SMTP Configuration</h3>
-              <p className="text-sm text-gray-500 mb-6">Configure your email server settings to enable sending emails from your application.</p>
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      SMTP Server *
-                    </label>
-                    <p className="text-xs text-gray-500 mb-1">The hostname of your SMTP server (e.g., smtp.gmail.com)</p>
-                    <div className="flex">
-                      <input
-                        type="text"
-                        value={formSettings.smtp_host}
-                        onChange={(e) => setFormSettings({ ...formSettings, smtp_host: e.target.value })}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
-                        placeholder="smtp.example.com"
-                        required
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Port *
-                    </label>
-                    <p className="text-xs text-gray-500 mb-1">SMTP port number (usually 465 for SSL or 587 for TLS)</p>
-                    <div className="flex">
-                      <input
-                        type="number"
-                        value={formSettings.smtp_port}
-                        onChange={(e) => setFormSettings({ ...formSettings, smtp_port: parseInt(e.target.value) })}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
-                        placeholder="587"
-                        required
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={formSettings.smtp_ssl}
-                      onChange={(e) => setFormSettings({ ...formSettings, smtp_ssl: e.target.checked })}
-                      className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                    />
-                    <span className="ml-2">
-                      <span className="text-sm text-gray-700">Use SSL/TLS</span>
-                      <p className="text-xs text-gray-500">Enable secure connection to your SMTP server</p>
-                    </span>
-                  </label>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Username *
-                    </label>
-                    <p className="text-xs text-gray-500 mb-1">Your SMTP account username or email address</p>
-                    <div className="flex">
-                      <input
-                        type="text"
-                        value={formSettings.smtp_username}
-                        onChange={(e) => setFormSettings({ ...formSettings, smtp_username: e.target.value })}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
-                        placeholder="user@example.com"
-                        required
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Password *
-                    </label>
-                    <p className="text-xs text-gray-500 mb-1">Your SMTP account password or app-specific password</p>
-                    <div className="flex">
-                      <input
-                        type="password"
-                        value={formSettings.smtp_password}
-                        onChange={(e) => setFormSettings({ ...formSettings, smtp_password: e.target.value })}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
-                        placeholder="••••••••"
-                        required
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Sender Email *
-                    </label>
-                    <p className="text-xs text-gray-500 mb-1">The email address that will appear in the "From" field</p>
-                    <div className="flex">
-                      <input
-                        type="email"
-                        value={formSettings.sender_email}
-                        onChange={(e) => setFormSettings({ ...formSettings, sender_email: e.target.value })}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
-                        placeholder="noreply@example.com"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Sender Name
-                    </label>
-                    <p className="text-xs text-gray-500 mb-1">The name that will appear in the "From" field</p>
-                    <div className="flex">
-                      <input
-                        type="text"
-                        value={formSettings.sender_name}
-                        onChange={(e) => setFormSettings({ ...formSettings, sender_name: e.target.value })}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
-                        placeholder="Your Company Name"
-                      />
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="flex justify-end pt-4">
-                  <button
-                    onClick={() => updateSettings.mutate(formSettings)}
-                    className="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-                  >
-                    Save Settings
-                  </button>
-                </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Port *
+              </label>
+              <p className="text-xs text-gray-500 mb-1">SMTP port number (usually 465 for SSL or 587 for TLS)</p>
+              <div className="flex">
+                <input
+                  type="number"
+                  value={formSettings.smtp_port}
+                  onChange={(e) => setFormSettings({ ...formSettings, smtp_port: parseInt(e.target.value) })}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                  placeholder="587"
+                  required
+                />
               </div>
             </div>
           </div>
-        </main>
+
+          <div>
+            <label className="flex items-center">
+              <input
+                type="checkbox"
+                checked={formSettings.smtp_ssl}
+                onChange={(e) => setFormSettings({ ...formSettings, smtp_ssl: e.target.checked })}
+                className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+              />
+              <span className="ml-2">
+                <span className="text-sm text-gray-700">Use SSL/TLS</span>
+                <p className="text-xs text-gray-500">Enable secure connection to your SMTP server</p>
+              </span>
+            </label>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Username *
+              </label>
+              <p className="text-xs text-gray-500 mb-1">Your SMTP account username or email address</p>
+              <div className="flex">
+                <input
+                  type="text"
+                  value={formSettings.smtp_username}
+                  onChange={(e) => setFormSettings({ ...formSettings, smtp_username: e.target.value })}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                  placeholder="user@example.com"
+                  required
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Password *
+              </label>
+              <p className="text-xs text-gray-500 mb-1">Your SMTP account password or app-specific password</p>
+              <div className="flex">
+                <input
+                  type="password"
+                  value={formSettings.smtp_password}
+                  onChange={(e) => setFormSettings({ ...formSettings, smtp_password: e.target.value })}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                  placeholder="••••••••"
+                  required
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Sender Email *
+              </label>
+              <p className="text-xs text-gray-500 mb-1">The email address that will appear in the "From" field</p>
+              <div className="flex">
+                <input
+                  type="email"
+                  value={formSettings.sender_email}
+                  onChange={(e) => setFormSettings({ ...formSettings, sender_email: e.target.value })}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                  placeholder="noreply@example.com"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Sender Name
+              </label>
+              <p className="text-xs text-gray-500 mb-1">The name that will appear in the "From" field</p>
+              <div className="flex">
+                <input
+                  type="text"
+                  value={formSettings.sender_name}
+                  onChange={(e) => setFormSettings({ ...formSettings, sender_name: e.target.value })}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                  placeholder="Your Company Name"
+                />
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex justify-end pt-4">
+            <button
+              onClick={() => updateSettings.mutate(formSettings)}
+              className="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+            >
+              Save Settings
+            </button>
+          </div>
+        </div>
       </div>
+
+      <div className="bg-white shadow-sm rounded-lg p-6">
+        <h3 className="text-lg font-medium text-gray-900 mb-6">Email Templates</h3>
+        <div className="space-y-6">
+          {templates?.map((template) => (
+            <div key={template.id} className="space-y-4">
+              <h4 className="text-sm font-medium text-gray-700">
+                {template.type === 'reset_password' ? 'Reset Password Email' : 'Registration Email'}
+              </h4>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Subject
+                </label>
+                <div className="flex">
+                  <input
+                    type="text"
+                    value={template.subject}
+                    onChange={(e) => {
+                      const newTemplate = { ...template, subject: e.target.value };
+                      updateTemplate.mutate(newTemplate);
+                    }}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Body
+                </label>
+                <div className="flex">
+                  <textarea
+                    value={template.body}
+                    onChange={(e) => {
+                      const newTemplate = { ...template, body: e.target.value };
+                      updateTemplate.mutate(newTemplate);
+                    }}
+                    rows={6}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                    placeholder="Available variables: {{name}}, {{link}}"
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end">
+                <button
+                  onClick={() => updateTemplate.mutate(template)}
+                  className="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                >
+                  Save Template
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <EmailTestForm />
     </div>
   );
 }
