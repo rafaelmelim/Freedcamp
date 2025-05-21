@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { supabase } from '../lib/supabase';
+import { toast } from 'react-hot-toast';
+import { EnvelopeIcon, CheckCircleIcon, XCircleIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { supabase } from '../lib/supabase';
 import { toast } from 'react-hot-toast';
 import { EnvelopeIcon, CheckCircleIcon, XCircleIcon, XMarkIcon } from '@heroicons/react/24/outline';
@@ -20,32 +22,6 @@ export function ResetPasswordForm({ onClose }: ResetPasswordFormProps) {
     error?: string;
   }>({ step: 'idle' });
   const { register, handleSubmit, formState: { errors } } = useForm<FormData>();
-
-  const { data: emailSettings } = useQuery({
-    queryKey: ['email-settings'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('email_settings')
-        .select('*')
-        .limit(1);
-
-      if (error) throw error;
-      return data?.[0] || null;
-    },
-  });
-
-  const { data: resetTemplate } = useQuery({
-    queryKey: ['reset-template'],
-    queryFn: async () => {
-      const { data: templates, error: templatesError } = await supabase
-        .from('email_templates')
-        .select('*')
-        .eq('type', 'reset_password');
-
-      if (templatesError) throw templatesError;
-      return templates?.[0] || null;
-    },
-  });
 
   const onSubmit = async (data: FormData) => {
     try {

@@ -2,7 +2,7 @@ import { Fragment, useState } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { useForm } from 'react-hook-form';
 import { format } from 'date-fns';
-import { Database, TaskPriority } from '../lib/database.types';
+import { Database } from '../lib/database.types';
 import { LabelPicker } from './LabelPicker';
 import { TaskComments } from './TaskComments';
 import { TimeTracking } from './TimeTracking';
@@ -208,3 +208,5 @@ export function TaskDetailsModal({
     </Transition>
   );
 }
+
+export { TaskDetailsModal }
