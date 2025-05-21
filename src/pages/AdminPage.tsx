@@ -40,6 +40,7 @@ export function AdminPage() {
     subject: 'Test Email Configuration',
     body: 'This is a test email to verify your SMTP configuration.',
   });
+  const [editedTemplates, setEditedTemplates] = useState<Record<string, EmailTemplate>>({});
   const queryClient = useQueryClient();
 
   const { data: settings, isLoading: isLoadingSettings } = useQuery({
@@ -107,6 +108,16 @@ export function AdminPage() {
       toast.error('Failed to update email settings');
     },
   });
+
+  useEffect(() => {
+    if (templates) {
+      const templatesMap: Record<string, EmailTemplate> = {};
+      templates.forEach(template => {
+        templatesMap[template.id] = template;
+      });
+      setEditedTemplates(templatesMap);
+    }
+  }, [templates]);
 
   const updateTemplate = useMutation({
     mutationFn: async (template: Partial<EmailTemplate>) => {
@@ -369,10 +380,15 @@ export function AdminPage() {
                     <div className="flex">
                       <input
                         type="text"
-                        value={template.subject}
+                        value={editedTemplates[template.id]?.subject || template.subject}
                         onChange={(e) => {
-                          const newTemplate = { ...template, subject: e.target.value };
-                          updateTemplate.mutate(newTemplate);
+                          setEditedTemplates({
+                            ...editedTemplates,
+                            [template.id]: {
+                              ...editedTemplates[template.id] || template,
+                              subject: e.target.value
+                            }
+                          });
                         }}
                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
                       />
@@ -384,10 +400,15 @@ export function AdminPage() {
                     </label>
                     <div className="flex">
                       <textarea
-                        value={template.body}
+                        value={editedTemplates[template.id]?.body || template.body}
                         onChange={(e) => {
-                          const newTemplate = { ...template, body: e.target.value };
-                          updateTemplate.mutate(newTemplate);
+                          setEditedTemplates({
+                            ...editedTemplates,
+                            [template.id]: {
+                              ...editedTemplates[template.id] || template,
+                              body: e.target.value
+                            }
+                          });
                         }}
                         rows={6}
                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
@@ -397,7 +418,7 @@ export function AdminPage() {
                   </div>
                   <div className="flex justify-end">
                     <button
-                      onClick={() => updateTemplate.mutate(template)}
+                      onClick={() => updateTemplate.mutate(editedTemplates[template.id])}
                       className="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
                     >
                       Save Template
