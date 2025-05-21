@@ -50,11 +50,6 @@ export function EmailSettings() {
   const updateSettings = useMutation({
     mutationFn: async (newSettings: Partial<EmailSettings>) => {
       const { error } = await supabase
-        .upsert([{ 
-          id: settings?.id || '', 
-          ...settings, 
-          ...newSettings,
-          updated_at: new Date().toISOString()
         .from('email_settings')
         .upsert([{ 
           id: settings?.id || '', 
@@ -79,9 +74,6 @@ export function EmailSettings() {
     mutationFn: async (template: Partial<EmailTemplate>) => {
       const { error } = await supabase
         .from('email_templates')
-        .upsert([{
-          ...template,
-          updated_at: new Date().toISOString()
         .upsert([{
           ...template,
           updated_at: new Date().toISOString()
@@ -138,20 +130,16 @@ export function EmailSettings() {
               <p className="text-xs text-gray-500 mb-1">The hostname of your SMTP server (e.g., smtp.gmail.com)</p>
               <div className="flex">
                 <input
-                type="text"
-                defaultValue={settings?.smtp_host || ''}
-                onChange={(e) => {
-                  const newSettings = { ...settings, smtp_host: e.target.value };
-                defaultValue={settings?.smtp_host || ''}
-                onChange={(e) => {
-                  const newSettings = { ...settings, smtp_host: e.target.value };
-                  settings = newSettings;
-                }}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
-                placeholder="smtp.example.com"
-                required
-                required
-              />
+                  type="text"
+                  defaultValue={settings?.smtp_host || ''}
+                  onChange={(e) => {
+                    const newSettings = { ...settings, smtp_host: e.target.value };
+                    settings = newSettings;
+                  }}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                  placeholder="smtp.example.com"
+                  required
+                />
               </div>
             </div>
             <div>
@@ -161,20 +149,16 @@ export function EmailSettings() {
               <p className="text-xs text-gray-500 mb-1">SMTP port number (usually 465 for SSL or 587 for TLS)</p>
               <div className="flex">
                 <input
-                type="number"
-                defaultValue={settings?.smtp_port || ''}
-                onChange={(e) => {
-                  const newSettings = { ...settings, smtp_port: parseInt(e.target.value) };
-                defaultValue={settings?.smtp_port || ''}
-                onChange={(e) => {
-                  const newSettings = { ...settings, smtp_port: parseInt(e.target.value) };
-                  settings = newSettings;
-                }}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
-                placeholder="587"
-                required
-                required
-              />
+                  type="number"
+                  defaultValue={settings?.smtp_port || ''}
+                  onChange={(e) => {
+                    const newSettings = { ...settings, smtp_port: parseInt(e.target.value) };
+                    settings = newSettings;
+                  }}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                  placeholder="587"
+                  required
+                />
               </div>
             </div>
           </div>
@@ -183,9 +167,6 @@ export function EmailSettings() {
             <label className="flex items-center">
               <input
                 type="checkbox"
-                defaultChecked={settings?.smtp_ssl || false}
-                onChange={(e) => {
-                  const newSettings = { ...settings, smtp_ssl: e.target.checked };
                 defaultChecked={settings?.smtp_ssl || false}
                 onChange={(e) => {
                   const newSettings = { ...settings, smtp_ssl: e.target.checked };
@@ -208,20 +189,16 @@ export function EmailSettings() {
               <p className="text-xs text-gray-500 mb-1">Your SMTP account username or email address</p>
               <div className="flex">
                 <input
-                type="text"
-                defaultValue={settings?.smtp_username || ''}
-                onChange={(e) => {
-                  const newSettings = { ...settings, smtp_username: e.target.value };
-                defaultValue={settings?.smtp_username || ''}
-                onChange={(e) => {
-                  const newSettings = { ...settings, smtp_username: e.target.value };
-                  settings = newSettings;
-                }}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
-                placeholder="user@example.com"
-                required
-                required
-              />
+                  type="text"
+                  defaultValue={settings?.smtp_username || ''}
+                  onChange={(e) => {
+                    const newSettings = { ...settings, smtp_username: e.target.value };
+                    settings = newSettings;
+                  }}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                  placeholder="user@example.com"
+                  required
+                />
               </div>
             </div>
             <div>
@@ -231,20 +208,16 @@ export function EmailSettings() {
               <p className="text-xs text-gray-500 mb-1">Your SMTP account password or app-specific password</p>
               <div className="flex">
                 <input
-                type="password"
-                defaultValue={settings?.smtp_password || ''}
-                onChange={(e) => {
-                  const newSettings = { ...settings, smtp_password: e.target.value };
-                defaultValue={settings?.smtp_password || ''}
-                onChange={(e) => {
-                  const newSettings = { ...settings, smtp_password: e.target.value };
-                  settings = newSettings;
-                }}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
-                placeholder="••••••••"
-                required
-                required
-              />
+                  type="password"
+                  defaultValue={settings?.smtp_password || ''}
+                  onChange={(e) => {
+                    const newSettings = { ...settings, smtp_password: e.target.value };
+                    settings = newSettings;
+                  }}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                  placeholder="••••••••"
+                  required
+                />
               </div>
             </div>
           </div>
@@ -257,12 +230,12 @@ export function EmailSettings() {
               <p className="text-xs text-gray-500 mb-1">The email address that will appear in the "From" field</p>
               <div className="flex">
                 <input
-                type="email"
-                value={settings?.sender_email || ''}
-                onChange={(e) => updateSettings.mutate({ sender_email: e.target.value })}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
-                placeholder="noreply@example.com"
-              />
+                  type="email"
+                  value={settings?.sender_email || ''}
+                  onChange={(e) => updateSettings.mutate({ sender_email: e.target.value })}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                  placeholder="noreply@example.com"
+                />
               </div>
             </div>
             <div>
@@ -272,12 +245,12 @@ export function EmailSettings() {
               <p className="text-xs text-gray-500 mb-1">The name that will appear in the "From" field</p>
               <div className="flex">
                 <input
-                type="text"
-                value={settings?.sender_name || ''}
-                onChange={(e) => updateSettings.mutate({ sender_name: e.target.value })}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
-                placeholder="Your Company Name"
-              />
+                  type="text"
+                  value={settings?.sender_name || ''}
+                  onChange={(e) => updateSettings.mutate({ sender_name: e.target.value })}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                  placeholder="Your Company Name"
+                />
               </div>
             </div>
           </div>
@@ -310,14 +283,14 @@ export function EmailSettings() {
                 </label>
                 <div className="flex">
                   <input
-                  type="text"
-                  value={template.subject}
-                  onChange={(e) => {
-                    const newTemplate = { ...template, subject: e.target.value };
-                    updateTemplate.mutate(newTemplate);
-                  }}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
-                />
+                    type="text"
+                    value={template.subject}
+                    onChange={(e) => {
+                      const newTemplate = { ...template, subject: e.target.value };
+                      updateTemplate.mutate(newTemplate);
+                    }}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                  />
                 </div>
               </div>
               <div>
@@ -326,15 +299,15 @@ export function EmailSettings() {
                 </label>
                 <div className="flex">
                   <textarea
-                  value={template.body}
-                  onChange={(e) => {
-                    const newTemplate = { ...template, body: e.target.value };
-                    updateTemplate.mutate(newTemplate);
-                  }}
-                  rows={6}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
-                  placeholder="Available variables: {{name}}, {{link}}"
-                />
+                    value={template.body}
+                    onChange={(e) => {
+                      const newTemplate = { ...template, body: e.target.value };
+                      updateTemplate.mutate(newTemplate);
+                    }}
+                    rows={6}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                    placeholder="Available variables: {{name}}, {{link}}"
+                  />
                 </div>
               </div>
               <div className="flex justify-end">
