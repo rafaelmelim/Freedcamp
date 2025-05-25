@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
+import { SystemSettingsProvider } from './contexts/SystemSettingsContext'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { RoleProtectedRoute } from './components/RoleProtectedRoute'
 import { LoginPage } from './pages/LoginPage'
@@ -14,6 +15,7 @@ import { SystemSettingsPage } from './pages/SystemSettingsPage'
 function App() {
   return (
     <AuthProvider>
+      <SystemSettingsProvider>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route
@@ -74,6 +76,7 @@ function App() {
         />
         <Route path="*" element={<Navigate to="/board" replace />} />
       </Routes>
+      </SystemSettingsProvider>
     </AuthProvider>
   )
 }

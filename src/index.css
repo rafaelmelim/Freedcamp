@@ -19,6 +19,7 @@
 @layer base {
   body {
     @apply bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen;
+    color: var(--system-font-color, #000000);
   }
 
   /* Smooth scrolling */
@@ -28,6 +29,66 @@
 }
 
 @layer components {
+  /* Form positioning based on system settings */
+  .form-position-left {
+    @apply justify-start;
+  }
+  
+  .form-position-center {
+    @apply justify-center;
+  }
+  
+  .form-position-right {
+    @apply justify-end;
+  }
+
+  /* Header styles */
+  .header-default {
+    @apply bg-white shadow-sm;
+  }
+
+  .header-minimal {
+    @apply bg-transparent;
+  }
+
+  .header-modern {
+    @apply bg-white/80 backdrop-blur-md shadow-lg;
+  }
+
+  .header-classic {
+    @apply bg-gray-800 text-white;
+  }
+
+  /* Footer styles */
+  .footer-default {
+    @apply bg-gray-900 text-white;
+  }
+
+  .footer-minimal {
+    @apply bg-transparent text-gray-600;
+  }
+
+  .footer-modern {
+    @apply bg-gray-800/90 backdrop-blur-md text-white;
+  }
+
+  .footer-classic {
+    @apply bg-gray-800 text-white border-t border-gray-700;
+  }
+
+  /* Form layouts */
+  .form-default {
+    @apply space-y-6;
+  }
+
+  .form-compact {
+    @apply space-y-4;
+  }
+
+  .form-comfortable {
+    @apply space-y-8;
+  }
+
   .btn-primary {
     @apply px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-md 
            hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 
