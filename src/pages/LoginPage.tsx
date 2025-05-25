@@ -61,7 +61,7 @@ export function LoginPage() {
       <header className="bg-white py-6 px-4 shadow-lg">
         <div className="container mx-auto max-w-7xl">
           <h1 className="text-primary-600 text-3xl font-bold flex items-center gap-2">
-            Cloud Operation Center - COC
+            Controle de Projetos - Alpha
           </h1>
         </div>
       </header>
