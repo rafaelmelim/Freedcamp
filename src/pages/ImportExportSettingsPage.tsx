@@ -1,4 +1,8 @@
 import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '../lib/supabase';
+import { Database } from '../lib/database.types';
+import { toast } from 'react-hot-toast';
 import { Link } from 'react-router-dom';
 import { Header } from '../components/Header';
 import { useAuth } from '../contexts/AuthContext';
@@ -14,59 +18,56 @@ import {
   UserCircleIcon,
 } from '@heroicons/react/24/outline';
 
-interface FieldConfig {
-  field: string;
-  enabled: boolean;
-  label: string;
-  description: string;
-}
+type ImportExportSetting = Database['public']['Tables']['import_export_settings']['Row'];
 
 export function ImportExportSettingsPage() {
-  const { signOut, hasRole } = useAuth();
+  const { signOut, hasRole, user } = useAuth();
+  const queryClient = useQueryClient();
   
-  const [projectFields, setProjectFields] = useState<FieldConfig[]>([
-    { field: 'id', enabled: true, label: 'ID', description: 'Identificador único do projeto' },
-    { field: 'title', enabled: true, label: 'Título', description: 'Título do projeto' },
-    { field: 'position', enabled: true, label: 'Posição', description: 'Posição do projeto no quadro' },
-    { field: 'owner_id', enabled: true, label: 'Proprietário', description: 'ID do proprietário do projeto' },
-    { field: 'created_at', enabled: true, label: 'Data de Criação', description: 'Data de criação do projeto' },
-    { field: 'updated_at', enabled: true, label: 'Data de Atualização', description: 'Data da última atualização do projeto' },
-  ]);
+  const { data: settings, isLoading } = useQuery({
+    queryKey: ['import-export-settings'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('import_export_settings')
+        .select('*')
+        .order('field_name');
 
-  const [taskFields, setTaskFields] = useState<FieldConfig[]>([
-    { field: 'id', enabled: true, label: 'ID', description: 'Identificador único da tarefa' },
-    { field: 'project_id', enabled: true, label: 'Projeto', description: 'ID do projeto associado' },
-    { field: 'title', enabled: true, label: 'Título', description: 'Título da tarefa' },
-    { field: 'description', enabled: true, label: 'Descrição', description: 'Descrição detalhada da tarefa' },
-    { field: 'due_date', enabled: true, label: 'Data de Entrega', description: 'Data limite para conclusão' },
-    { field: 'position', enabled: true, label: 'Posição', description: 'Posição da tarefa no projeto' },
-    { field: 'assignee_id', enabled: true, label: 'Responsável', description: 'ID do responsável pela tarefa' },
-    { field: 'completed', enabled: true, label: 'Concluída', description: 'Status de conclusão da tarefa' },
-    { field: 'priority', enabled: true, label: 'Prioridade', description: 'Nível de prioridade da tarefa' },
-    { field: 'archived', enabled: true, label: 'Arquivada', description: 'Status de arquivamento da tarefa' },
-    { field: 'created_at', enabled: true, label: 'Data de Criação', description: 'Data de criação da tarefa' },
-    { field: 'updated_at', enabled: true, label: 'Data de Atualização', description: 'Data da última atualização da tarefa' },
-  ]);
+      if (error) throw error;
+      return data as ImportExportSetting[];
+    },
+  });
 
-  const handleProjectFieldToggle = (index: number) => {
-    const newFields = [...projectFields];
-    newFields[index].enabled = !newFields[index].enabled;
-    setProjectFields(newFields);
+  const updateSetting = useMutation({
+    mutationFn: async ({ id, enabled }: { id: string; enabled: boolean }) => {
+      const { error } = await supabase
+        .from('import_export_settings')
+        .update({ 
+          enabled,
+          owner_id: user?.id,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['import-export-settings'] });
+      toast.success('Configurações atualizadas com sucesso');
+    },
+    onError: () => {
+      toast.error('Erro ao atualizar configurações');
+    },
+  });
+
+  const handleFieldToggle = (setting: ImportExportSetting) => {
+    updateSetting.mutate({
+      id: setting.id,
+      enabled: !setting.enabled,
+    });
   };
 
-  const handleTaskFieldToggle = (index: number) => {
-    const newFields = [...taskFields];
-    newFields[index].enabled = !newFields[index].enabled;
-    setTaskFields(newFields);
-  };
-
-  const handleSaveSettings = () => {
-    // Save settings to localStorage for now
-    localStorage.setItem('importExportSettings', JSON.stringify({
-      projectFields,
-      taskFields,
-    }));
-  };
+  const projectFields = settings?.filter(s => s.entity_type === 'project') || [];
+  const taskFields = settings?.filter(s => s.entity_type === 'task') || [];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-500/10 to-primary-700/20">
@@ -162,13 +163,13 @@ export function ImportExportSettingsPage() {
                   Selecione os campos que devem ser incluídos na importação e exportação de projetos.
                 </p>
                 <div className="space-y-4">
-                  {projectFields.map((field, index) => (
-                    <div key={field.field} className="flex items-start">
+                  {projectFields.map((field) => (
+                    <div key={field.id} className="flex items-start">
                       <div className="flex items-center h-5">
                         <input
                           type="checkbox"
                           checked={field.enabled}
-                          onChange={() => handleProjectFieldToggle(index)}
+                          onChange={() => handleFieldToggle(field)}
                           className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                         />
                       </div>
@@ -190,13 +191,13 @@ export function ImportExportSettingsPage() {
                   Selecione os campos que devem ser incluídos na importação e exportação de tarefas.
                 </p>
                 <div className="space-y-4">
-                  {taskFields.map((field, index) => (
-                    <div key={field.field} className="flex items-start">
+                  {taskFields.map((field) => (
+                    <div key={field.id} className="flex items-start">
                       <div className="flex items-center h-5">
                         <input
                           type="checkbox"
                           checked={field.enabled}
-                          onChange={() => handleTaskFieldToggle(index)}
+                          onChange={() => handleFieldToggle(field)}
                           className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                         />
                       </div>
@@ -209,15 +210,6 @@ export function ImportExportSettingsPage() {
                     </div>
                   ))}
                 </div>
-              </div>
-
-              <div className="flex justify-end">
-                <button
-                  onClick={handleSaveSettings}
-                  className="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-                >
-                  Salvar Configurações
-                </button>
               </div>
             </div>
           </div>
