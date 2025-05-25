@@ -10,6 +10,7 @@ import { UserProfilesPage } from './pages/UserProfilesPage'
 import { EmailSettingsPage } from './pages/EmailSettingsPage'
 import { ArchivedTasksPage } from './pages/ArchivedTasksPage'
 import { UsersPage } from './pages/UsersPage'
+import { ImportExportSettingsPage } from './pages/ImportExportSettingsPage'
 import { SystemSettingsPage } from './pages/SystemSettingsPage'
 
 function App() {
@@ -71,6 +72,14 @@ function App() {
           element={
             <RoleProtectedRoute requiredRole="admin">
               <SystemSettingsPage />
+            </RoleProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/import-export"
+          element={
+            <RoleProtectedRoute requiredRole="admin">
+              <ImportExportSettingsPage />
             </RoleProtectedRoute>
           }
         />
