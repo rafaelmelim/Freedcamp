@@ -50,7 +50,7 @@ export function AdminPage() {
                     className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md"
                   >
                     <UserCircleIcon className="w-5 h-5" />
-                    <span>Perfis de Usuários</span>
+                    <span>Cadastro de Usuários</span>
                   </Link>
                   <Link
                     to="/admin/users"
@@ -80,13 +80,13 @@ export function AdminPage() {
                 className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md w-full text-left"
               >
                 <ArrowRightOnRectangleIcon className="w-5 h-5" />
-                <span>Sign out</span>
+                <span>Sair</span>
               </button>
             </div>
           </nav>
         </aside>
         <main className="flex-1 ml-64 p-8 space-y-8">
-          <h2 className="text-2xl font-bold text-gray-900">Settings</h2>
+          <h2 className="text-2xl font-bold text-gray-900">Configurações</h2>
           <p className="text-gray-600">Select a settings category from the menu on the left.</p>
         </main>
       </div>
