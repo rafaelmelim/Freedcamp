@@ -17,6 +17,12 @@ export interface Database {
           site_name: string
           site_description: string | null
           primary_color: string
+          form_position: string
+          header_style: string
+          footer_style: string
+          system_font_color: string
+          default_header_description: string | null
+          form_layout: string
           logo_url: string | null
           favicon_url: string | null
           footer_text: string | null
@@ -29,6 +35,12 @@ export interface Database {
           site_name?: string
           site_description?: string | null
           primary_color?: string
+          form_position?: string
+          header_style?: string
+          footer_style?: string
+          system_font_color?: string
+          default_header_description?: string | null
+          form_layout?: string
           logo_url?: string | null
           favicon_url?: string | null
           footer_text?: string | null
@@ -41,6 +53,12 @@ export interface Database {
           site_name?: string
           site_description?: string | null
           primary_color?: string
+          form_position?: string
+          header_style?: string
+          footer_style?: string
+          system_font_color?: string
+          default_header_description?: string | null
+          form_layout?: string
           logo_url?: string | null
           favicon_url?: string | null
           footer_text?: string | null

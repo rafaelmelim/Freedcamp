@@ -26,6 +26,19 @@ const layoutOptions = [
   { value: 'comfortable', label: 'Confortável' },
 ];
 
+const formPositionOptions = [
+  { value: 'left', label: 'Esquerda' },
+  { value: 'center', label: 'Centro' },
+  { value: 'right', label: 'Direita' },
+];
+
+const styleOptions = [
+  { value: 'default', label: 'Padrão' },
+  { value: 'minimal', label: 'Minimalista' },
+  { value: 'modern', label: 'Moderno' },
+  { value: 'classic', label: 'Clássico' },
+];
+
 export function SystemSettingsPage() {
   const { signOut, hasRole } = useAuth();
   const queryClient = useQueryClient();
@@ -33,12 +46,19 @@ export function SystemSettingsPage() {
     site_name: '',
     site_description: '',
     primary_color: '#0EA5E9',
+    form_position: 'center',
+    header_style: 'default',
+    footer_style: 'default',
+    system_font_color: '#000000',
+    default_header_description: '',
+    form_layout: 'default',
     logo_url: '',
     favicon_url: '',
     footer_text: '',
     layout_type: 'default'
   });
   const [previewColor, setPreviewColor] = useState(settings.primary_color || '#0EA5E9');
+  const [previewFontColor, setPreviewFontColor] = useState(settings.system_font_color || '#000000');
 
   const { data: currentSettings, isLoading, error } = useQuery({
     queryKey: ['system-settings'],
@@ -288,6 +308,113 @@ export function SystemSettingsPage() {
               <div className="bg-white shadow-sm rounded-lg p-6">
                 <h3 className="text-lg font-medium text-gray-900 mb-4">Aparência</h3>
                 <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Posição do Formulário
+                    </label>
+                    <select
+                      value={settings.form_position || 'center'}
+                      onChange={(e) => setSettings({ ...settings, form_position: e.target.value })}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                    >
+                      {formPositionOptions.map(option => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Estilo do Cabeçalho
+                    </label>
+                    <select
+                      value={settings.header_style || 'default'}
+                      onChange={(e) => setSettings({ ...settings, header_style: e.target.value })}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                    >
+                      {styleOptions.map(option => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Estilo do Rodapé
+                    </label>
+                    <select
+                      value={settings.footer_style || 'default'}
+                      onChange={(e) => setSettings({ ...settings, footer_style: e.target.value })}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                    >
+                      {styleOptions.map(option => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Cor da Fonte do Sistema
+                    </label>
+                    <div className="mt-1 flex items-center gap-4">
+                      <input
+                        type="color"
+                        value={previewFontColor}
+                        onChange={(e) => {
+                          setPreviewFontColor(e.target.value);
+                          setSettings({ ...settings, system_font_color: e.target.value });
+                        }}
+                        className="h-10 w-20"
+                      />
+                      <input
+                        type="text"
+                        value={previewFontColor}
+                        onChange={(e) => {
+                          setPreviewFontColor(e.target.value);
+                          setSettings({ ...settings, system_font_color: e.target.value });
+                        }}
+                        className="w-28 rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Descrição Padrão dos Cabeçalhos
+                    </label>
+                    <textarea
+                      value={settings.default_header_description || ''}
+                      onChange={(e) => setSettings({ ...settings, default_header_description: e.target.value })}
+                      rows={2}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                      placeholder="Descrição padrão que aparecerá nos cabeçalhos do sistema"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Layout do Formulário
+                    </label>
+                    <select
+                      value={settings.form_layout || 'default'}
+                      onChange={(e) => setSettings({ ...settings, form_layout: e.target.value })}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                    >
+                      {styleOptions.map(option => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700">
                       Cor Primária
