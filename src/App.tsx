@@ -9,6 +9,7 @@ import { UserProfilesPage } from './pages/UserProfilesPage'
 import { EmailSettingsPage } from './pages/EmailSettingsPage'
 import { ArchivedTasksPage } from './pages/ArchivedTasksPage'
 import { UsersPage } from './pages/UsersPage'
+import { SystemSettingsPage } from './pages/SystemSettingsPage'
 
 function App() {
   return (
@@ -61,6 +62,14 @@ function App() {
             <ProtectedRoute>
               <ArchivedTasksPage />
             </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/system"
+          element={
+            <RoleProtectedRoute requiredRole="admin">
+              <SystemSettingsPage />
+            </RoleProtectedRoute>
           }
         />
         <Route path="*" element={<Navigate to="/board" replace />} />
