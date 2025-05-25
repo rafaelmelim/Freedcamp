@@ -192,12 +192,6 @@ export function SystemSettingsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-500/10 to-primary-700/20">
       <Header />
-      <div className="bg-white border-b border-gray-200 mb-8">
-        <div className="max-w-4xl mx-auto px-8 py-4">
-          <h2 className="text-2xl font-bold text-gray-900">Configurações do Sistema</h2>
-          <p className="text-gray-600 mt-1">{settings.default_header_description || 'Configure as definições do sistema'}</p>
-        </div>
-      </div>
       <div className="flex h-screen pt-16">
         <aside className="w-64 bg-white border-r border-gray-200 fixed left-0 top-16 bottom-0 overflow-y-auto">
           <nav className="p-4 space-y-2">
@@ -278,6 +272,7 @@ export function SystemSettingsPage() {
         </aside>
 
         <main className="flex-1 ml-64 p-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-8">Configurações do Sistema</h2>
           <div className="max-w-4xl mx-auto">
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="bg-white shadow-sm rounded-lg p-6">
