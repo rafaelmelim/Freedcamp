@@ -91,14 +91,14 @@ export function ArchivedTasksPage() {
               className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md"
             >
               <HomeIcon className="w-5 h-5" />
-              <span>My Board</span>
+              <span>Página Inicial</span>
             </Link>
             <Link
               to="/archived"
               className="flex items-center space-x-2 px-4 py-2 bg-gray-100 text-gray-900 rounded-md"
             >
               <ArchiveBoxIcon className="w-5 h-5" />
-              <span>Archived</span>
+              <span>Arquivo</span>
             </Link>
             </div>
             <div className="pt-4 mt-4 border-t border-gray-200">
@@ -108,7 +108,7 @@ export function ArchivedTasksPage() {
                   className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md"
                 >
                   <Cog6ToothIcon className="w-5 h-5" />
-                  <span>Settings</span>
+                  <span>Configurações</span>
                 </Link>
               )}
               <button
@@ -116,7 +116,7 @@ export function ArchivedTasksPage() {
                 className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md w-full text-left"
               >
                 <ArrowRightOnRectangleIcon className="w-5 h-5" />
-                <span>Sign out</span>
+                <span>Sair</span>
               </button>
             </div>
           </nav>
