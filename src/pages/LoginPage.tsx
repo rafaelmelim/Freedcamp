@@ -230,7 +230,7 @@ export function LoginPage() {
             </ul>
           </nav>
           <p className="text-sm text-gray-400">
-            © 2025 Freedcamp. Todos os direitos reservados.
+            © 2025 Controle de Projetos - Alpha_v_001. Todos os direitos reservados.
           </p>
         </div>
       </footer>
