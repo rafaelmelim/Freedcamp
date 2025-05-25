@@ -29,8 +29,16 @@ const layoutOptions = [
 export function SystemSettingsPage() {
   const { signOut, hasRole } = useAuth();
   const queryClient = useQueryClient();
-  const [settings, setSettings] = useState<Partial<SystemSettings>>({});
-  const [previewColor, setPreviewColor] = useState('#0EA5E9');
+  const [settings, setSettings] = useState<Partial<SystemSettings>>({
+    site_name: '',
+    site_description: '',
+    primary_color: '#0EA5E9',
+    logo_url: '',
+    favicon_url: '',
+    footer_text: '',
+    layout_type: 'default'
+  });
+  const [previewColor, setPreviewColor] = useState(settings.primary_color || '#0EA5E9');
 
   const { data: currentSettings, isLoading } = useQuery({
     queryKey: ['system-settings'],
@@ -40,13 +48,54 @@ export function SystemSettingsPage() {
         .select('*')
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching settings:', error);
+        throw error;
+      }
+
+      // Apply settings to document
+      if (data) {
+        document.documentElement.style.setProperty('--primary-50', `${data.primary_color}10`);
+        document.documentElement.style.setProperty('--primary-100', `${data.primary_color}20`);
+        document.documentElement.style.setProperty('--primary-200', `${data.primary_color}30`);
+        document.documentElement.style.setProperty('--primary-300', `${data.primary_color}40`);
+        document.documentElement.style.setProperty('--primary-400', `${data.primary_color}50`);
+        document.documentElement.style.setProperty('--primary-500', data.primary_color);
+        document.documentElement.style.setProperty('--primary-600', `${data.primary_color}70`);
+        document.documentElement.style.setProperty('--primary-700', `${data.primary_color}80`);
+        document.documentElement.style.setProperty('--primary-800', `${data.primary_color}90`);
+        document.documentElement.style.setProperty('--primary-900', `${data.primary_color}95`);
+        document.documentElement.style.setProperty('--primary-950', `${data.primary_color}99`);
+
+        // Update favicon if set
+        if (data.favicon_url) {
+          const favicon = document.querySelector('link[rel="icon"]');
+          if (favicon) {
+            favicon.setAttribute('href', data.favicon_url);
+          } else {
+            const newFavicon = document.createElement('link');
+            newFavicon.rel = 'icon';
+            newFavicon.href = data.favicon_url;
+            document.head.appendChild(newFavicon);
+          }
+        }
+
+        // Update document title
+        if (data.site_name) {
+          document.title = data.site_name;
+        }
+      }
+
       return data;
     },
     onSuccess: (data) => {
       setSettings(data);
       setPreviewColor(data.primary_color);
     },
+    onError: (error) => {
+      toast.error('Erro ao carregar configurações');
+      console.error('Error:', error);
+    }
   });
 
   const updateSettings = useMutation({
@@ -62,8 +111,37 @@ export function SystemSettingsPage() {
       if (error) throw error;
     },
     onSuccess: () => {
+      // Refresh settings
       queryClient.invalidateQueries({ queryKey: ['system-settings'] });
       toast.success('Configurações atualizadas com sucesso');
+      
+      // Update preview immediately
+      if (settings.primary_color) {
+        document.documentElement.style.setProperty('--primary-50', `${settings.primary_color}10`);
+        document.documentElement.style.setProperty('--primary-100', `${settings.primary_color}20`);
+        document.documentElement.style.setProperty('--primary-200', `${settings.primary_color}30`);
+        document.documentElement.style.setProperty('--primary-300', `${settings.primary_color}40`);
+        document.documentElement.style.setProperty('--primary-400', `${settings.primary_color}50`);
+        document.documentElement.style.setProperty('--primary-500', settings.primary_color);
+        document.documentElement.style.setProperty('--primary-600', `${settings.primary_color}70`);
+        document.documentElement.style.setProperty('--primary-700', `${settings.primary_color}80`);
+        document.documentElement.style.setProperty('--primary-800', `${settings.primary_color}90`);
+        document.documentElement.style.setProperty('--primary-900', `${settings.primary_color}95`);
+        document.documentElement.style.setProperty('--primary-950', `${settings.primary_color}99`);
+      }
+
+      // Update favicon
+      if (settings.favicon_url) {
+        const favicon = document.querySelector('link[rel="icon"]');
+        if (favicon) {
+          favicon.setAttribute('href', settings.favicon_url);
+        }
+      }
+
+      // Update document title
+      if (settings.site_name) {
+        document.title = settings.site_name;
+      }
     },
     onError: () => {
       toast.error('Erro ao atualizar configurações');
@@ -76,7 +154,11 @@ export function SystemSettingsPage() {
   };
 
   if (isLoading) {
-    return <div>Carregando...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-600 border-t-transparent"></div>
+      </div>
+    );
   }
 
   return (
