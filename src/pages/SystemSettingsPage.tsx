@@ -40,12 +40,13 @@ export function SystemSettingsPage() {
   });
   const [previewColor, setPreviewColor] = useState(settings.primary_color || '#0EA5E9');
 
-  const { data: currentSettings, isLoading } = useQuery({
+  const { data: currentSettings, isLoading, error } = useQuery({
     queryKey: ['system-settings'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('system_settings')
         .select('*')
+        .limit(1)
         .single();
 
       if (error) {
@@ -53,8 +54,14 @@ export function SystemSettingsPage() {
         throw error;
       }
 
-      // Apply settings to document
+      return data;
+    },
+    onSuccess: (data) => {
       if (data) {
+        setSettings(data);
+        setPreviewColor(data.primary_color || '#0EA5E9');
+        
+        // Apply settings to document
         document.documentElement.style.setProperty('--primary-50', `${data.primary_color}10`);
         document.documentElement.style.setProperty('--primary-100', `${data.primary_color}20`);
         document.documentElement.style.setProperty('--primary-200', `${data.primary_color}30`);
@@ -85,18 +92,19 @@ export function SystemSettingsPage() {
           document.title = data.site_name;
         }
       }
-
-      return data;
-    },
-    onSuccess: (data) => {
-      setSettings(data);
-      setPreviewColor(data.primary_color);
     },
     onError: (error) => {
       toast.error('Erro ao carregar configurações');
       console.error('Error:', error);
     }
   });
+
+  useEffect(() => {
+    if (currentSettings) {
+      setSettings(currentSettings);
+      setPreviewColor(currentSettings.primary_color || '#0EA5E9');
+    }
+  }, [currentSettings]);
 
   const updateSettings = useMutation({
     mutationFn: async (newSettings: Partial<SystemSettings>) => {
