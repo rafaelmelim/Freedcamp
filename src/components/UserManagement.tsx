@@ -23,6 +23,7 @@ export function UserManagement() {
     email: '',
     password: '',
   });
+  const [validationError, setValidationError] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
   const { data: users, isLoading } = useQuery({
@@ -178,6 +179,16 @@ export function UserManagement() {
             <form
               onSubmit={(e) => {
                 e.preventDefault();
+                // Reset validation error
+                setValidationError(null);
+                
+                // Validate email format
+                const emailRegex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
+                if (!emailRegex.test(newUser.email)) {
+                  setValidationError('Please enter a valid email address');
+                  return;
+                }
+                
                 createUser.mutate(newUser);
               }}
               className="space-y-4"
@@ -194,6 +205,11 @@ export function UserManagement() {
                   required
                 />
               </div>
+              {validationError && (
+                <p className="text-sm text-red-600" role="alert">
+                  {validationError}
+                </p>
+              )}
 
               <div>
                 <label className="block text-sm font-medium text-gray-700">
@@ -202,7 +218,10 @@ export function UserManagement() {
                 <input
                   type="email"
                   value={newUser.email}
-                  onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+                  onChange={(e) => {
+                    setValidationError(null);
+                    setNewUser({ ...newUser, email: e.target.value });
+                  }}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
                   required
                 />
