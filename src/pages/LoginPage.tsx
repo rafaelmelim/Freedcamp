@@ -4,6 +4,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { toast } from "react-hot-toast";
 import { ResetPasswordForm } from "../components/ResetPasswordForm";
 import { SignUpForm } from "../components/SignUpForm";
+import { useSystemSettings } from "../contexts/SystemSettingsContext";
 
 interface LoginFormData {
   email: string;
@@ -12,6 +13,7 @@ interface LoginFormData {
 
 export function LoginPage() {
   const { signIn } = useAuth();
+  const { settings } = useSystemSettings();
   const [isLoading, setIsLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [showResetPassword, setShowResetPassword] = useState<boolean>(false);
@@ -71,7 +73,7 @@ export function LoginPage() {
       <header className="bg-white py-6 px-4 shadow-lg">
         <div className="container mx-auto max-w-7xl">
           <h1 className="text-primary-600 text-3xl font-bold flex items-center gap-2">
-            Controle de Projetos - Alpha_v_001
+            {settings?.site_name || 'Controle de Projetos - Alpha_v_001'}
           </h1>
         </div>
       </header>
@@ -240,7 +242,7 @@ export function LoginPage() {
             </ul>
           </nav>
           <p className="text-sm text-gray-400">
-            © 2025 Controle de Projetos - Alpha_v_001. Todos os direitos reservados.
+            © 2025 {settings?.site_name || 'Controle de Projetos - Alpha_v_001'}. Todos os direitos reservados.
           </p>
         </div>
       </footer>
