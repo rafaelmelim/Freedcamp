@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { Database } from '../lib/database.types';
 import { toast } from 'react-hot-toast';
-import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { MagnifyingGlassIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
 
 type Profile = Database['public']['Tables']['profiles']['Row'];
 type Role = Database['public']['Tables']['roles']['Row'];
@@ -105,7 +105,21 @@ export function RoleManagement() {
     <div className="space-y-6">
       <div className="bg-white shadow-sm rounded-lg p-6">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-medium text-gray-900">Gerenciamento de Perfis</h3>
+          <div className="flex items-center space-x-4">
+            <h3 className="text-lg font-medium text-gray-900">Gerenciamento de Perfis</h3>
+            <button
+              onClick={() => {
+                queryClient.invalidateQueries({ queryKey: ['users'] });
+                queryClient.invalidateQueries({ queryKey: ['roles'] });
+                queryClient.invalidateQueries({ queryKey: ['user-roles'] });
+                toast.success('Lista atualizada com sucesso');
+              }}
+              className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-primary-600 hover:text-primary-700 focus:outline-none"
+            >
+              <ArrowPathIcon className="h-5 w-5 mr-1" />
+              Atualizar
+            </button>
+          </div>
         </div>
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
