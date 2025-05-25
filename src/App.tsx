@@ -8,6 +8,7 @@ import { AdminPage } from './pages/AdminPage'
 import { UserProfilesPage } from './pages/UserProfilesPage'
 import { EmailSettingsPage } from './pages/EmailSettingsPage'
 import { ArchivedTasksPage } from './pages/ArchivedTasksPage'
+import { UsersPage } from './pages/UsersPage'
 
 function App() {
   return (
@@ -43,6 +44,14 @@ function App() {
           element={
             <RoleProtectedRoute requiredRole="admin">
               <UserProfilesPage />
+            </RoleProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/users"
+          element={
+            <RoleProtectedRoute requiredRole="admin">
+              <UsersPage />
             </RoleProtectedRoute>
           }
         />
