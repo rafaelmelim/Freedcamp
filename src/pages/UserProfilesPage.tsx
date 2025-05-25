@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { Header } from '../components/Header';
 import { useAuth } from '../contexts/AuthContext';
 import { HomeIcon, ArchiveBoxIcon, Cog6ToothIcon, ArrowRightOnRectangleIcon, EnvelopeIcon, UsersIcon, ComputerDesktopIcon, ArrowDownTrayIcon, UserCircleIcon } from '@heroicons/react/24/outline';
+import { UserManagement } from '../components/UserManagement';
 
 export function UserProfilesPage() {
   const { signOut, hasRole } = useAuth();
@@ -88,6 +89,7 @@ export function UserProfilesPage() {
         <main className="flex-1 ml-64 p-8 space-y-8">
           <h2 className="text-2xl font-bold text-gray-900">Perfis de Usuários</h2>
           <p className="text-gray-600">Gerencie os perfis de acesso dos usuários do sistema.</p>
+          <UserManagement />
         </main>
       </div>
     </div>
