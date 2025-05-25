@@ -50,7 +50,17 @@ export function LoginPage() {
         localStorage.removeItem('loginCredentials');
       }
     } catch (error) {
-      toast.error("Email ou senha inválidos");
+      if (error instanceof Error) {
+        toast.error(error.message, {
+          duration: 5000,
+          position: 'top-center',
+        });
+      } else {
+        toast.error("Ocorreu um erro ao tentar fazer login. Por favor, tente novamente.", {
+          duration: 5000,
+          position: 'top-center',
+        });
+      }
     } finally {
       setIsLoading(false);
     }

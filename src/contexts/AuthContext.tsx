@@ -89,6 +89,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       })
 
       if (error) {
+        if (error.message === 'Invalid login credentials') {
+          throw new Error('Email ou senha incorretos. Por favor, verifique suas credenciais.')
+        }
         throw error
       }
 
