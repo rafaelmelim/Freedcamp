@@ -12,6 +12,7 @@ type UserRole = Database['public']['Tables']['user_roles']['Row'];
 export function RoleManagement() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState<Profile | null>(null);
+  const [selectedRoles, setSelectedRoles] = useState<number[]>([]);
   const queryClient = useQueryClient();
 
   const { data: users, isLoading: isLoadingUsers } = useQuery({
@@ -57,24 +58,35 @@ export function RoleManagement() {
       if (error) throw error;
       return data as UserRole[];
     },
+    onSuccess: (data) => {
+      setSelectedRoles(data.map(ur => ur.role_id));
+    },
   });
 
-  const toggleRole = useMutation({
-    mutationFn: async ({ userId, roleId, isAdding }: { userId: string; roleId: number; isAdding: boolean }) => {
-      if (isAdding) {
-        const { error } = await supabase
-          .from('user_roles')
-          .insert([{ profile_id: userId, role_id: roleId }]);
+  const saveUserRoles = useMutation({
+    mutationFn: async () => {
+      if (!selectedUser) return;
+      
+      // Delete existing roles
+      const { error: deleteError } = await supabase
+        .from('user_roles')
+        .delete()
+        .eq('profile_id', selectedUser.id);
 
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
+      if (deleteError) throw deleteError;
+      
+      if (selectedRoles.length > 0) {
+        // Insert new roles
+        const { error: insertError } = await supabase
           .from('user_roles')
-          .delete()
-          .eq('profile_id', userId)
-          .eq('role_id', roleId);
-
-        if (error) throw error;
+          .insert(
+            selectedRoles.map(roleId => ({
+              profile_id: selectedUser.id,
+              role_id: roleId
+            }))
+          );
+        
+        if (insertError) throw insertError;
       }
     },
     onSuccess: () => {
@@ -90,14 +102,13 @@ export function RoleManagement() {
     setSelectedUser(user);
   };
 
-  const handleRoleToggle = (roleId: number) => {
-    if (!selectedUser) return;
-
-    const hasRole = userRoles?.some(ur => ur.role_id === roleId);
-    toggleRole.mutate({
-      userId: selectedUser.id,
-      roleId,
-      isAdding: !hasRole,
+  const handleRoleToggle = (roleId: number, checked: boolean) => {
+    setSelectedRoles(prev => {
+      if (checked) {
+        return [...prev, roleId];
+      } else {
+        return prev.filter(id => id !== roleId);
+      }
     });
   };
 
@@ -181,8 +192,8 @@ export function RoleManagement() {
                 <input
                   type="checkbox"
                   id={`role-${role.id}`}
-                  checked={userRoles?.some(ur => ur.role_id === role.id)}
-                  onChange={() => handleRoleToggle(role.id)}
+                  checked={selectedRoles.includes(role.id)}
+                  onChange={(e) => handleRoleToggle(role.id, e.target.checked)}
                   className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                 />
                 <label
@@ -198,6 +209,15 @@ export function RoleManagement() {
                 </label>
               </div>
             ))}
+          </div>
+          
+          <div className="mt-6 flex justify-end">
+            <button
+              onClick={() => saveUserRoles.mutate()}
+              className="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+            >
+              Salvar Alterações
+            </button>
           </div>
         </div>
       )}
