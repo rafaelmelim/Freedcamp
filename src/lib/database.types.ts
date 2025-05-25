@@ -11,6 +11,44 @@ export type TaskPriority = 'low' | 'medium' | 'high';
 export interface Database {
   public: {
     Tables: {
+      system_settings: {
+        Row: {
+          id: string
+          site_name: string
+          site_description: string | null
+          primary_color: string
+          logo_url: string | null
+          favicon_url: string | null
+          footer_text: string | null
+          layout_type: string
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          site_name?: string
+          site_description?: string | null
+          primary_color?: string
+          logo_url?: string | null
+          favicon_url?: string | null
+          footer_text?: string | null
+          layout_type?: string
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          site_name?: string
+          site_description?: string | null
+          primary_color?: string
+          logo_url?: string | null
+          favicon_url?: string | null
+          footer_text?: string | null
+          layout_type?: string
+          created_at?: string | null
+          updated_at?: string | null
+        }
+      }
       email_settings: {
         Row: {
           id: string
