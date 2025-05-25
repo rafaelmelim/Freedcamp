@@ -3,14 +3,26 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { Database } from '../lib/database.types';
 import { toast } from 'react-hot-toast';
-import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { MagnifyingGlassIcon, PlusIcon } from '@heroicons/react/24/outline';
 
 type Profile = Database['public']['Tables']['profiles']['Row'];
+
+interface NewUser {
+  name: string;
+  email: string;
+  password: string;
+}
 
 export function UserManagement() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState<Profile | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [newUser, setNewUser] = useState<NewUser>({
+    name: '',
+    email: '',
+    password: '',
+  });
   const queryClient = useQueryClient();
 
   const { data: users, isLoading } = useQuery({
@@ -50,6 +62,42 @@ export function UserManagement() {
     },
   });
 
+  const createUser = useMutation({
+    mutationFn: async (userData: NewUser) => {
+      // Create auth user
+      const { data: authData, error: signUpError } = await supabase.auth.signUp({
+        email: userData.email,
+        password: userData.password,
+      });
+
+      if (signUpError) throw signUpError;
+
+      if (authData.user) {
+        // Create user profile
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert([
+            {
+              id: authData.user.id,
+              name: userData.name,
+              email: userData.email,
+            },
+          ]);
+
+        if (profileError) throw profileError;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      setShowCreateForm(false);
+      setNewUser({ name: '', email: '', password: '' });
+      toast.success('User created successfully');
+    },
+    onError: () => {
+      toast.error('Failed to create user');
+    },
+  });
+
   const handleUserSelect = (user: Profile) => {
     setSelectedUser(user);
     setIsEditing(false);
@@ -68,7 +116,16 @@ export function UserManagement() {
   return (
     <div className="space-y-6">
       <div className="bg-white shadow-sm rounded-lg p-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">User Search</h3>
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-medium text-gray-900">User Search</h3>
+          <button
+            onClick={() => setShowCreateForm(true)}
+            className="flex items-center px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+          >
+            <PlusIcon className="h-5 w-5 mr-2" />
+            Create User
+          </button>
+        </div>
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
@@ -113,6 +170,77 @@ export function UserManagement() {
           </div>
         )}
       </div>
+
+      {showCreateForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Create New User</h3>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                createUser.mutate(newUser);
+              }}
+              className="space-y-4"
+            >
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Name
+                </label>
+                <input
+                  type="text"
+                  value={newUser.name}
+                  onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  value={newUser.email}
+                  onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Password
+                </label>
+                <input
+                  type="password"
+                  value={newUser.password}
+                  onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                  required
+                  minLength={6}
+                />
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowCreateForm(false)}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                >
+                  Create User
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {selectedUser && (
         <div className="bg-white shadow-sm rounded-lg p-6">
