@@ -427,15 +427,6 @@ export function BoardPage() {
           <div className="flex space-x-4">
             <ImportCSV onImport={handleImport} />
             <ExportCSV />
-            {!isAddingProject && (
-              <button
-                onClick={() => setIsAddingProject(true)}
-                className="flex items-center px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200"
-              >
-                <PlusIcon className="w-5 h-5 mr-2" />
-                Novo Projeto
-              </button>
-            )}
           </div>
         </div>
 
@@ -617,7 +608,10 @@ export function BoardPage() {
         {isAddingProject && (
           <div className="fixed bottom-0 left-64 right-0 p-6 bg-white border-t border-gray-200 shadow-lg">
             <ProjectForm
-              onSubmit={(project) => createProject.mutate(project.title)}
+              onSubmit={(project) => {
+                createProject.mutate(project.title);
+                setIsAddingProject(false);
+              }}
               onCancel={() => setIsAddingProject(false)}
             />
           </div>
