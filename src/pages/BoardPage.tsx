@@ -15,7 +15,7 @@ import { TaskFilters } from '../components/TaskFilters';
 import { TaskDetailsModal } from '../components/TaskDetailsModal';
 import { ProjectDetails } from '../components/ProjectDetails';
 import { ProjectForm } from '../components/ProjectForm';
-import { HomeIcon, ArchiveBoxIcon, Cog6ToothIcon, ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
+import { HomeIcon, ArchiveBoxIcon, Cog6ToothIcon, ArrowRightOnRectangleIcon, PlusIcon } from '@heroicons/react/24/outline';
 import { Link } from 'react-router-dom';
 
 type Project = Database['public']['Tables']['projects']['Row'];
