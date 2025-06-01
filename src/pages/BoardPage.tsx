@@ -606,20 +606,19 @@ export function BoardPage() {
         
         <div className="fixed bottom-8 right-8 z-50">
           <button
-            onClick={() => setAddingTaskToProject(projects?.[0]?.id)}
+            onClick={() => setIsAddingProject(true)}
             className="flex items-center px-6 py-3 text-white bg-primary-600 rounded-full shadow-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all duration-200"
           >
             <PlusIcon className="w-6 h-6 mr-2" />
-            Nova Tarefa
+            Novo Projeto
           </button>
         </div>
 
-        {addingTaskToProject && (
+        {isAddingProject && (
           <div className="fixed bottom-0 left-64 right-0 p-6 bg-white border-t border-gray-200 shadow-lg">
-            <TaskForm
-              projectId={addingTaskToProject}
-              onSubmit={(task, labels) => createTask.mutate({ task, labels })}
-              onCancel={() => setAddingTaskToProject(null)}
+            <ProjectForm
+              onSubmit={(project) => createProject.mutate(project.title)}
+              onCancel={() => setIsAddingProject(false)}
             />
           </div>
         )}
