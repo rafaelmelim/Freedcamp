@@ -5,10 +5,11 @@ import { Database } from '../lib/database.types';
 import { toast } from 'react-hot-toast';
 
 type Task = Database['public']['Tables']['tasks']['Insert'];
+type Label = Database['public']['Tables']['labels']['Row'];
 
 interface TaskFormProps {
   projectId: number;
-  onSubmit: (data: Task) => void;
+  onSubmit: (data: Task, labels: Label[]) => void;
   onCancel: () => void;
 }
 
@@ -71,7 +72,7 @@ export function TaskForm({ projectId, onSubmit, onCancel }: TaskFormProps) {
     };
 
     try {
-      onSubmit(taskData);
+      onSubmit(taskData, []); // Pass empty array for labels
     } catch (error) {
       toast.error('Erro ao criar tarefa. Por favor, tente novamente.');
       console.error('Error creating task:', error);
