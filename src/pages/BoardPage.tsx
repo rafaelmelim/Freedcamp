@@ -433,7 +433,6 @@ export function BoardPage() {
         <div className="mb-8">
           <TaskStatistics tasks={tasks || []} />
         </div>
-
         {projects?.map((project) => {
           const projectTasks = tasks?.filter(task => task.project_id === project.id) || [];
           return (
@@ -445,12 +444,6 @@ export function BoardPage() {
           );
         })}
 
-        {isAddingProject && (
-          <ProjectForm
-            onSubmit={(project) => createProject.mutate(project.title)}
-            onCancel={() => setIsAddingProject(false)}
-          />
-        )}
 
         <DragDropContext onDragEnd={handleDragEnd}>
           <Droppable droppableId="board" type="project" direction="horizontal">
@@ -604,7 +597,7 @@ export function BoardPage() {
         </div>
 
         {isAddingProject && (
-          <div className="fixed bottom-0 left-64 right-0 p-6 bg-white border-t border-gray-200 shadow-lg">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
             <ProjectForm
               onSubmit={(project) => {
                 createProject.mutate(project.title);
