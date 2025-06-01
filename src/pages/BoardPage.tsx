@@ -610,6 +610,16 @@ export function BoardPage() {
           </Droppable>
         </DragDropContext>
 
+        {addingTaskToProject && (
+          <div className="fixed bottom-0 left-64 right-0 p-6 bg-white border-t border-gray-200 shadow-lg">
+            <TaskForm
+              projectId={addingTaskToProject}
+              onSubmit={(task, labels) => createTask.mutate({ task, labels })}
+              onCancel={() => setAddingTaskToProject(null)}
+            />
+          </div>
+        )}
+
         {selectedTask && (
           <TaskDetailsModal
             task={selectedTask}
