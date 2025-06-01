@@ -41,8 +41,15 @@ export function TaskForm({ projectId, onSubmit, onCancel }: TaskFormProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Validate required fields
     if (!title.trim()) {
       toast.error('O nome da tarefa é obrigatório');
+      return;
+    }
+
+    // Validate dates
+    if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
+      toast.error('A data inicial não pode ser maior que a data final');
       return;
     }
 
@@ -54,14 +61,21 @@ export function TaskForm({ projectId, onSubmit, onCancel }: TaskFormProps) {
 
     const fullDescription = description.trim() + (issueLinksText ? `\n\nIssues:\n${issueLinksText}` : '');
 
-    onSubmit({
+    const taskData = {
       title: title.trim(),
       description: fullDescription || null,
       project_id: projectId,
       position: 0,
-      due_date: endDate || null,
+      due_date: endDate || startDate || null,
       priority: 'medium',
-    });
+    };
+
+    try {
+      onSubmit(taskData);
+    } catch (error) {
+      toast.error('Erro ao criar tarefa. Por favor, tente novamente.');
+      console.error('Error creating task:', error);
+    }
   };
 
   return (

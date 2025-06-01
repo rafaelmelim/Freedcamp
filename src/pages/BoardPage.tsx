@@ -116,13 +116,20 @@ export function BoardPage() {
   const createTask = useMutation({
     mutationFn: async ({ task, labels }: { task: TaskInsert, labels: Label[] }) => {
       // First create the task
-      const { data: taskData, error: taskError } = await supabase
+      const { data, error } = await supabase
         .from('tasks')
         .insert([task])
         .select()
         .single();
 
-      if (taskError) throw taskError;
+      if (error) {
+        console.error('Error creating task:', error);
+        throw new Error('Failed to create task: ' + error.message);
+      }
+
+      if (!data) {
+        throw new Error('No data returned from task creation');
+      }
 
       // Then create the task-label associations
       if (labels.length > 0) {
@@ -130,23 +137,27 @@ export function BoardPage() {
           .from('task_labels')
           .insert(
             labels.map(label => ({
-              task_id: taskData.id,
+              task_id: data.id,
               label_id: label.id,
             }))
           );
 
-        if (labelError) throw labelError;
+        if (labelError) {
+          console.error('Error creating task labels:', labelError);
+          throw new Error('Failed to create task labels: ' + labelError.message);
+        }
       }
 
-      return taskData;
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       setAddingTaskToProject(null);
       toast.success('Task created successfully');
     },
-    onError: () => {
-      toast.error('Failed to create task');
+    onError: (error: Error) => {
+      console.error('Task creation error:', error);
+      toast.error(error.message || 'Failed to create task');
     },
   });
 
