@@ -422,12 +422,20 @@ export function BoardPage() {
           </nav>
         </aside>
         <main className="flex-1 ml-64 p-8">
+        <div className="mb-8">
+          <TaskFilters onFilterChange={setFilters} />
+        </div>
+        
         <div className="flex justify-between items-center mb-8">
           <h2 className="text-2xl font-bold text-gray-900">Página Inicial</h2>
           <div className="flex space-x-4">
             <ImportCSV onImport={handleImport} />
             <ExportCSV />
           </div>
+        </div>
+
+        <div className="mb-8">
+          <TaskStatistics tasks={tasks || []} />
         </div>
 
         {projects?.map((project) => {
@@ -440,12 +448,6 @@ export function BoardPage() {
             />
           );
         })}
-
-        <div className="mb-8">
-          <TaskStatistics tasks={tasks || []} />
-        </div>
-
-        <TaskFilters onFilterChange={setFilters} />
 
         {isAddingProject && (
           <ProjectForm
