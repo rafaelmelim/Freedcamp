@@ -20,7 +20,6 @@ export function ProjectForm({ onSubmit, onCancel }: ProjectFormProps) {
   const [description, setDescription] = useState('');
   const [estimatedHours, setEstimatedHours] = useState('');
   const [actualHours, setActualHours] = useState('');
-  const [showActivities, setShowActivities] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -177,33 +176,6 @@ export function ProjectForm({ onSubmit, onCancel }: ProjectFormProps) {
               />
             </div>
           </div>
-
-          <div>
-            <button
-              type="button"
-              onClick={() => setShowActivities(true)}
-              className="flex items-center px-4 py-2 text-sm font-medium text-primary-600 border border-primary-600 rounded-lg hover:bg-primary-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200"
-            >
-              <PlusIcon className="w-5 h-5 mr-2" />
-              Adicionar Atividades
-            </button>
-          </div>
-
-          {showActivities && (
-            <div className="bg-gray-50 rounded-lg p-4">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-medium text-gray-900">Atividades</h3>
-                <button
-                  type="button"
-                  onClick={() => setShowActivities(false)}
-                  className="text-gray-400 hover:text-gray-500"
-                >
-                  <XMarkIcon className="w-5 h-5" />
-                </button>
-              </div>
-              {/* Activities form content will be added here */}
-            </div>
-          )}
         </div>
 
         <div className="flex justify-end space-x-3">
