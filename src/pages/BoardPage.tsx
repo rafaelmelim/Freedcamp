@@ -428,10 +428,6 @@ export function BoardPage() {
         
         <div className="flex justify-between items-center mb-8">
           <h2 className="text-2xl font-bold text-gray-900">Página Inicial</h2>
-          <div className="flex space-x-4">
-            <ImportCSV onImport={handleImport} />
-            <ExportCSV />
-          </div>
         </div>
 
         <div className="mb-8">
