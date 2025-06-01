@@ -23,7 +23,7 @@ export function SystemSettingsProvider({ children }: { children: React.ReactNode
         .from('system_settings')
         .select('*')
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       return data;
