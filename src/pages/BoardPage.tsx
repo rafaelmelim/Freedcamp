@@ -14,6 +14,7 @@ import { Header } from '../components/Header';
 import { TaskFilters } from '../components/TaskFilters';
 import { TaskDetailsModal } from '../components/TaskDetailsModal';
 import { ProjectDetails } from '../components/ProjectDetails';
+import { ProjectForm } from '../components/ProjectForm';
 import { HomeIcon, ArchiveBoxIcon, Cog6ToothIcon, ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
 import { Link } from 'react-router-dom';
 
@@ -426,12 +427,15 @@ export function BoardPage() {
           <div className="flex space-x-4">
             <ImportCSV onImport={handleImport} />
             <ExportCSV />
-            <button
-              onClick={() => setIsAddingProject(true)}
-              className="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-            >
-              Novo Projeto
-            </button>
+            {!isAddingProject && (
+              <button
+                onClick={() => setIsAddingProject(true)}
+                className="flex items-center px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200"
+              >
+                <PlusIcon className="w-5 h-5 mr-2" />
+                Novo Projeto
+              </button>
+            )}
           </div>
         </div>
 
@@ -453,30 +457,10 @@ export function BoardPage() {
         <TaskFilters onFilterChange={setFilters} />
 
         {isAddingProject && (
-          <div className="mb-8 bg-white/80 backdrop-blur-sm rounded-lg p-4">
-            <input
-              type="text"
-              value={newProjectTitle}
-              onChange={(e) => setNewProjectTitle(e.target.value)}
-              placeholder="Project title"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary-500"
-            />
-            <div className="mt-4 flex justify-end space-x-2">
-              <button
-                onClick={() => setIsAddingProject(false)}
-                className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => createProject.mutate(newProjectTitle)}
-                disabled={!newProjectTitle.trim()}
-                className="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
-              >
-                Create
-              </button>
-            </div>
-          </div>
+          <ProjectForm
+            onSubmit={(project) => createProject.mutate(project.title)}
+            onCancel={() => setIsAddingProject(false)}
+          />
         )}
 
         <DragDropContext onDragEnd={handleDragEnd}>
@@ -502,7 +486,7 @@ export function BoardPage() {
                       >
                         <div className="flex justify-between items-center mb-4">
                           <h3 className="text-lg font-semibold text-gray-900">
-                            {project.title}
+                            #{project.sequence_number} - {project.title}
                           </h3>
                           <button
                             onClick={() => setAddingTaskToProject(project.id)}
