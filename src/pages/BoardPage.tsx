@@ -470,6 +470,13 @@ export function BoardPage() {
                           <h3 className="text-lg font-semibold text-gray-900">
                             #{project.sequence_number} - {project.title}
                           </h3>
+                          <button
+                            onClick={() => setAddingTaskToProject(project.id)}
+                            className="flex items-center px-3 py-1 text-sm text-primary-600 hover:text-primary-700 focus:outline-none"
+                          >
+                            <PlusIcon className="w-5 h-5 mr-1" />
+                            Task
+                          </button>
                         </div>
 
                         {addingTaskToProject === project.id && (
