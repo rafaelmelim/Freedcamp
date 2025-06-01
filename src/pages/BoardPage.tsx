@@ -13,6 +13,7 @@ import { TaskStatistics } from '../components/TaskStatistics';
 import { Header } from '../components/Header';
 import { TaskFilters } from '../components/TaskFilters';
 import { TaskDetailsModal } from '../components/TaskDetailsModal';
+import { ProjectDetails } from '../components/ProjectDetails';
 import { HomeIcon, ArchiveBoxIcon, Cog6ToothIcon, ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
 import { Link } from 'react-router-dom';
 
@@ -433,6 +434,17 @@ export function BoardPage() {
             </button>
           </div>
         </div>
+
+        {projects?.map((project) => {
+          const projectTasks = tasks?.filter(task => task.project_id === project.id) || [];
+          return (
+            <ProjectDetails
+              key={project.id}
+              project={project}
+              tasks={projectTasks}
+            />
+          );
+        })}
 
         <div className="mb-8">
           <TaskStatistics tasks={tasks || []} />
