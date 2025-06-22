@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { Database } from '../lib/database.types';
-import { toast } from 'react-hot-toast';
 
 type Label = Database['public']['Tables']['labels']['Row'];
 
@@ -12,11 +11,6 @@ interface LabelPickerProps {
 }
 
 export function LabelPicker({ selectedLabels, onToggleLabel }: LabelPickerProps) {
-  const [isCreating, setIsCreating] = useState(false);
-  const [newLabelName, setNewLabelName] = useState('');
-  const [newLabelColor, setNewLabelColor] = useState('#3B82F6');
-  const queryClient = useQueryClient();
-
   const { data: labels } = useQuery({
     queryKey: ['labels'],
     queryFn: async () => {
@@ -27,34 +21,6 @@ export function LabelPicker({ selectedLabels, onToggleLabel }: LabelPickerProps)
 
       if (error) throw error;
       return data as Label[];
-    },
-  });
-
-  const createLabel = useMutation({
-    mutationFn: async () => {
-      const { data, error } = await supabase
-        .from('labels')
-        .insert([
-          {
-            name: newLabelName,
-            color: newLabelColor,
-          },
-        ])
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: (newLabel) => {
-      queryClient.invalidateQueries({ queryKey: ['labels'] });
-      setIsCreating(false);
-      setNewLabelName('');
-      toast.success('Label created successfully');
-      onToggleLabel(newLabel);
-    },
-    onError: () => {
-      toast.error('Failed to create label');
     },
   });
 
@@ -81,46 +47,6 @@ export function LabelPicker({ selectedLabels, onToggleLabel }: LabelPickerProps)
           </div>
         ))}
       </div>
-
-      {isCreating ? (
-        <div className="mt-4 space-y-2">
-          <input
-            type="text"
-            value={newLabelName}
-            onChange={(e) => setNewLabelName(e.target.value)}
-            placeholder="Label name"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary-500"
-          />
-          <input
-            type="color"
-            value={newLabelColor}
-            onChange={(e) => setNewLabelColor(e.target.value)}
-            className="w-full h-10 p-1 rounded-md"
-          />
-          <div className="flex justify-end gap-2">
-            <button
-              onClick={() => setIsCreating(false)}
-              className="px-3 py-1 text-sm text-gray-600 hover:text-gray-900"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={() => createLabel.mutate()}
-              disabled={!newLabelName.trim()}
-              className="px-3 py-1 text-sm text-white bg-primary-600 rounded-md hover:bg-primary-700 disabled:opacity-50"
-            >
-              Create
-            </button>
-          </div>
-        </div>
-      ) : (
-        <button
-          onClick={() => setIsCreating(true)}
-          className="mt-4 w-full px-3 py-2 text-sm text-primary-600 border border-primary-600 rounded-md hover:bg-primary-50"
-        >
-          Create new label
-        </button>
-      )}
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { User } from '@supabase/supabase-js'
+import { User, AuthSessionMissingError } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
 import { getUserRoles } from '../lib/roles'
 import { Database } from '../lib/database.types'
@@ -108,10 +108,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(null)
       setRoles([])
 
-      // Clear any stored auth data
-      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID
-      localStorage.removeItem(`sb-${projectId}-auth-token`)
-      
       // Sign out from Supabase
       const { error } = await supabase.auth.signOut()
       if (error) {
@@ -120,8 +116,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       navigate('/login')
     } catch (error) {
-      console.error('Sign out error:', error)
-      throw error
+      // Handle the case where session is already missing/invalid
+      if (error instanceof AuthSessionMissingError) {
+        console.log('Session already cleared, proceeding with navigation')
+        navigate('/login')
+      } else {
+        console.error('Sign out error:', error)
+        throw error
+      }
     }
   }
 

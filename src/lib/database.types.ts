@@ -7,6 +7,7 @@ export type Json =
   | Json[]
 
 export type TaskPriority = 'low' | 'medium' | 'high';
+export type TaskStatus = 'concluida' | 'em_andamento' | 'nao_iniciada';
 
 export interface Database {
   public: {
@@ -214,6 +215,8 @@ export interface Database {
           completed: boolean
           priority: TaskPriority
           archived: boolean
+          status: TaskStatus
+          value: number | null
         }
         Insert: {
           id?: number
@@ -228,6 +231,8 @@ export interface Database {
           completed?: boolean
           priority?: TaskPriority
           archived?: boolean
+          status?: TaskStatus
+          value?: number | null
         }
         Update: {
           id?: number
@@ -242,6 +247,8 @@ export interface Database {
           completed?: boolean
           priority?: TaskPriority
           archived?: boolean
+          status?: TaskStatus
+          value?: number | null
         }
       }
       labels: {

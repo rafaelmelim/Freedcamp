@@ -24,6 +24,7 @@ export function TaskForm({ projectId, onSubmit, onCancel }: TaskFormProps) {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [issueLinks, setIssueLinks] = useState<IssueLink[]>([{ id: '1', url: '' }]);
+  const [value, setValue] = useState('');
 
   const handleAddIssueLink = () => {
     setIssueLinks([...issueLinks, { id: Date.now().toString(), url: '' }]);
@@ -69,6 +70,7 @@ export function TaskForm({ projectId, onSubmit, onCancel }: TaskFormProps) {
       position: 0,
       due_date: endDate || startDate || null,
       priority: 'medium',
+      value: value ? parseFloat(value) : null,
     };
 
     try {
@@ -174,6 +176,21 @@ export function TaskForm({ projectId, onSubmit, onCancel }: TaskFormProps) {
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors duration-200"
             />
           </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Valor da Tarefa (R$)
+          </label>
+          <input
+            type="number"
+            step="0.01"
+            min="0"
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            placeholder="0,00"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors duration-200"
+          />
         </div>
 
         <div>

@@ -1,21 +1,18 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { format, isPast, isToday, addDays, startOfDay } from 'date-fns';
+import { format, isPast, isToday, addDays, startOfDay, isFuture } from 'date-fns';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'react-hot-toast';
-import { Database, TaskPriority } from '../lib/database.types';
+import { Database, TaskPriority, TaskStatus } from '../lib/database.types';
 import { TaskForm } from '../components/TaskForm';
 import { ImportCSV } from '../components/ImportCSV';
 import { ExportCSV } from '../components/ExportCSV';
-import { TaskStatistics } from '../components/TaskStatistics';
 import { Header } from '../components/Header';
-import { TaskFilters } from '../components/TaskFilters';
 import { TaskDetailsModal } from '../components/TaskDetailsModal';
-import { ProjectDetails } from '../components/ProjectDetails';
 import { ProjectForm } from '../components/ProjectForm';
-import { HomeIcon, ArchiveBoxIcon, Cog6ToothIcon, ArrowRightOnRectangleIcon, PlusIcon } from '@heroicons/react/24/outline';
+import { HomeIcon, ArchiveBoxIcon, Cog6ToothIcon, ArrowRightOnRectangleIcon, PlusIcon, ChevronUpIcon, ChevronDownIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { Link } from 'react-router-dom';
 
 type Project = Database['public']['Tables']['projects']['Row'];
@@ -24,17 +21,22 @@ type Label = Database['public']['Tables']['labels']['Row'];
 type ProjectInsert = Database['public']['Tables']['projects']['Insert'];
 type TaskInsert = Database['public']['Tables']['tasks']['Insert'];
 
-interface TaskFiltersState {
-  search: string;
-  showCompleted: boolean;
-  dueDateFilter: 'all' | 'overdue' | 'today' | 'upcoming' | 'none';
-  priorityFilter: TaskPriority | 'all';
-}
-
 const priorityColors = {
   high: 'bg-red-100 text-red-800 ring-red-600/20',
   medium: 'bg-yellow-100 text-yellow-800 ring-yellow-600/20',
   low: 'bg-blue-100 text-blue-800 ring-blue-600/20',
+};
+
+const statusColors = {
+  concluida: 'text-green-600',
+  em_andamento: 'text-yellow-600',
+  nao_iniciada: 'text-gray-600',
+};
+
+const statusLabels = {
+  concluida: 'Concluída',
+  em_andamento: 'Em andamento',
+  nao_iniciada: 'Não iniciada',
 };
 
 export function BoardPage() {
@@ -43,21 +45,27 @@ export function BoardPage() {
   const [newProjectTitle, setNewProjectTitle] = useState('');
   const [addingTaskToProject, setAddingTaskToProject] = useState<number | null>(null);
   const [selectedTask, setSelectedTask] = useState<(Task & { task_labels: { label: Label }[] }) | null>(null);
-  const [filters, setFilters] = useState<TaskFiltersState>({
-    search: '',
-    showCompleted: true,
-    dueDateFilter: 'all',
-    priorityFilter: 'all',
-  });
+  const [projectToEdit, setProjectToEdit] = useState<Project | null>(null);
+  const [showProjectForm, setShowProjectForm] = useState(false);
+  const [inputProjectSearchTerm, setInputProjectSearchTerm] = useState('');
+  const [actualProjectSearchTerm, setActualProjectSearchTerm] = useState('');
+  const [collapsedProjects, setCollapsedProjects] = useState<Record<number, boolean>>({});
   const queryClient = useQueryClient();
 
   const { data: projects, isLoading: isLoadingProjects } = useQuery({
-    queryKey: ['projects'],
+    queryKey: ['projects', actualProjectSearchTerm],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('projects')
         .select('*')
         .order('position');
+
+      // Apply search filter if provided
+      if (actualProjectSearchTerm.trim()) {
+        query = query.or(`title.ilike.%${actualProjectSearchTerm}%,sequence_number.eq.${parseInt(actualProjectSearchTerm) || 0}`);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       return data as Project[];
@@ -86,17 +94,26 @@ export function BoardPage() {
     },
   });
 
+  // Initialize all projects as collapsed when projects are loaded
+  useEffect(() => {
+    if (projects && projects.length > 0 && Object.keys(collapsedProjects).length === 0) {
+      const initialCollapsedState: Record<number, boolean> = {};
+      projects.forEach(project => {
+        initialCollapsedState[project.id] = true;
+      });
+      setCollapsedProjects(initialCollapsedState);
+    }
+  }, [projects, collapsedProjects]);
+
   const createProject = useMutation({
-    mutationFn: async (title: string) => {
+    mutationFn: async (projectData: ProjectInsert) => {
       const { data, error } = await supabase
         .from('projects')
-        .insert([
-          {
-            title,
-            owner_id: user?.id,
-            position: projects ? projects.length : 0,
-          },
-        ])
+        .insert([{
+          ...projectData,
+          owner_id: user?.id,
+          position: projects ? projects.length : 0,
+        }])
         .select();
 
       if (error) throw error;
@@ -104,12 +121,32 @@ export function BoardPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
-      setNewProjectTitle('');
-      setIsAddingProject(false);
+      setShowProjectForm(false);
+      setProjectToEdit(null);
       toast.success('Project created successfully');
     },
     onError: () => {
       toast.error('Failed to create project');
+    },
+  });
+
+  const updateProject = useMutation({
+    mutationFn: async ({ projectId, projectData }: { projectId: number; projectData: Partial<Project> }) => {
+      const { error } = await supabase
+        .from('projects')
+        .update(projectData)
+        .eq('id', projectId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      setShowProjectForm(false);
+      setProjectToEdit(null);
+      toast.success('Project updated successfully');
+    },
+    onError: () => {
+      toast.error('Failed to update project');
     },
   });
 
@@ -162,7 +199,7 @@ export function BoardPage() {
   });
 
   const updateTask = useMutation({
-    mutationFn: async ({ taskId, data, labels }: { taskId: number, data: Partial<Task>, labels: Label[] }) => {
+    mutationFn: async ({ taskId, data }: { taskId: number, data: Partial<Task> }) => {
       // Update task data
       const { error: taskError } = await supabase
         .from('tasks')
@@ -170,28 +207,6 @@ export function BoardPage() {
         .eq('id', taskId);
 
       if (taskError) throw taskError;
-
-      // Delete existing label associations
-      const { error: deleteError } = await supabase
-        .from('task_labels')
-        .delete()
-        .eq('task_id', taskId);
-
-      if (deleteError) throw deleteError;
-
-      // Create new label associations
-      if (labels.length > 0) {
-        const { error: labelError } = await supabase
-          .from('task_labels')
-          .insert(
-            labels.map(label => ({
-              task_id: taskId,
-              label_id: label.id,
-            }))
-          );
-
-        if (labelError) throw labelError;
-      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
@@ -238,11 +253,14 @@ export function BoardPage() {
     },
   });
 
-  const toggleTaskCompleted = useMutation({
-    mutationFn: async ({ taskId, completed }: { taskId: number; completed: boolean }) => {
+  const updateTaskStatus = useMutation({
+    mutationFn: async ({ taskId, status }: { taskId: number; status: TaskStatus }) => {
       const { error } = await supabase
         .from('tasks')
-        .update({ completed })
+        .update({ 
+          status,
+          completed: status === 'concluida'
+        })
         .eq('id', taskId);
 
       if (error) throw error;
@@ -284,27 +302,7 @@ export function BoardPage() {
 
     const { source, destination, draggableId, type } = result;
 
-    if (type === 'project') {
-      const newProjects = Array.from(projects || []);
-      const [removed] = newProjects.splice(source.index, 1);
-      newProjects.splice(destination.index, 0, removed);
-
-      const updates = newProjects.map((project, index) => ({
-        id: project.id,
-        position: index,
-      }));
-
-      const { error } = await supabase
-        .from('projects')
-        .upsert(updates);
-
-      if (error) {
-        toast.error('Failed to update project positions');
-        return;
-      }
-
-      queryClient.setQueryData(['projects'], newProjects);
-    } else if (type === 'task') {
+    if (type === 'task') {
       const sourceProjectId = source.droppableId;
       const destinationProjectId = destination.droppableId;
       const taskId = parseInt(draggableId);
@@ -333,48 +331,26 @@ export function BoardPage() {
     importData.mutate({ projects, tasks });
   };
 
+  const toggleCollapse = (projectId: number) => {
+    setCollapsedProjects(prev => ({
+      ...prev,
+      [projectId]: !prev[projectId]
+    }));
+  };
+
+  const getTaskStatus = (task: Task) => {
+    const status = task.status || 'nao_iniciada';
+    return {
+      label: statusLabels[status],
+      color: statusColors[status],
+    };
+  };
+
   const filterTasks = (tasks: (Task & { task_labels: { label: Label }[] })[] | undefined, projectId: number) => {
     if (!tasks) return [];
 
     return tasks
       .filter(task => task.project_id === projectId)
-      .filter(task => {
-        // Filter by completion status
-        if (!filters.showCompleted && task.completed) {
-          return false;
-        }
-
-        // Filter by search term
-        if (filters.search && !task.title.toLowerCase().includes(filters.search.toLowerCase())) {
-          return false;
-        }
-
-        // Filter by priority
-        if (filters.priorityFilter !== 'all' && task.priority !== filters.priorityFilter) {
-          return false;
-        }
-
-        // Filter by due date
-        if (task.due_date) {
-          const dueDate = startOfDay(new Date(task.due_date));
-          const today = startOfDay(new Date());
-
-          switch (filters.dueDateFilter) {
-            case 'overdue':
-              return isPast(dueDate) && !isToday(dueDate);
-            case 'today':
-              return isToday(dueDate);
-            case 'upcoming':
-              return dueDate >= today && dueDate <= addDays(today, 7);
-            case 'none':
-              return false;
-            default:
-              return true;
-          }
-        } else {
-          return filters.dueDateFilter === 'none' || filters.dueDateFilter === 'all';
-        }
-      })
       .sort((a, b) => {
         // Sort by priority (high to low)
         const priorityOrder = { high: 0, medium: 1, low: 2 };
@@ -384,6 +360,65 @@ export function BoardPage() {
         // Then by position
         return a.position - b.position;
       });
+  };
+
+  const handleSearch = () => {
+    setActualProjectSearchTerm(inputProjectSearchTerm);
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
+  const calculateProjectProgress = (projectId: number) => {
+    const projectTasks = tasks?.filter(t => t.project_id === projectId) || [];
+    const totalTasks = projectTasks.length;
+    
+    if (totalTasks === 0) {
+      return { completed: 0, inProgress: 0, notStarted: 0, completedPercentage: 0, inProgressPercentage: 0, notStartedPercentage: 0 };
+    }
+    
+    const completed = projectTasks.filter(t => t.status === 'concluida').length;
+    const inProgress = projectTasks.filter(t => t.status === 'em_andamento').length;
+    const notStarted = projectTasks.filter(t => t.status === 'nao_iniciada').length;
+    
+    const completedPercentage = Math.round((completed / totalTasks) * 100);
+    const inProgressPercentage = Math.round((inProgress / totalTasks) * 100);
+    const notStartedPercentage = Math.round((notStarted / totalTasks) * 100);
+    
+    return {
+      completed,
+      inProgress,
+      notStarted,
+      completedPercentage,
+      inProgressPercentage,
+      notStartedPercentage
+    };
+  };
+
+  const handleProjectClick = (project: Project) => {
+    setProjectToEdit(project);
+    setShowProjectForm(true);
+  };
+
+  const handleNewProject = () => {
+    setProjectToEdit(null);
+    setShowProjectForm(true);
+  };
+
+  const handleProjectFormSubmit = (projectData: ProjectInsert) => {
+    if (projectToEdit) {
+      updateProject.mutate({ projectId: projectToEdit.id, projectData });
+    } else {
+      createProject.mutate(projectData);
+    }
+  };
+
+  const handleProjectFormCancel = () => {
+    setShowProjectForm(false);
+    setProjectToEdit(null);
   };
 
   if (isLoadingProjects || isLoadingTasks) {
@@ -397,20 +432,20 @@ export function BoardPage() {
         <aside className="w-64 bg-white border-r border-gray-200 fixed left-0 top-16 bottom-0 overflow-y-auto">
           <nav className="p-4 space-y-2">
             <div className="pb-4 mb-4 border-b border-gray-200">
-            <Link
-              to="/board"
-              className="flex items-center space-x-2 px-4 py-2 bg-gray-100 text-gray-900 rounded-md"
-            >
-              <HomeIcon className="w-5 h-5" />
-              <span>Página Inicial</span>
-            </Link>
-            <Link
-              to="/archived"
-              className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md"
-            >
-              <ArchiveBoxIcon className="w-5 h-5" />
-              <span>Arquivos</span>
-            </Link>
+              <Link
+                to="/board"
+                className="flex items-center space-x-2 px-4 py-2 bg-gray-100 text-gray-900 rounded-md"
+              >
+                <HomeIcon className="w-5 h-5" />
+                <span>Página Inicial</span>
+              </Link>
+              <Link
+                to="/archived"
+                className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md"
+              >
+                <ArchiveBoxIcon className="w-5 h-5" />
+                <span>Arquivos</span>
+              </Link>
             </div>
             <div className="pt-4 mt-4 border-t border-gray-200">
               {hasRole('admin') && (
@@ -433,218 +468,257 @@ export function BoardPage() {
           </nav>
         </aside>
         <main className="flex-1 ml-64 p-8">
-        <div className="mb-8">
-          <TaskFilters onFilterChange={setFilters} />
-        </div>
-        
-        <div className="flex justify-between items-center mb-8">
-          <h2 className="text-2xl font-bold text-gray-900">Página Inicial</h2>
-        </div>
-
-        <div className="mb-8">
-          <TaskStatistics tasks={tasks || []} />
-        </div>
-        {projects?.map((project) => {
-          const projectTasks = tasks?.filter(task => task.project_id === project.id) || [];
-          return (
-            <ProjectDetails
-              key={project.id}
-              project={project}
-              tasks={projectTasks}
-            />
-          );
-        })}
-
-
-        <DragDropContext onDragEnd={handleDragEnd}>
-          <Droppable droppableId="board" type="project" direction="horizontal">
-            {(provided) => (
-              <div
-                {...provided.droppableProps}
-                ref={provided.innerRef}
-                className="flex space-x-6 overflow-x-auto pb-6"
-              >
-                {projects?.map((project, index) => (
-                  <Draggable
-                    key={project.id}
-                    draggableId={String(project.id)}
-                    index={index}
-                  >
-                    {(provided) => (
-                      <div
-                        ref={provided.innerRef}
-                        {...provided.draggableProps}
-                        {...provided.dragHandleProps}
-                        className="bg-white/80 backdrop-blur-sm rounded-lg shadow-sm p-4 min-w-[300px]"
-                      >
-                        <div className="flex justify-between items-center mb-4">
-                          <h3 className="text-lg font-semibold text-gray-900">
-                            #{project.sequence_number} - {project.title}
-                          </h3>
-                          <button
-                            onClick={() => setAddingTaskToProject(project.id)}
-                            className="flex items-center px-3 py-1 text-sm text-primary-600 hover:text-primary-700 focus:outline-none"
-                          >
-                            <PlusIcon className="w-5 h-5 mr-1" />
-                            Task
-                          </button>
-                        </div>
-
-                        {addingTaskToProject === project.id && (
-                          <TaskForm
-                            projectId={project.id}
-                            onSubmit={(task, labels) => createTask.mutate({ task, labels })}
-                            onCancel={() => setAddingTaskToProject(null)}
-                          />
-                        )}
-
-                        <Droppable droppableId={String(project.id)} type="task">
-                          {(provided) => (
-                            <div
-                              ref={provided.innerRef}
-                              {...provided.droppableProps}
-                              className="space-y-2"
-                            >
-                              {filterTasks(tasks, project.id).map((task, index) => (
-                                <Draggable
-                                  key={task.id}
-                                  draggableId={String(task.id)}
-                                  index={index}
-                                >
-                                  {(provided) => (
-                                    <div
-                                      ref={provided.innerRef}
-                                      {...provided.draggableProps}
-                                      {...provided.dragHandleProps}
-                                      className={`bg-white rounded-md shadow-sm p-3 hover:shadow-md transition-shadow cursor-pointer ${
-                                        task.completed ? 'opacity-50' : ''
-                                      }`}
-                                      onClick={() => setSelectedTask(task)}
-                                    >
-                                      <div className="flex items-start gap-3">
-                                        <input
-                                          type="checkbox"
-                                          checked={task.completed}
-                                          onChange={(e) => {
-                                            e.stopPropagation();
-                                            toggleTaskCompleted.mutate({
-                                              taskId: task.id,
-                                              completed: e.target.checked,
-                                            });
-                                          }}
-                                          className="mt-1 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                                        />
-                                        <div className="flex-1">
-                                          <div className="flex items-center gap-2 mb-1">
-                                            <span
-                                              className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${
-                                                priorityColors[task.priority]
-                                              }`}
-                                            >
-                                              {task.priority}
-                                            </span>
-                                            <h4 className={`font-medium text-gray-900 ${
-                                              task.completed ? 'line-through' : ''
-                                            }`}>
-                                              {task.title}
-                                            </h4>
-                                          </div>
-                                          {task.description && (
-                                            <p className="text-sm text-gray-600 mt-1">
-                                              {task.description}
-                                            </p>
-                                          )}
-                                          {task.due_date && (
-                                            <p
-                                              className={`text-sm mt-2 ${
-                                                isPast(new Date(task.due_date)) && !isToday(new Date(task.due_date))
-                                                  ? 'text-red-600'
-                                                  : isToday(new Date(task.due_date))
-                                                  ? 'text-orange-600'
-                                                  : 'text-gray-600'
-                                              }`}
-                                            >
-                                              Due: {format(new Date(task.due_date), 'dd/MM/yyyy')}
-                                            </p>
-                                          )}
-                                          {task.task_labels?.length > 0 && (
-                                            <div className="flex flex-wrap gap-1 mt-2">
-                                              {task.task_labels.map(({ label }) => (
-                                                <span
-                                                  key={label.id}
-                                                  className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
-                                                  style={{
-                                                    backgroundColor: `${label.color}20`,
-                                                    color: label.color,
-                                                  }}
-                                                >
-                                                  {label.name}
-                                                </span>
-                                              ))}
-                                            </div>
-                                          )}
-                                        </div>
-                                      </div>
-                                    
-                                    </div>
-                                  )}
-                                </Draggable>
-                              ))}
-                              {provided.placeholder}
-                            </div>
-                          )}
-                        </Droppable>
-                      </div>
-                    )}
-                  </Draggable>
-                ))}
-                {provided.placeholder}
-              </div>
-            )}
-          </Droppable>
-        </DragDropContext>
-        
-        <div className="fixed bottom-8 right-8 z-50">
-          <button
-            onClick={() => setIsAddingProject(true)}
-            className="flex items-center px-6 py-3 text-white bg-primary-600 rounded-full shadow-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all duration-200"
-          >
-            <PlusIcon className="w-6 h-6 mr-2" />
-            Novo Projeto
-          </button>
-        </div>
-
-        {isAddingProject && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <ProjectForm
-              onSubmit={(project) => {
-                createProject.mutate(project.title);
-                setIsAddingProject(false);
-              }}
-              onCancel={() => setIsAddingProject(false)}
-            />
+          <div className="flex justify-between items-center mb-8">
+            <h2 className="text-2xl font-bold text-gray-900">Página Inicial</h2>
           </div>
-        )}
 
-        {selectedTask && (
-          <TaskDetailsModal
-            task={selectedTask}
-            isOpen={true}
-            onClose={() => setSelectedTask(null)}
-            onUpdate={(taskId, data, labels) => {
-              updateTask.mutate({ taskId, data, labels });
-              setSelectedTask(null);
-            }}
-            onDelete={(taskId) => {
-              deleteTask.mutate(taskId);
-              setSelectedTask(null);
-            }}
-            onArchive={(taskId) => {
-              archiveTask.mutate(taskId);
-              setSelectedTask(null);
-            }}
-          />
-        )}
+          <div className="mb-6">
+            <div className="flex gap-2 items-center">
+              <div className="relative flex-1">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  value={inputProjectSearchTerm}
+                  onChange={(e) => setInputProjectSearchTerm(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder="Pesquisar por nome ou número do projeto..."
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                />
+              </div>
+              <button
+                onClick={handleSearch}
+                className="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+              >
+                Pesquisar
+              </button>
+            </div>
+          </div>
+
+          <div className="space-y-6 mb-8">
+            {projects?.map((project) => (
+              <div
+                key={project.id}
+                className="bg-white/80 backdrop-blur-sm rounded-lg shadow-sm p-4 w-full"
+              >
+                <div className="flex justify-between items-center mb-4">
+                  <h3 
+                    className="text-lg font-semibold text-gray-900 cursor-pointer hover:text-primary-600 transition-colors"
+                    onClick={() => handleProjectClick(project)}
+                  >
+                    #{project.sequence_number} - {project.title}
+                  </h3>
+                  <div className="flex items-center space-x-4">
+                    {/* Project Values */}
+                    <div className="text-sm text-gray-600">
+                      <div className="flex items-center space-x-2">
+                        {project.estimated_value && (
+                          <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">
+                            Previsto: {project.estimated_value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                          </span>
+                        )}
+                        {project.actual_value && project.actual_value > 0 && (
+                          <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">
+                            Real: {project.actual_value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex justify-end items-center mb-4">
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => toggleCollapse(project.id)}
+                      className="flex items-center px-2 py-1 text-sm text-gray-600 hover:text-gray-800 focus:outline-none"
+                      title={collapsedProjects[project.id] ? 'Expandir tarefas' : 'Recolher tarefas'}
+                    >
+                      {collapsedProjects[project.id] ? (
+                        <ChevronDownIcon className="w-5 h-5" />
+                      ) : (
+                        <ChevronUpIcon className="w-5 h-5" />
+                      )}
+                    </button>
+                    <button
+                      onClick={() => setAddingTaskToProject(project.id)}
+                      className="flex items-center px-3 py-1 text-sm text-primary-600 hover:text-primary-700 focus:outline-none"
+                    >
+                      <PlusIcon className="w-5 h-5 mr-1" />
+                      Task
+                    </button>
+                  </div>
+                </div>
+
+                {/* Progress Indicator */}
+                <div className="mb-4">
+                  {(() => {
+                    const progress = calculateProjectProgress(project.id);
+                    const totalTasks = tasks?.filter(t => t.project_id === project.id).length || 0;
+                    
+                    return (
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm text-gray-600">
+                          <span>Progresso do Projeto ({totalTasks} tarefas)</span>
+                          <span>{progress.completedPercentage}% concluído</span>
+                        </div>
+                        <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden" style={{ width: '8cm' }}>
+                          <div className="h-full flex">
+                            {/* Green for completed tasks */}
+                            <div 
+                              className="bg-green-500 h-full transition-all duration-300"
+                              style={{ width: `${progress.completedPercentage}%` }}
+                              title={`${progress.completed} tarefas concluídas (${progress.completedPercentage}%)`}
+                            />
+                            {/* Yellow for in-progress tasks */}
+                            <div 
+                              className="bg-yellow-500 h-full transition-all duration-300"
+                              style={{ width: `${progress.inProgressPercentage}%` }}
+                              title={`${progress.inProgress} tarefas em andamento (${progress.inProgressPercentage}%)`}
+                            />
+                            {/* Gray for not-started tasks */}
+                            <div 
+                              className="bg-gray-400 h-full transition-all duration-300"
+                              style={{ width: `${progress.notStartedPercentage}%` }}
+                              title={`${progress.notStarted} tarefas não iniciadas (${progress.notStartedPercentage}%)`}
+                            />
+                          </div>
+                        </div>
+                        <div className="flex justify-between text-xs text-gray-500">
+                          <span className="flex items-center">
+                            <div className="w-3 h-3 bg-green-500 rounded-full mr-1"></div>
+                            Concluídas: {progress.completed}
+                          </span>
+                          <span className="flex items-center">
+                            <div className="w-3 h-3 bg-yellow-500 rounded-full mr-1"></div>
+                            Em andamento: {progress.inProgress}
+                          </span>
+                          <span className="flex items-center">
+                            <div className="w-3 h-3 bg-gray-400 rounded-full mr-1"></div>
+                            Não iniciadas: {progress.notStarted}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+
+                {addingTaskToProject === project.id && (
+                  <TaskForm
+                    projectId={project.id}
+                    onSubmit={(task, labels) => createTask.mutate({ task, labels })}
+                    onCancel={() => setAddingTaskToProject(null)}
+                  />
+                )}
+
+                <div className={collapsedProjects[project.id] ? 'hidden' : ''}>
+                  <DragDropContext onDragEnd={handleDragEnd}>
+                    <Droppable droppableId={String(project.id)} type="task">
+                      {(provided) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.droppableProps}
+                          className="space-y-2"
+                        >
+                          {filterTasks(tasks, project.id).map((task, index) => (
+                            <Draggable
+                              key={task.id}
+                              draggableId={String(task.id)}
+                              index={index}
+                            >
+                              {(provided) => (
+                                <div
+                                  ref={provided.innerRef}
+                                  {...provided.draggableProps}
+                                  {...provided.dragHandleProps}
+                                  className={`bg-white rounded-md shadow-sm p-3 hover:shadow-md transition-shadow cursor-pointer ${
+                                    task.completed ? 'opacity-50' : ''
+                                  }`}
+                                  onClick={() => setSelectedTask(task)}
+                                >
+                                  <div className="flex items-center gap-3">
+                                    {/* Priority */}
+                                    <span
+                                      className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${
+                                        priorityColors[task.priority]
+                                      }`}
+                                    >
+                                      {task.priority}
+                                    </span>
+                                    
+                                    {/* Task Name */}
+                                    <div className="flex-1">
+                                      <h4 className={`font-medium text-gray-900 ${
+                                        task.status === 'concluida' ? 'line-through' : ''
+                                      }`}>
+                                        {task.title}
+                                      </h4>
+                                    </div>
+                                    
+                                    {/* Due Date */}
+                                    <div className="text-sm text-gray-600 min-w-[100px]">
+                                      {task.due_date ? format(new Date(task.due_date), 'dd/MM/yyyy') : '-'}
+                                    </div>
+                                    
+                                    {/* Status */}
+                                    <div className={`text-sm font-medium min-w-[120px] text-right ${getTaskStatus(task).color}`}>
+                                      {getTaskStatus(task).label}
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </Draggable>
+                          ))}
+                          {provided.placeholder}
+                        </div>
+                      )}
+                    </Droppable>
+                  </DragDropContext>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="fixed bottom-8 right-8 z-50">
+            <button
+              onClick={handleNewProject}
+              className="flex items-center px-6 py-3 text-white bg-primary-600 rounded-full shadow-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all duration-200"
+            >
+              <PlusIcon className="w-6 h-6 mr-2" />
+              Novo Projeto
+            </button>
+          </div>
+
+          {showProjectForm && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+              <ProjectForm
+                initialData={projectToEdit}
+                onSubmit={handleProjectFormSubmit}
+                onCancel={handleProjectFormCancel}
+              />
+            </div>
+          )}
+
+          {selectedTask && (
+            <TaskDetailsModal
+              task={selectedTask}
+              isOpen={true}
+              onClose={() => setSelectedTask(null)}
+              onUpdate={(taskId, data) => {
+                updateTask.mutate({ taskId, data });
+                setSelectedTask(null);
+              }}
+              onDelete={(taskId) => {
+                deleteTask.mutate(taskId);
+                setSelectedTask(null);
+              }}
+              onArchive={(taskId) => {
+                archiveTask.mutate(taskId);
+                setSelectedTask(null);
+              }}
+            />
+          )}
         </main>
       </div>
     </div>

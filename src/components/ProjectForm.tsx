@@ -1,51 +1,77 @@
 import { useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { PlusIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { toast } from 'react-hot-toast';
-import { Database } from '../lib/database.types';
+import { Database, Project } from '../lib/database.types';
 
 type ProjectInsert = Database['public']['Tables']['projects']['Insert'];
+type Project = Database['public']['Tables']['projects']['Row'];
+
+interface ProjectFormData {
+  title: string;
+  estimated_value: string;
+  actual_value: string;
+  estimated_end_date: string;
+  actual_end_date: string;
+  analyst: string;
+  description: string;
+  estimated_hours: string;
+  actual_hours: string;
+}
 
 interface ProjectFormProps {
+  initialData?: Project | null;
   onSubmit: (project: ProjectInsert) => void;
   onCancel: () => void;
 }
 
-export function ProjectForm({ onSubmit, onCancel }: ProjectFormProps) {
-  const [title, setTitle] = useState('');
-  const [estimatedValue, setEstimatedValue] = useState('');
-  const [actualValue, setActualValue] = useState('');
-  const [estimatedEndDate, setEstimatedEndDate] = useState('');
-  const [actualEndDate, setActualEndDate] = useState('');
-  const [analyst, setAnalyst] = useState('');
-  const [description, setDescription] = useState('');
-  const [estimatedHours, setEstimatedHours] = useState('');
-  const [actualHours, setActualHours] = useState('');
+export function ProjectForm({ initialData, onSubmit, onCancel }: ProjectFormProps) {
+  const isEditing = !!initialData;
+  
+  const { register, handleSubmit, formState: { errors, isDirty } } = useForm<ProjectFormData>({
+    defaultValues: {
+      title: initialData?.title || '',
+      estimated_value: initialData?.estimated_value?.toString() || '',
+      actual_value: initialData?.actual_value?.toString() || '',
+      estimated_end_date: initialData?.estimated_end_date || '',
+      actual_end_date: initialData?.actual_end_date || '',
+      analyst: initialData?.analyst || '',
+      description: initialData?.description || '',
+      estimated_hours: initialData?.estimated_hours?.toString() || '',
+      actual_hours: initialData?.actual_hours?.toString() || '',
+    },
+  });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!title.trim()) {
-      toast.error('O título do projeto é obrigatório');
-      return;
-    }
-
-    onSubmit({
-      title: title.trim(),
+  const handleFormSubmit = (data: ProjectFormData) => {
+    const projectData: ProjectInsert = {
+      title: data.title.trim(),
       position: 0,
-      estimated_value: estimatedValue ? parseFloat(estimatedValue) : null,
-      actual_value: actualValue ? parseFloat(actualValue) : null,
-      estimated_end_date: estimatedEndDate || null,
-      actual_end_date: actualEndDate || null,
-      analyst: analyst.trim() || null,
-      description: description.trim() || null,
-      estimated_hours: estimatedHours ? parseInt(estimatedHours) : null,
-      actual_hours: actualHours ? parseInt(actualHours) : null,
-    });
+      estimated_value: data.estimated_value ? parseFloat(data.estimated_value) : null,
+      actual_value: data.actual_value ? parseFloat(data.actual_value) : null,
+      estimated_end_date: data.estimated_end_date || null,
+      actual_end_date: data.actual_end_date || null,
+      analyst: data.analyst.trim() || null,
+      description: data.description.trim() || null,
+      estimated_hours: data.estimated_hours ? parseInt(data.estimated_hours) : null,
+      actual_hours: data.actual_hours ? parseInt(data.actual_hours) : null,
+    };
+
+    onSubmit(projectData);
+  };
+
+  const handleCancel = () => {
+    if (isDirty) {
+      if (confirm('Você tem alterações não salvas. Deseja realmente sair sem salvar?')) {
+        onCancel();
+      }
+    } else {
+      onCancel();
+    }
   };
 
   return (
     <div className="bg-white/80 backdrop-blur-sm rounded-lg shadow-lg p-6 mb-8 w-full max-w-2xl">
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
         <div className="grid grid-cols-1 gap-6">
           <div>
             <label htmlFor="project-title" className="block text-sm font-medium text-gray-700 mb-2">
@@ -54,12 +80,13 @@ export function ProjectForm({ onSubmit, onCancel }: ProjectFormProps) {
             <input
               id="project-title"
               type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              {...register('title', { required: 'O título do projeto é obrigatório' })}
               placeholder="Digite o título do projeto"
               className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
-              required
             />
+            {errors.title && (
+              <p className="mt-1 text-sm text-red-600">{errors.title.message}</p>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -71,8 +98,7 @@ export function ProjectForm({ onSubmit, onCancel }: ProjectFormProps) {
                 id="estimated-value"
                 type="number"
                 step="0.01"
-                value={estimatedValue}
-                onChange={(e) => setEstimatedValue(e.target.value)}
+                {...register('estimated_value')}
                 placeholder="0.00"
                 className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
               />
@@ -85,8 +111,7 @@ export function ProjectForm({ onSubmit, onCancel }: ProjectFormProps) {
                 id="actual-value"
                 type="number"
                 step="0.01"
-                value={actualValue}
-                onChange={(e) => setActualValue(e.target.value)}
+                {...register('actual_value')}
                 placeholder="0.00"
                 className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
               />
@@ -101,8 +126,7 @@ export function ProjectForm({ onSubmit, onCancel }: ProjectFormProps) {
               <input
                 id="estimated-end-date"
                 type="date"
-                value={estimatedEndDate}
-                onChange={(e) => setEstimatedEndDate(e.target.value)}
+                {...register('estimated_end_date')}
                 className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
               />
             </div>
@@ -113,8 +137,7 @@ export function ProjectForm({ onSubmit, onCancel }: ProjectFormProps) {
               <input
                 id="actual-end-date"
                 type="date"
-                value={actualEndDate}
-                onChange={(e) => setActualEndDate(e.target.value)}
+                {...register('actual_end_date')}
                 className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
               />
             </div>
@@ -127,8 +150,7 @@ export function ProjectForm({ onSubmit, onCancel }: ProjectFormProps) {
             <input
               id="analyst"
               type="text"
-              value={analyst}
-              onChange={(e) => setAnalyst(e.target.value)}
+              {...register('analyst')}
               placeholder="Nome do analista responsável"
               className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
             />
@@ -140,8 +162,7 @@ export function ProjectForm({ onSubmit, onCancel }: ProjectFormProps) {
             </label>
             <textarea
               id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              {...register('description')}
               placeholder="Descreva o projeto"
               rows={4}
               className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
@@ -156,8 +177,7 @@ export function ProjectForm({ onSubmit, onCancel }: ProjectFormProps) {
               <input
                 id="estimated-hours"
                 type="number"
-                value={estimatedHours}
-                onChange={(e) => setEstimatedHours(e.target.value)}
+                {...register('estimated_hours')}
                 placeholder="0"
                 className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
               />
@@ -169,8 +189,7 @@ export function ProjectForm({ onSubmit, onCancel }: ProjectFormProps) {
               <input
                 id="actual-hours"
                 type="number"
-                value={actualHours}
-                onChange={(e) => setActualHours(e.target.value)}
+                {...register('actual_hours')}
                 placeholder="0"
                 className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
               />
@@ -181,7 +200,7 @@ export function ProjectForm({ onSubmit, onCancel }: ProjectFormProps) {
         <div className="flex justify-end space-x-3">
           <button
             type="button"
-            onClick={onCancel}
+            onClick={handleCancel}
             className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
           >
             Cancelar
@@ -189,10 +208,9 @@ export function ProjectForm({ onSubmit, onCancel }: ProjectFormProps) {
           <button
             type="submit"
             className="flex items-center px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 transition-colors duration-200"
-            disabled={!title.trim()}
           >
             <PlusIcon className="w-5 h-5 mr-2" />
-            Criar Projeto
+            {isEditing ? 'Salvar Alterações' : 'Criar Projeto'}
           </button>
         </div>
       </form>

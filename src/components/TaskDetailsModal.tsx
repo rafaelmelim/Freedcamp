@@ -2,19 +2,17 @@ import { Fragment, useState } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { useForm } from 'react-hook-form';
 import { format } from 'date-fns';
-import { Database, TaskPriority } from '../lib/database.types';
-import { LabelPicker } from './LabelPicker';
+import { Database, TaskPriority, TaskStatus } from '../lib/database.types';
 import { TaskComments } from './TaskComments';
 import { TimeTracking } from './TimeTracking';
 
 type Task = Database['public']['Tables']['tasks']['Row'];
-type Label = Database['public']['Tables']['labels']['Row'];
 
 interface TaskDetailsModalProps {
-  task: Task & { task_labels?: { label: Label }[] };
+  task: Task;
   isOpen: boolean;
   onClose: () => void;
-  onUpdate: (taskId: number, data: Partial<Task>, labels: Label[]) => void;
+  onUpdate: (taskId: number, data: Partial<Task>) => void;
   onDelete: (taskId: number) => void;
   onArchive?: (taskId: number) => void;
 }
@@ -24,6 +22,12 @@ const priorityColors: Record<TaskPriority, string> = {
   medium: 'bg-yellow-100 text-yellow-800 ring-yellow-600/20',
   low: 'bg-blue-100 text-blue-800 ring-blue-600/20',
 };
+
+const statusOptions: { value: TaskStatus; label: string }[] = [
+  { value: 'concluida', label: 'Concluída' },
+  { value: 'em_andamento', label: 'Em andamento' },
+  { value: 'nao_iniciada', label: 'Não iniciada' },
+];
 
 function TaskDetailsModal({
   task,
@@ -39,23 +43,13 @@ function TaskDetailsModal({
       description: task.description || '',
       due_date: task.due_date || '',
       priority: task.priority,
+      status: task.status || 'nao_iniciada',
+      value: task.value || '',
     },
   });
 
-  const [selectedLabels, setSelectedLabels] = useState<Label[]>(
-    (task.task_labels || []).map(tl => tl.label)
-  );
-
-  const handleToggleLabel = (label: Label) => {
-    setSelectedLabels(prev => 
-      prev.some(l => l.id === label.id)
-        ? prev.filter(l => l.id !== label.id)
-        : [...prev, label]
-    );
-  };
-
   const onSubmit = (data: any) => {
-    onUpdate(task.id, data, selectedLabels);
+    onUpdate(task.id, data);
     onClose();
   };
 
@@ -113,6 +107,9 @@ function TaskDetailsModal({
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Due Date
+                      </label>
                       <input
                         type="date"
                         {...register('due_date')}
@@ -122,6 +119,9 @@ function TaskDetailsModal({
                     </div>
 
                     <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Priority
+                      </label>
                       <select
                         {...register('priority')}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary-500"
@@ -135,14 +135,36 @@ function TaskDetailsModal({
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Labels
+                      Status da Tarefa
                     </label>
-                    <LabelPicker
-                      taskId={task.id}
-                      selectedLabels={selectedLabels}
-                      onToggleLabel={handleToggleLabel}
+                    <select
+                      {...register('status')}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary-500"
+                    >
+                      {statusOptions.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Valor da Tarefa (R$)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      {...register('value', {
+                        setValueAs: (value) => value === '' ? null : parseFloat(value)
+                      })}
+                      placeholder="0,00"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary-500"
                     />
                   </div>
+
 
                   <div>
                     <TimeTracking taskId={task.id} />

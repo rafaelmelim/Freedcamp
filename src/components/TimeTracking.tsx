@@ -11,6 +11,18 @@ interface TimeTrackingProps {
   taskId: number;
 }
 
+/**
+ * Time Tracking Component
+ * 
+ * This component provides session-based time tracking within the modal.
+ * The timer starts when "Start" is clicked and stops when "Stop" is clicked.
+ * Time is tracked in seconds for precision and stored as duration in the database.
+ * 
+ * Note: If the modal is closed without explicitly stopping the timer,
+ * the current session's elapsed time will not be saved. For persistent tracking
+ * across sessions or modal closures, a more complex solution involving
+ * server-side updates or persistent client-side storage would be necessary.
+ */
 export function TimeTracking({ taskId }: TimeTrackingProps) {
   const [isTracking, setIsTracking] = useState(false);
   const [startTime, setStartTime] = useState<Date | null>(null);
@@ -119,6 +131,7 @@ export function TimeTracking({ taskId }: TimeTrackingProps) {
           </p>
         </div>
         <button
+          type="button"
           onClick={isTracking ? handleStopTracking : handleStartTracking}
           className={`px-4 py-2 text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 ${
             isTracking
