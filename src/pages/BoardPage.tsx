@@ -58,7 +58,7 @@ export function BoardPage() {
       let query = supabase
         .from('projects')
         .select('*')
-        .order('position');
+        .order('sequence_number');
 
       // Apply search filter if provided
       if (actualProjectSearchTerm.trim()) {
