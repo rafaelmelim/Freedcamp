@@ -210,6 +210,7 @@ export function BoardPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
       toast.success('Task updated successfully');
     },
     onError: () => {
