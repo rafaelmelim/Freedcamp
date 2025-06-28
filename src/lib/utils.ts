@@ -3,23 +3,27 @@
  */
 
 /**
- * Converts integer hours to hh:mm:ss format
- * @param hours - Integer number of hours
+ * Converts seconds to hh:mm:ss format
+ * @param seconds - Total number of seconds
  * @returns Formatted string in hh:mm:ss format
  */
-export function formatHoursToHHMMSS(hours: number | null): string {
-  if (!hours || hours === 0) return '00:00:00';
+export function formatSecondsToHHMMSS(seconds: number | null): string {
+  if (!seconds || seconds === 0) return '00:00:00';
   
-  const h = Math.floor(Math.abs(hours));
-  return `${h.toString().padStart(2, '0')}:00:00`;
+  const totalSeconds = Math.abs(seconds);
+  const h = Math.floor(totalSeconds / 3600);
+  const m = Math.floor((totalSeconds % 3600) / 60);
+  const s = totalSeconds % 60;
+  
+  return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 }
 
 /**
- * Parses hh:mm:ss format to integer hours (rounded to nearest hour)
+ * Parses hh:mm:ss format to total seconds
  * @param timeString - Time string in hh:mm:ss format
- * @returns Integer number of hours
+ * @returns Total number of seconds
  */
-export function parseHHMMSSToHours(timeString: string): number {
+export function parseHHMMSSToSeconds(timeString: string): number {
   if (!timeString || timeString === '00:00:00') return 0;
   
   const parts = timeString.split(':');
@@ -29,7 +33,6 @@ export function parseHHMMSSToHours(timeString: string): number {
   const minutes = parseInt(parts[1]) || 0;
   const seconds = parseInt(parts[2]) || 0;
   
-  // Convert to total hours and round to nearest integer
-  const totalHours = hours + (minutes / 60) + (seconds / 3600);
-  return Math.round(totalHours);
+  // Convert to total seconds without rounding
+  return (hours * 3600) + (minutes * 60) + seconds;
 }
