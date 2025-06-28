@@ -61,6 +61,21 @@ export function TimeTracking({ taskId }: TimeTrackingProps) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['time_entries', taskId] });
       queryClient.refetchQueries({ queryKey: ['time_entries', taskId] });
+      
+      // Update task actual_hours with total time
+      setTimeout(async () => {
+        const totalDuration = getTotalDuration() + (startTime ? Math.floor((new Date().getTime() - startTime.getTime()) / 1000) : 0);
+        const totalHours = Math.round(totalDuration / 3600);
+        
+        await supabase
+          .from('tasks')
+          .update({ actual_hours: totalHours })
+          .eq('id', taskId);
+          
+        queryClient.invalidateQueries({ queryKey: ['tasks'] });
+        queryClient.invalidateQueries({ queryKey: ['projects'] });
+      }, 100);
+      
       toast.success('Time entry saved');
     },
     onError: () => {
