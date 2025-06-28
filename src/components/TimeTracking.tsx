@@ -4,7 +4,6 @@ import { format } from 'date-fns';
 import { supabase } from '../lib/supabase';
 import { toast } from 'react-hot-toast';
 import { Database } from '../lib/database.types';
-import { useQueryClient } from '@tanstack/react-query';
 
 type TimeEntry = Database['public']['Tables']['time_entries']['Row'];
 
