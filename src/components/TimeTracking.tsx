@@ -60,6 +60,7 @@ export function TimeTracking({ taskId }: TimeTrackingProps) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['time_entries', taskId] });
+      queryClient.refetchQueries({ queryKey: ['time_entries', taskId] });
       toast.success('Time entry saved');
     },
     onError: () => {
