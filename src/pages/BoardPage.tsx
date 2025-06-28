@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format, isPast, isToday, addDays, startOfDay, isFuture } from 'date-fns';
-import { Menu, MenuButton, MenuItems, MenuItem, Transition } from '@headlessui/react';
+import { Menu, MenuItems, MenuItem, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -681,9 +681,9 @@ export function BoardPage() {
 
                                     {/* Context Menu */}
                                     <Menu as="div" className="relative inline-block text-left">
-                                      <MenuButton className="flex items-center justify-center w-8 h-8 text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded-full hover:bg-gray-100">
+                                      <Menu.Button className="flex items-center justify-center w-8 h-8 text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded-full hover:bg-gray-100">
                                         <EllipsisVerticalIcon className="w-5 h-5" />
-                                      </MenuButton>
+                                      </Menu.Button>
 
                                       <Transition
                                         as={Fragment}
