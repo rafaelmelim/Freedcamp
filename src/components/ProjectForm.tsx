@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { PlusIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { toast } from 'react-hot-toast';
+import { formatHoursToHHMMSS, parseHHMMSSToHours } from '../lib/utils';
 import { Database, Project } from '../lib/database.types';
 
 type ProjectInsert = Database['public']['Tables']['projects']['Insert'];
@@ -37,8 +38,8 @@ export function ProjectForm({ initialData, onSubmit, onCancel }: ProjectFormProp
       actual_end_date: initialData?.actual_end_date || '',
       analyst: initialData?.analyst || '',
       description: initialData?.description || '',
-      estimated_hours: initialData?.estimated_hours?.toString() || '',
-      actual_hours: initialData?.actual_hours?.toString() || '',
+      estimated_hours: formatHoursToHHMMSS(initialData?.estimated_hours),
+      actual_hours: formatHoursToHHMMSS(initialData?.actual_hours),
     },
   });
 
@@ -52,8 +53,8 @@ export function ProjectForm({ initialData, onSubmit, onCancel }: ProjectFormProp
       actual_end_date: data.actual_end_date || null,
       analyst: data.analyst.trim() || null,
       description: data.description.trim() || null,
-      estimated_hours: data.estimated_hours ? parseInt(data.estimated_hours) : null,
-      actual_hours: data.actual_hours ? parseInt(data.actual_hours) : null,
+      estimated_hours: data.estimated_hours ? parseHHMMSSToHours(data.estimated_hours) : null,
+      actual_hours: data.actual_hours ? parseHHMMSSToHours(data.actual_hours) : null,
     };
 
     onSubmit(projectData);
@@ -176,9 +177,9 @@ export function ProjectForm({ initialData, onSubmit, onCancel }: ProjectFormProp
               </label>
               <input
                 id="estimated-hours"
-                type="number"
+                type="text"
+                placeholder="00:00:00"
                 {...register('estimated_hours')}
-                placeholder="0"
                 className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
               />
             </div>
@@ -188,9 +189,9 @@ export function ProjectForm({ initialData, onSubmit, onCancel }: ProjectFormProp
               </label>
               <input
                 id="actual-hours"
-                type="number"
+                type="text"
+                placeholder="00:00:00"
                 {...register('actual_hours')}
-                placeholder="0"
                 className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
               />
             </div>

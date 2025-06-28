@@ -14,6 +14,7 @@ import { TaskDetailsModal } from '../components/TaskDetailsModal';
 import { ProjectForm } from '../components/ProjectForm';
 import { HomeIcon, ArchiveBoxIcon, Cog6ToothIcon, ArrowRightOnRectangleIcon, PlusIcon, ChevronUpIcon, ChevronDownIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { Link } from 'react-router-dom';
+import { formatHoursToHHMMSS } from '../lib/utils';
 
 type Project = Database['public']['Tables']['projects']['Row'];
 type Task = Database['public']['Tables']['tasks']['Row'];
@@ -526,12 +527,12 @@ export function BoardPage() {
                         )}
                         {project.estimated_hours && (
                           <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs">
-                            Horas Previstas: {project.estimated_hours}h
+                            Horas Previstas: {formatHoursToHHMMSS(project.estimated_hours)}
                           </span>
                         )}
                         {project.actual_hours && project.actual_hours > 0 && (
                           <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded-full text-xs">
-                            Horas Realizadas: {project.actual_hours}h
+                            Horas Realizadas: {formatHoursToHHMMSS(project.actual_hours)}
                           </span>
                         )}
                       </div>
