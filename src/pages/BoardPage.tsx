@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format, isPast, isToday, addDays, startOfDay, isFuture } from 'date-fns';
-import { Menu, MenuItems, MenuItem, Transition } from '@headlessui/react';
+import { Menu, MenuItems, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -695,7 +695,7 @@ export function BoardPage() {
                                         leaveTo="transform opacity-0 scale-95"
                                       >
                                         <MenuItems className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-                                          <MenuItem>
+                                          <Menu.Item>
                                             {({ focus }) => (
                                               <button
                                                 onClick={(e) => {
@@ -709,8 +709,8 @@ export function BoardPage() {
                                                 Adicionar Subtarefa
                                               </button>
                                             )}
-                                          </MenuItem>
-                                          <MenuItem>
+                                          </Menu.Item>
+                                          <Menu.Item>
                                             {({ focus }) => (
                                               <button
                                                 onClick={(e) => {
@@ -724,8 +724,8 @@ export function BoardPage() {
                                                 Editar Tarefa
                                               </button>
                                             )}
-                                          </MenuItem>
-                                          <MenuItem>
+                                          </Menu.Item>
+                                          <Menu.Item>
                                             {({ focus }) => (
                                               <button
                                                 onClick={(e) => {
@@ -741,7 +741,7 @@ export function BoardPage() {
                                                 Excluir Tarefa
                                               </button>
                                             )}
-                                          </MenuItem>
+                                          </Menu.Item>
                                         </MenuItems>
                                       </Transition>
                                     </Menu>
