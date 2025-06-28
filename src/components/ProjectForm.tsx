@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { PlusIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { toast } from 'react-hot-toast';
-import { formatHoursToHHMMSS, parseHHMMSSToHours } from '../lib/utils';
+import { formatSecondsToHHMMSS, parseHHMMSSToSeconds } from '../lib/utils';
 import { Database, Project } from '../lib/database.types';
 
 type ProjectInsert = Database['public']['Tables']['projects']['Insert'];
@@ -38,8 +38,8 @@ export function ProjectForm({ initialData, onSubmit, onCancel }: ProjectFormProp
       actual_end_date: initialData?.actual_end_date || '',
       analyst: initialData?.analyst || '',
       description: initialData?.description || '',
-      estimated_hours: formatHoursToHHMMSS(initialData?.estimated_hours),
-      actual_hours: formatHoursToHHMMSS(initialData?.actual_hours),
+      estimated_hours: formatSecondsToHHMMSS(initialData?.estimated_hours),
+      actual_hours: formatSecondsToHHMMSS(initialData?.actual_hours),
     },
   });
 
@@ -53,8 +53,8 @@ export function ProjectForm({ initialData, onSubmit, onCancel }: ProjectFormProp
       actual_end_date: data.actual_end_date || null,
       analyst: data.analyst.trim() || null,
       description: data.description.trim() || null,
-      estimated_hours: data.estimated_hours ? parseHHMMSSToHours(data.estimated_hours) : null,
-      actual_hours: data.actual_hours ? parseHHMMSSToHours(data.actual_hours) : null,
+      estimated_hours: data.estimated_hours && data.estimated_hours !== '00:00:00' ? parseHHMMSSToSeconds(data.estimated_hours) : null,
+      actual_hours: data.actual_hours && data.actual_hours !== '00:00:00' ? parseHHMMSSToSeconds(data.actual_hours) : null,
     };
 
     onSubmit(projectData);
@@ -173,7 +173,7 @@ export function ProjectForm({ initialData, onSubmit, onCancel }: ProjectFormProp
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label htmlFor="estimated-hours" className="block text-sm font-medium text-gray-700 mb-2">
-                Horas Previstas
+                Horas Previstas (hh:mm:ss)
               </label>
               <input
                 id="estimated-hours"
@@ -185,7 +185,7 @@ export function ProjectForm({ initialData, onSubmit, onCancel }: ProjectFormProp
             </div>
             <div>
               <label htmlFor="actual-hours" className="block text-sm font-medium text-gray-700 mb-2">
-                Horas Reais
+                Horas Reais (hh:mm:ss)
               </label>
               <input
                 id="actual-hours"

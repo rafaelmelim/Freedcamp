@@ -5,6 +5,7 @@ import { format } from 'date-fns';
 import { Database, TaskPriority, TaskStatus } from '../lib/database.types';
 import { TaskComments } from './TaskComments';
 import { TimeTracking } from './TimeTracking';
+import { formatSecondsToHHMMSS, parseHHMMSSToSeconds } from '../lib/utils';
 
 type Task = Database['public']['Tables']['tasks']['Row'];
 
@@ -45,7 +46,7 @@ function TaskDetailsModal({
       priority: task.priority,
       status: task.status || 'nao_iniciada',
       value: task.value || '',
-      actual_hours: task.actual_hours || '',
+      actual_hours: formatSecondsToHHMMSS(task.actual_hours),
     },
   });
 
@@ -229,15 +230,14 @@ function TaskDetailsModal({
         </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Horas Realizadas
+              Horas Realizadas (hh:mm:ss)
             </label>
             <input
-              type="number"
-              min="0"
+              type="text"
               {...register('actual_hours', {
-                setValueAs: (value) => value === '' ? null : parseInt(value)
+                setValueAs: (value) => value === '' || value === '00:00:00' ? null : parseHHMMSSToSeconds(value)
               })}
-              placeholder="0"
+              placeholder="00:00:00"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary-500"
             />
           </div>
