@@ -51,7 +51,9 @@ function TaskDetailsModal({
   });
 
   const onSubmit = (data: any) => {
-    onUpdate(task.id, data);
+    // Exclude actual_hours from the update to preserve its original value
+    const { actual_hours, ...updateData } = data;
+    onUpdate(task.id, updateData);
     onClose();
   };
 
