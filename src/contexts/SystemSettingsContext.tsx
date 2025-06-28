@@ -33,23 +33,26 @@ export function SystemSettingsProvider({ children }: { children: React.ReactNode
   useEffect(() => {
     if (settings) {
       // Apply primary color
-      document.documentElement.style.setProperty('--primary-50', `${settings.primary_color}10`);
-      document.documentElement.style.setProperty('--primary-100', `${settings.primary_color}20`);
-      document.documentElement.style.setProperty('--primary-200', `${settings.primary_color}30`);
-      document.documentElement.style.setProperty('--primary-300', `${settings.primary_color}40`);
-      document.documentElement.style.setProperty('--primary-400', `${settings.primary_color}50`);
-      document.documentElement.style.setProperty('--primary-500', settings.primary_color);
-      document.documentElement.style.setProperty('--primary-600', `${settings.primary_color}70`);
-      document.documentElement.style.setProperty('--primary-700', `${settings.primary_color}80`);
-      document.documentElement.style.setProperty('--primary-800', `${settings.primary_color}90`);
-      document.documentElement.style.setProperty('--primary-900', `${settings.primary_color}95`);
-      document.documentElement.style.setProperty('--primary-950', `${settings.primary_color}99`);
+      const primaryColor = settings.primary_color || '#0EA5E9';
+      document.documentElement.style.setProperty('--primary-50', `${primaryColor}10`);
+      document.documentElement.style.setProperty('--primary-100', `${primaryColor}20`);
+      document.documentElement.style.setProperty('--primary-200', `${primaryColor}30`);
+      document.documentElement.style.setProperty('--primary-300', `${primaryColor}40`);
+      document.documentElement.style.setProperty('--primary-400', `${primaryColor}50`);
+      document.documentElement.style.setProperty('--primary-500', primaryColor);
+      document.documentElement.style.setProperty('--primary-600', `${primaryColor}70`);
+      document.documentElement.style.setProperty('--primary-700', `${primaryColor}80`);
+      document.documentElement.style.setProperty('--primary-800', `${primaryColor}90`);
+      document.documentElement.style.setProperty('--primary-900', `${primaryColor}95`);
+      document.documentElement.style.setProperty('--primary-950', `${primaryColor}99`);
 
       // Apply system font color
-      document.documentElement.style.setProperty('--system-font-color', settings.system_font_color);
+      const systemFontColor = settings.system_font_color || '#000000';
+      document.documentElement.style.setProperty('--system-font-color', systemFontColor);
 
       // Apply form position as CSS variable
-      document.documentElement.style.setProperty('--form-position', settings.form_position);
+      const formPosition = settings.form_position || 'center';
+      document.documentElement.style.setProperty('--form-position', formPosition);
 
       // Update favicon
       if (settings.favicon_url) {
@@ -70,7 +73,11 @@ export function SystemSettingsProvider({ children }: { children: React.ReactNode
       }
 
       // Apply layout classes to body
-      document.body.className = `layout-${settings.layout_type} header-${settings.header_style} footer-${settings.footer_style} form-${settings.form_layout}`;
+      const layoutType = settings.layout_type || 'default';
+      const headerStyle = settings.header_style || 'default';
+      const footerStyle = settings.footer_style || 'default';
+      const formLayout = settings.form_layout || 'default';
+      document.body.className = `layout-${layoutType} header-${headerStyle} footer-${footerStyle} form-${formLayout}`;
     }
   }, [settings]);
 
