@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format, isPast, isToday, addDays, startOfDay, isFuture } from 'date-fns';
+import { Menu, MenuButton, MenuItems, MenuItem, Transition } from '@headlessui/react';
+import { Fragment } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'react-hot-toast';
@@ -12,7 +14,7 @@ import { ExportCSV } from '../components/ExportCSV';
 import { Header } from '../components/Header';
 import { TaskDetailsModal } from '../components/TaskDetailsModal';
 import { ProjectForm } from '../components/ProjectForm';
-import { HomeIcon, ArchiveBoxIcon, Cog6ToothIcon, ArrowRightOnRectangleIcon, PlusIcon, ChevronUpIcon, ChevronDownIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { HomeIcon, ArchiveBoxIcon, Cog6ToothIcon, ArrowRightOnRectangleIcon, PlusIcon, ChevronUpIcon, ChevronDownIcon, MagnifyingGlassIcon, EllipsisVerticalIcon } from '@heroicons/react/24/outline';
 import { Link } from 'react-router-dom';
 import { formatSecondsToHHMMSS } from '../lib/utils';
 
@@ -647,7 +649,6 @@ export function BoardPage() {
                                   className={`bg-white rounded-md shadow-sm p-3 hover:shadow-md transition-shadow cursor-pointer ${
                                     task.completed ? 'opacity-50' : ''
                                   }`}
-                                  onClick={() => setSelectedTask(task)}
                                 >
                                   <div className="flex items-center gap-3">
                                     {/* Priority */}
@@ -677,6 +678,73 @@ export function BoardPage() {
                                     <div className={`text-sm font-medium min-w-[120px] text-right ${getTaskStatus(task).color}`}>
                                       {getTaskStatus(task).label}
                                     </div>
+
+                                    {/* Context Menu */}
+                                    <Menu as="div" className="relative inline-block text-left">
+                                      <MenuButton className="flex items-center justify-center w-8 h-8 text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded-full hover:bg-gray-100">
+                                        <EllipsisVerticalIcon className="w-5 h-5" />
+                                      </MenuButton>
+
+                                      <Transition
+                                        as={Fragment}
+                                        enter="transition ease-out duration-100"
+                                        enterFrom="transform opacity-0 scale-95"
+                                        enterTo="transform opacity-100 scale-100"
+                                        leave="transition ease-in duration-75"
+                                        leaveFrom="transform opacity-100 scale-100"
+                                        leaveTo="transform opacity-0 scale-95"
+                                      >
+                                        <MenuItems className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                          <MenuItem>
+                                            {({ focus }) => (
+                                              <button
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  setAddingTaskToProject(task.project_id);
+                                                }}
+                                                className={`${
+                                                  focus ? 'bg-gray-100' : ''
+                                                } block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100`}
+                                              >
+                                                Adicionar Subtarefa
+                                              </button>
+                                            )}
+                                          </MenuItem>
+                                          <MenuItem>
+                                            {({ focus }) => (
+                                              <button
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  setSelectedTask(task);
+                                                }}
+                                                className={`${
+                                                  focus ? 'bg-gray-100' : ''
+                                                } block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100`}
+                                              >
+                                                Editar Tarefa
+                                              </button>
+                                            )}
+                                          </MenuItem>
+                                          <MenuItem>
+                                            {({ focus }) => (
+                                              <button
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  if (confirm('Tem certeza que deseja excluir esta tarefa?')) {
+                                                    deleteTask.mutate(task.id);
+                                                  }
+                                                }}
+                                                className={`${
+                                                  focus ? 'bg-gray-100' : ''
+                                                } block w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-gray-100`}
+                                              >
+                                                Excluir Tarefa
+                                              </button>
+                                            )}
+                                          </MenuItem>
+                                        </MenuItems>
+                                      </Transition>
+                                    </Menu>
                                   </div>
                                 </div>
                               )}
