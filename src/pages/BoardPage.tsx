@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format, isPast, isToday, addDays, startOfDay, isFuture } from 'date-fns';
-import { Menu, MenuItems, Transition } from '@headlessui/react';
+import { Menu, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -694,7 +694,7 @@ export function BoardPage() {
                                         leaveFrom="transform opacity-100 scale-100"
                                         leaveTo="transform opacity-0 scale-95"
                                       >
-                                        <MenuItems className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                        <Menu.Items className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
                                           <Menu.Item>
                                             {({ focus }) => (
                                               <button
@@ -742,7 +742,7 @@ export function BoardPage() {
                                               </button>
                                             )}
                                           </Menu.Item>
-                                        </MenuItems>
+                                        </Menu.Items>
                                       </Transition>
                                     </Menu>
                                   </div>
