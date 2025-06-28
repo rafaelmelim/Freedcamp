@@ -217,6 +217,7 @@ export interface Database {
           archived: boolean
           status: TaskStatus
           value: number | null
+          actual_hours: number | null
         }
         Insert: {
           id?: number
@@ -233,6 +234,7 @@ export interface Database {
           archived?: boolean
           status?: TaskStatus
           value?: number | null
+          actual_hours?: number | null
         }
         Update: {
           id?: number
@@ -249,6 +251,7 @@ export interface Database {
           archived?: boolean
           status?: TaskStatus
           value?: number | null
+          actual_hours?: number | null
         }
       }
       labels: {

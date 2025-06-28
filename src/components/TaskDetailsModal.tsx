@@ -45,6 +45,7 @@ function TaskDetailsModal({
       priority: task.priority,
       status: task.status || 'nao_iniciada',
       value: task.value || '',
+      actual_hours: task.actual_hours || '',
     },
   });
 
@@ -226,6 +227,21 @@ function TaskDetailsModal({
             </Transition.Child>
           </div>
         </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Horas Realizadas
+            </label>
+            <input
+              type="number"
+              min="0"
+              {...register('actual_hours', {
+                setValueAs: (value) => value === '' ? null : parseInt(value)
+              })}
+              placeholder="0"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary-500"
+            />
+          </div>
+
       </Dialog>
     </Transition>
   );

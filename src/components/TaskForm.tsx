@@ -25,6 +25,7 @@ export function TaskForm({ projectId, onSubmit, onCancel }: TaskFormProps) {
   const [endDate, setEndDate] = useState('');
   const [issueLinks, setIssueLinks] = useState<IssueLink[]>([{ id: '1', url: '' }]);
   const [value, setValue] = useState('');
+  const [actualHours, setActualHours] = useState('');
 
   const handleAddIssueLink = () => {
     setIssueLinks([...issueLinks, { id: Date.now().toString(), url: '' }]);
@@ -71,6 +72,7 @@ export function TaskForm({ projectId, onSubmit, onCancel }: TaskFormProps) {
       due_date: endDate || startDate || null,
       priority: 'medium',
       value: value ? parseFloat(value) : null,
+      actual_hours: actualHours ? parseInt(actualHours) : null,
     };
 
     try {
@@ -189,6 +191,20 @@ export function TaskForm({ projectId, onSubmit, onCancel }: TaskFormProps) {
             value={value}
             onChange={(e) => setValue(e.target.value)}
             placeholder="0,00"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors duration-200"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Horas Realizadas
+          </label>
+          <input
+            type="number"
+            min="0"
+            value={actualHours}
+            onChange={(e) => setActualHours(e.target.value)}
+            placeholder="0"
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors duration-200"
           />
         </div>

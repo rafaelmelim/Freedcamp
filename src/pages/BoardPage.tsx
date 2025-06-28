@@ -524,6 +524,16 @@ export function BoardPage() {
                             Real: {project.actual_value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                           </span>
                         )}
+                        {project.estimated_hours && (
+                          <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs">
+                            Horas Previstas: {project.estimated_hours}h
+                          </span>
+                        )}
+                        {project.actual_hours && project.actual_hours > 0 && (
+                          <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded-full text-xs">
+                            Horas Realizadas: {project.actual_hours}h
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
