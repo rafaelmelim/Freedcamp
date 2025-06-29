@@ -838,7 +838,7 @@ export function BoardPage() {
                   />
                 )}
 
-                {addingSubtaskToTask && (
+                {addingSubtaskToTask && addingTaskToProject === null && (
                   <TaskForm
                     projectId={project.id}
                     parentTaskId={addingSubtaskToTask}
@@ -948,6 +948,8 @@ export function BoardPage() {
                                               <button
                                                 onClick={(e) => {
                                                   e.stopPropagation();
+                                                  // Fechar outros formulários antes de abrir o de subtarefa
+                                                  setAddingTaskToProject(null);
                                                   setAddingSubtaskToTask(task.id);
                                                 }}
                                                 className={`${
@@ -964,6 +966,8 @@ export function BoardPage() {
                                               <button
                                                 onClick={(e) => {
                                                   e.stopPropagation();
+                                                  // Fechar formulário de subtarefa se estiver aberto
+                                                  setAddingSubtaskToTask(null);
                                                   setSelectedTask(task);
                                                 }}
                                                 className={`${
@@ -979,6 +983,8 @@ export function BoardPage() {
                                               <button
                                                 onClick={(e) => {
                                                   e.stopPropagation();
+                                                  // Fechar formulário de subtarefa se estiver aberto
+                                                  setAddingSubtaskToTask(null);
                                                   if (confirm(`Tem certeza que deseja excluir esta ${task.parent_task_id ? 'subtarefa' : 'tarefa'}?`)) {
                                                     deleteTask.mutate(task.id);
                                                   }
