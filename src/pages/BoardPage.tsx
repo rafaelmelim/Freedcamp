@@ -15,6 +15,7 @@ import { ExportCSV } from '../components/ExportCSV';
 import { Header } from '../components/Header';
 import { TaskDetailsModal } from '../components/TaskDetailsModal';
 import { ProjectForm } from '../components/ProjectForm';
+import { SubtaskForm } from '../components/SubtaskForm';
 import { HomeIcon, ArchiveBoxIcon, Cog6ToothIcon, ArrowRightOnRectangleIcon, PlusIcon, ChevronUpIcon, ChevronDownIcon, MagnifyingGlassIcon, EllipsisVerticalIcon, TrashIcon, ArchiveBoxArrowDownIcon, ChartBarIcon, ChartPieIcon, UserGroupIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import { Link } from 'react-router-dom';
 import { formatSecondsToHHMMSS } from '../lib/utils';
@@ -839,15 +840,15 @@ export function BoardPage() {
                 )}
 
                 {addingSubtaskToTask && addingTaskToProject === null && (
-                  <TaskForm
+                  <SubtaskForm
                     projectId={project.id}
                     parentTaskId={addingSubtaskToTask}
-                    onSubmit={async (task, labels) => {
+                    onSubmit={async (task) => {
                       try {
-                        await createTask.mutateAsync({ task, labels });
+                        await createTask.mutateAsync({ task, labels: [] });
                         setAddingSubtaskToTask(null);
                       } catch (error) {
-                        // Re-throw error to let TaskForm handle it properly
+                        // Re-throw error to let SubtaskForm handle it properly
                         throw error;
                       }
                     }}
