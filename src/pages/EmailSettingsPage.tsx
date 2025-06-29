@@ -8,7 +8,6 @@ import { EmailTestForm } from '../components/EmailTestForm';
 import { Header } from '../components/Header';
 import { useAuth } from '../contexts/AuthContext';
 import { HomeIcon, ArchiveBoxIcon, Cog6ToothIcon, ArrowRightOnRectangleIcon, EnvelopeIcon, UsersIcon, ComputerDesktopIcon, ArrowDownTrayIcon, UserCircleIcon, ChartBarIcon, ChartPieIcon, UserGroupIcon, ChevronDownIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
-import { useState } from 'react';
 
 type EmailSettings = Database['public']['Tables']['email_settings']['Row'];
 type EmailTemplate = Database['public']['Tables']['email_templates']['Row'];
