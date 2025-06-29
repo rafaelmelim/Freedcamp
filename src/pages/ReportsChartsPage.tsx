@@ -554,7 +554,14 @@ export function ReportsChartsPage() {
             {/* Generate Charts Button */}
             <div className="flex justify-center mb-8">
               <button
-                onClick={() => setShowCharts(true)}
+                onClick={() => {
+                  // Only show charts if there is filtered data available
+                  if (filteredTasks.length > 0) {
+                    setShowCharts(true);
+                  } else {
+                    setShowCharts(false);
+                  }
+                }}
                 className="inline-flex items-center px-6 py-3 text-base font-medium text-white bg-primary-600 rounded-lg shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all duration-200 transform hover:scale-105"
               >
                 <ChartBarIcon className="w-5 h-5 mr-2" />
@@ -612,10 +619,10 @@ export function ReportsChartsPage() {
                 </h3>
                 <div className="mb-4 text-sm text-gray-600">
                   <p>
-                    <strong>Semana Atual:</strong> {format(weekRange.startDate, 'dd/MM/yyyy')} a {format(weekRange.endDate, \'dd/MM/yyyy')}
+                    <strong>Semana Atual:</strong> {format(weekRange.startDate, 'dd/MM/yyyy')} a {format(weekRange.endDate, 'dd/MM/yyyy')}
                   </p>
                   <p>
-                    <strong>Semana Anterior:</strong> {format(previousWeekRange.startDate, 'dd/MM/yyyy')} a {format(previousWeekRange.endDate, \'dd/MM/yyyy')}
+                    <strong>Semana Anterior:</strong> {format(previousWeekRange.startDate, 'dd/MM/yyyy')} a {format(previousWeekRange.endDate, 'dd/MM/yyyy')}
                   </p>
                 </div>
                 <Bar data={weeklyComparisonChartData} options={chartOptions} />
