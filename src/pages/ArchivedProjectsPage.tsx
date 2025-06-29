@@ -362,16 +362,20 @@ export function ArchivedProjectsPage() {
                     {filterTasks(tasks, project.id).map((task) => (
                       <div
                         key={task.id}
-                        className={`bg-white rounded-md shadow-sm p-3 ${
+                        className={`bg-white rounded-md shadow-sm ${
                           task.completed ? 'opacity-50' : ''
-                        } ${task.parent_task_id ? 'ml-6 border-l-4 border-gray-300' : ''}`}
+                        } ${task.parent_task_id ? 'ml-8 mr-2 border-l-4 border-primary-300 bg-gray-50' : 'p-3'}`}
                       >
                         {task.parent_task_id && (
-                          <div className="text-xs text-gray-500 mb-1">
-                            Subtarefa de: {getParentTask(task.parent_task_id)?.title}
+                          <div className="flex items-center text-xs text-primary-600 mb-2 pl-3 pt-2">
+                            <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                            </svg>
+                            <span className="font-medium">Subtarefa de:</span>
+                            <span className="ml-1 font-semibold">{getParentTask(task.parent_task_id)?.title}</span>
                           </div>
                         )}
-                        <div className="flex items-center gap-3">
+                        <div className={`flex items-center gap-3 ${task.parent_task_id ? 'pl-3 pb-2' : ''}`}>
                           {/* Priority */}
                           <span
                             className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${
@@ -383,9 +387,18 @@ export function ArchivedProjectsPage() {
                           
                           {/* Task Name */}
                           <div className="flex-1">
-                            <h4 className={`font-medium text-gray-900 ${
+                            <h4 className={`font-medium ${
+                              task.parent_task_id ? 'text-gray-700 text-sm' : 'text-gray-900'
+                            } ${
                               task.status === 'concluida' ? 'line-through' : ''
                             }`}>
+                              {task.parent_task_id && (
+                                <span className="inline-flex items-center mr-2 text-primary-600">
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                  </svg>
+                                </span>
+                              )}
                               {task.title}
                             </h4>
                             {task.description && (
