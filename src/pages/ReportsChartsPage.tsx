@@ -8,9 +8,10 @@ import { useAuth } from '../contexts/AuthContext';
 import {
   HomeIcon,
   ArchiveBoxIcon,
-  Cog6ToothIcon,
   ArrowRightOnRectangleIcon,
   ChartBarIcon,
+  ChevronDownIcon,
+  ChevronRightIcon,
 } from '@heroicons/react/24/outline';
 import {
   Chart as ChartJS,
@@ -53,6 +54,7 @@ interface ChartData {
 
 export function ReportsChartsPage() {
   const { signOut, hasRole } = useAuth();
+  const [reportsMenuOpen, setReportsMenuOpen] = useState(true);
   const [selectedStartDate, setSelectedStartDate] = useState(format(startOfWeek(new Date(), { weekStartsOn: 1 }), 'yyyy-MM-dd'));
   const [selectedEndDate, setSelectedEndDate] = useState(format(endOfWeek(new Date(), { weekStartsOn: 1 }), 'yyyy-MM-dd'));
   const [selectedProjects, setSelectedProjects] = useState<number[]>([]);
@@ -605,24 +607,33 @@ export function ReportsChartsPage() {
                 <ArchiveBoxIcon className="w-5 h-5" />
                 <span>Projetos Arquivados</span>
               </Link>
-              <Link
-                to="/reports/charts"
-                className="flex items-center space-x-2 px-4 py-2 bg-gray-100 text-gray-900 rounded-md"
+              <button
+                onClick={() => setReportsMenuOpen(!reportsMenuOpen)}
+                className="flex items-center justify-between w-full px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md"
               >
-                <ChartBarIcon className="w-5 h-5" />
-                <span>Gráficos</span>
-              </Link>
+                <div className="flex items-center space-x-2">
+                  <ChartBarIcon className="w-5 h-5" />
+                  <span>Relatórios Gerenciais</span>
+                </div>
+                {reportsMenuOpen ? (
+                  <ChevronDownIcon className="w-4 h-4" />
+                ) : (
+                  <ChevronRightIcon className="w-4 h-4" />
+                )}
+              </button>
+              {reportsMenuOpen && (
+                <div className="ml-4 space-y-2">
+                  <Link
+                    to="/reports/charts"
+                    className="flex items-center space-x-2 px-4 py-2 bg-gray-100 text-gray-900 rounded-md"
+                  >
+                    <ChartBarIcon className="w-4 h-4" />
+                    <span>Gráficos</span>
+                  </Link>
+                </div>
+              )}
             </div>
             <div className="pt-4 mt-4 border-t border-gray-200">
-              {hasRole('admin') && (
-                <Link
-                  to="/admin"
-                  className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md"
-                >
-                  <Cog6ToothIcon className="w-5 h-5" />
-                  <span>Configurações</span>
-                </Link>
-              )}
               <button
                 onClick={() => signOut()}
                 className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md w-full text-left"
