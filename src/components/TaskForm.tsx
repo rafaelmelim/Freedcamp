@@ -109,10 +109,10 @@ export const TaskForm = forwardRef<TaskFormRef, TaskFormProps>(({ projectId, par
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
+          <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity z-40" />
         </Transition.Child>
 
-        <div className="fixed inset-0 overflow-y-auto">
+        <div className="fixed inset-0 overflow-y-auto z-50">
           <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
             <Transition.Child
               as={Fragment}
@@ -137,7 +137,7 @@ export const TaskForm = forwardRef<TaskFormRef, TaskFormProps>(({ projectId, par
                 <div className="sm:flex sm:items-start">
                   <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
                     <Dialog.Title as="h3" className="text-lg font-semibold leading-6 text-gray-900">
-                      {parentTaskId ? 'Nova Subtarefa' : 'Nova Tarefa'}
+                      {parentTaskId ? 'Cadastro de Subtarefa' : 'Nova Tarefa'}
                     </Dialog.Title>
                     <div className="mt-4">
                       <form onSubmit={handleSubmit} className="space-y-4">
