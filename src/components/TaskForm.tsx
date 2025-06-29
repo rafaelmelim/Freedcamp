@@ -234,17 +234,49 @@ export function TaskForm({ projectId, parentTaskId, onSubmit, onCancel }: TaskFo
                             <label className="block text-sm font-medium text-gray-700 mb-1">
                               {parentTaskId ? 'Data inicial da subtarefa' : 'Data inicial da tarefa'}
                             </label>
-                            <input
-                              type="date"
-                              value={startDate}
-                              onChange={(e) => setStartDate(e.target.value)}
-                              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 transition-colors duration-200 cursor-pointer ${
-                                errors.startDate 
-                                  ? 'border-red-300 focus:ring-red-500 focus:border-red-500' 
-                                  : 'border-gray-300 focus:ring-primary-500'
-                              }`}
-                              disabled={isSubmitting}
-                            />
+                            <div className="relative">
+                              <input
+                                type="date"
+                                value={startDate}
+                                onChange={(e) => setStartDate(e.target.value)}
+                                className={`w-full px-3 py-2 pr-10 border rounded-md focus:outline-none focus:ring-2 transition-colors duration-200 ${
+                                  errors.startDate 
+                                    ? 'border-red-300 focus:ring-red-500 focus:border-red-500' 
+                                    : 'border-gray-300 focus:ring-primary-500'
+                                }`}
+                                disabled={isSubmitting}
+                                style={{
+                                  colorScheme: 'light',
+                                  cursor: 'pointer'
+                                }}
+                                onFocus={(e) => {
+                                  // Force show date picker on focus
+                                  e.target.showPicker?.();
+                                }}
+                                onClick={(e) => {
+                                  // Force show date picker on click
+                                  e.target.showPicker?.();
+                                }}
+                              />
+                              <div 
+                                className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none"
+                                style={{ pointerEvents: 'none' }}
+                              >
+                                <svg 
+                                  className="w-5 h-5 text-gray-400" 
+                                  fill="none" 
+                                  stroke="currentColor" 
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path 
+                                    strokeLinecap="round" 
+                                    strokeLinejoin="round" 
+                                    strokeWidth={2} 
+                                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" 
+                                  />
+                                </svg>
+                              </div>
+                            </div>
                             {errors.startDate && (
                               <p className="mt-1 text-sm text-red-600 flex items-center">
                                 <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
@@ -259,17 +291,49 @@ export function TaskForm({ projectId, parentTaskId, onSubmit, onCancel }: TaskFo
                             <label className="block text-sm font-medium text-gray-700 mb-1">
                               {parentTaskId ? 'Data fim da subtarefa' : 'Data fim da tarefa'}
                             </label>
-                            <input
-                              type="date"
-                              value={endDate}
-                              onChange={(e) => setEndDate(e.target.value)}
-                              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 transition-colors duration-200 cursor-pointer ${
-                                errors.endDate 
-                                  ? 'border-red-300 focus:ring-red-500 focus:border-red-500' 
-                                  : 'border-gray-300 focus:ring-primary-500'
-                              }`}
-                              disabled={isSubmitting}
-                            />
+                            <div className="relative">
+                              <input
+                                type="date"
+                                value={endDate}
+                                onChange={(e) => setEndDate(e.target.value)}
+                                className={`w-full px-3 py-2 pr-10 border rounded-md focus:outline-none focus:ring-2 transition-colors duration-200 ${
+                                  errors.endDate 
+                                    ? 'border-red-300 focus:ring-red-500 focus:border-red-500' 
+                                    : 'border-gray-300 focus:ring-primary-500'
+                                }`}
+                                disabled={isSubmitting}
+                                style={{
+                                  colorScheme: 'light',
+                                  cursor: 'pointer'
+                                }}
+                                onFocus={(e) => {
+                                  // Force show date picker on focus
+                                  e.target.showPicker?.();
+                                }}
+                                onClick={(e) => {
+                                  // Force show date picker on click
+                                  e.target.showPicker?.();
+                                }}
+                              />
+                              <div 
+                                className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none"
+                                style={{ pointerEvents: 'none' }}
+                              >
+                                <svg 
+                                  className="w-5 h-5 text-gray-400" 
+                                  fill="none" 
+                                  stroke="currentColor" 
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path 
+                                    strokeLinecap="round" 
+                                    strokeLinejoin="round" 
+                                    strokeWidth={2} 
+                                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" 
+                                  />
+                                </svg>
+                              </div>
+                            </div>
                             {errors.endDate && (
                               <p className="mt-1 text-sm text-red-600 flex items-center">
                                 <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
