@@ -101,7 +101,7 @@ export const TaskForm = forwardRef<TaskFormRef, TaskFormProps>(({ projectId, par
 
   return (
     <Transition.Root show={true} as={Fragment}>
-      <Dialog as="div" className="relative z-50" onClose={onCancel}>
+      <Dialog as="div" className="relative z-50" onClose={parentTaskId ? () => {} : onCancel}>
         <Transition.Child
           as={Fragment}
           enter="ease-out duration-300"
