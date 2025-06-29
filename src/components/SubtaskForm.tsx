@@ -220,7 +220,7 @@ export function SubtaskForm({
             </select>
           </div>
 
-          <div>
+          <div className="hidden">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Valor da Subtarefa (R$)
             </label>
@@ -235,7 +235,7 @@ export function SubtaskForm({
             />
           </div>
 
-          <div>
+          <div className="hidden">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Horas Realizadas (hh:mm:ss)
             </label>
