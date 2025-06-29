@@ -11,7 +11,7 @@ type Label = Database['public']['Tables']['labels']['Row'];
 interface TaskFormProps {
   projectId: number;
   parentTaskId?: number;
-  onSubmit: (data: Task, labels: Label[]) => void;
+  onSubmit: (data: Task, labels: Label[]) => Promise<any>;
   onCancel: () => void;
 }
 
@@ -28,6 +28,7 @@ export function TaskForm({ projectId, parentTaskId, onSubmit, onCancel }: TaskFo
   const [issueLinks, setIssueLinks] = useState<IssueLink[]>([{ id: '1', url: '' }]);
   const [value, setValue] = useState('');
   const [actualHours, setActualHours] = useState('00:00:00');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleAddIssueLink = () => {
     setIssueLinks([...issueLinks, { id: Date.now().toString(), url: '' }]);
@@ -43,12 +44,14 @@ export function TaskForm({ projectId, parentTaskId, onSubmit, onCancel }: TaskFo
     ));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (isSubmitting) return;
     
     // Validate required fields
     if (!title.trim()) {
-      toast.error('O nome da tarefa é obrigatório');
+      toast.error(parentTaskId ? 'O nome da subtarefa é obrigatório' : 'O nome da tarefa é obrigatório');
       return;
     }
 
@@ -58,27 +61,36 @@ export function TaskForm({ projectId, parentTaskId, onSubmit, onCancel }: TaskFo
       return;
     }
 
-    // Format issue links as part of the description
-    const issueLinksText = issueLinks
-      .filter(link => link.url.trim())
-      .map(link => link.url.trim())
-      .join('\n');
+    setIsSubmitting(true);
 
-    const fullDescription = description.trim() + (issueLinksText ? `\n\nIssues:\n${issueLinksText}` : '');
+    try {
+      // Format issue links as part of the description
+      const issueLinksText = issueLinks
+        .filter(link => link.url.trim())
+        .map(link => link.url.trim())
+        .join('\n');
 
-    const taskData = {
-      title: title.trim(),
-      description: fullDescription || null,
-      project_id: projectId,
-      parent_task_id: parentTaskId || null,
-      position: 0,
-      due_date: endDate || startDate || null,
-      priority: 'medium',
-      value: value ? parseFloat(value) : null,
-      actual_hours: actualHours !== '00:00:00' ? parseHHMMSSToSeconds(actualHours) : null,
-    };
+      const fullDescription = description.trim() + (issueLinksText ? `\n\nIssues:\n${issueLinksText}` : '');
 
-    onSubmit(taskData, []); // Pass empty array for labels
+      const taskData: Task = {
+        title: title.trim(),
+        description: fullDescription || null,
+        project_id: projectId,
+        parent_task_id: parentTaskId || null,
+        position: 0,
+        due_date: endDate || startDate || null,
+        priority: 'medium',
+        value: value ? parseFloat(value) : null,
+        actual_hours: actualHours !== '00:00:00' ? parseHHMMSSToSeconds(actualHours) : null,
+      };
+
+      await onSubmit(taskData, []); // Pass empty array for labels
+    } catch (error) {
+      console.error('Error creating task:', error);
+      toast.error(parentTaskId ? 'Erro ao criar subtarefa' : 'Erro ao criar tarefa');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -131,139 +143,157 @@ export function TaskForm({ projectId, parentTaskId, onSubmit, onCancel }: TaskFo
                     <div className="mt-4">
                       <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            {parentTaskId ? 'Nome da Subtarefa *' : 'Nome da Tarefa *'}
-          </label>
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors duration-200"
-            placeholder={parentTaskId ? "Digite o nome da subtarefa" : "Digite o nome da tarefa"}
-            required
-          />
-        </div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            {parentTaskId ? 'Nome da Subtarefa *' : 'Nome da Tarefa *'}
+                          </label>
+                          <input
+                            type="text"
+                            value={title}
+                            onChange={(e) => setTitle(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors duration-200"
+                            placeholder={parentTaskId ? "Digite o nome da subtarefa" : "Digite o nome da tarefa"}
+                            required
+                            disabled={isSubmitting}
+                          />
+                        </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            {parentTaskId ? 'Descrição da subtarefa' : 'Descrição da tarefa'}
-          </label>
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            rows={3}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors duration-200"
-            placeholder={parentTaskId ? "Descreva a subtarefa" : "Descreva a tarefa"}
-          />
-        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            {parentTaskId ? 'Descrição da subtarefa' : 'Descrição da tarefa'}
+                          </label>
+                          <textarea
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
+                            rows={3}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors duration-200"
+                            placeholder={parentTaskId ? "Descreva a subtarefa" : "Descreva a tarefa"}
+                            disabled={isSubmitting}
+                          />
+                        </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              {parentTaskId ? 'Data inicial da subtarefa' : 'Data inicial da tarefa'}
-            </label>
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors duration-200"
-            />
-          </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              {parentTaskId ? 'Data inicial da subtarefa' : 'Data inicial da tarefa'}
+                            </label>
+                            <input
+                              type="date"
+                              value={startDate}
+                              onChange={(e) => setStartDate(e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors duration-200"
+                              disabled={isSubmitting}
+                            />
+                          </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              {parentTaskId ? 'Data fim da subtarefa' : 'Data fim da tarefa'}
-            </label>
-            <input
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors duration-200"
-            />
-          </div>
-        </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              {parentTaskId ? 'Data fim da subtarefa' : 'Data fim da tarefa'}
+                            </label>
+                            <input
+                              type="date"
+                              value={endDate}
+                              onChange={(e) => setEndDate(e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors duration-200"
+                              disabled={isSubmitting}
+                            />
+                          </div>
+                        </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            {parentTaskId ? 'Valor da Subtarefa (R$)' : 'Valor da Tarefa (R$)'}
-          </label>
-          <input
-            type="number"
-            step="0.01"
-            min="0"
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            placeholder="0,00"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors duration-200"
-          />
-        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            {parentTaskId ? 'Valor da Subtarefa (R$)' : 'Valor da Tarefa (R$)'}
+                          </label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={value}
+                            onChange={(e) => setValue(e.target.value)}
+                            placeholder="0,00"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors duration-200"
+                            disabled={isSubmitting}
+                          />
+                        </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Horas Realizadas (hh:mm:ss)
-          </label>
-          <input
-            type="text"
-            value={actualHours}
-            onChange={(e) => setActualHours(e.target.value)}
-            placeholder="00:00:00"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors duration-200"
-          />
-        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Horas Realizadas (hh:mm:ss)
+                          </label>
+                          <input
+                            type="text"
+                            value={actualHours}
+                            onChange={(e) => setActualHours(e.target.value)}
+                            placeholder="00:00:00"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors duration-200"
+                            disabled={isSubmitting}
+                          />
+                        </div>
 
-        <div>
-          <div className="flex justify-between items-center mb-2">
-            <label className="block text-sm font-medium text-gray-700">
-              Vincular Link da Issue
-            </label>
-            <button
-              type="button"
-              onClick={handleAddIssueLink}
-              className="text-sm text-primary-600 hover:text-primary-700 flex items-center"
-            >
-              <PlusIcon className="w-4 h-4 mr-1" />
-              Adicionar Issue
-            </button>
-          </div>
-          <div className="space-y-2">
-            {issueLinks.map((link) => (
-              <div key={link.id} className="flex gap-2">
-                <input
-                  type="url"
-                  value={link.url}
-                  onChange={(e) => handleUpdateIssueLink(link.id, e.target.value)}
-                  placeholder="https://..."
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors duration-200"
-                />
-                {issueLinks.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveIssueLink(link.id)}
-                    className="text-gray-400 hover:text-gray-600"
-                  >
-                    <XMarkIcon className="w-5 h-5" />
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
+                        <div>
+                          <div className="flex justify-between items-center mb-2">
+                            <label className="block text-sm font-medium text-gray-700">
+                              Vincular Link da Issue
+                            </label>
+                            <button
+                              type="button"
+                              onClick={handleAddIssueLink}
+                              className="text-sm text-primary-600 hover:text-primary-700 flex items-center disabled:opacity-50"
+                              disabled={isSubmitting}
+                            >
+                              <PlusIcon className="w-4 h-4 mr-1" />
+                              Adicionar Issue
+                            </button>
+                          </div>
+                          <div className="space-y-2">
+                            {issueLinks.map((link) => (
+                              <div key={link.id} className="flex gap-2">
+                                <input
+                                  type="url"
+                                  value={link.url}
+                                  onChange={(e) => handleUpdateIssueLink(link.id, e.target.value)}
+                                  placeholder="https://..."
+                                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors duration-200"
+                                  disabled={isSubmitting}
+                                />
+                                {issueLinks.length > 1 && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRemoveIssueLink(link.id)}
+                                    className="text-gray-400 hover:text-gray-600 disabled:opacity-50"
+                                    disabled={isSubmitting}
+                                  >
+                                    <XMarkIcon className="w-5 h-5" />
+                                  </button>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
 
                         <div className="flex justify-end space-x-2 pt-4">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
-          >
-            Cancelar
-          </button>
-          <button
-            type="submit"
-            className="inline-flex justify-center px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-          >
-            {parentTaskId ? 'Criar Subtarefa' : 'Criar Tarefa'}
-          </button>
-        </div>
+                          <button
+                            type="button"
+                            onClick={onCancel}
+                            className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50"
+                            disabled={isSubmitting}
+                          >
+                            Cancelar
+                          </button>
+                          <button
+                            type="submit"
+                            className="inline-flex justify-center px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                            disabled={isSubmitting}
+                          >
+                            {isSubmitting ? (
+                              <>
+                                <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                                {parentTaskId ? 'Criando...' : 'Criando...'}
+                              </>
+                            ) : (
+                              parentTaskId ? 'Criar Subtarefa' : 'Criar Tarefa'
+                            )}
+                          </button>
+                        </div>
                       </form>
                     </div>
                   </div>
