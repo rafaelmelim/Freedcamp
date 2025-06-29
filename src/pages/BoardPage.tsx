@@ -579,7 +579,7 @@ export function BoardPage() {
                 className="bg-white/80 backdrop-blur-sm rounded-lg shadow-sm p-4 w-full"
               >
                 <div className="flex justify-between items-center mb-4">
-                  <div className="flex items-center justify-between w-full">
+                  <div className="flex items-center">
                     <h3 
                       className="text-lg font-semibold text-gray-900 cursor-pointer hover:text-primary-600 transition-colors"
                       onClick={() => handleProjectClick(project)}
@@ -588,7 +588,7 @@ export function BoardPage() {
                     </h3>
                     
                     {/* Project Options Menu */}
-                    <Menu as="div" className="relative inline-block text-left">
+                    <Menu as="div" className="relative inline-block text-left ml-2">
                       <Menu.Button className="flex items-center justify-center w-8 h-8 text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded-full hover:bg-gray-100">
                         <EllipsisVerticalIcon className="w-5 h-5" />
                       </Menu.Button>
@@ -646,8 +646,8 @@ export function BoardPage() {
                   
                   <div className="flex items-center space-x-4">
                     {/* Project Values */}
-                    <div className="text-sm text-gray-600">
-                      <div className="flex items-center space-x-2">
+                    <div>
+                      <div className="flex items-center space-x-2 flex-wrap justify-end">
                         {project.estimated_value && (
                           <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">
                             Previsto: {project.estimated_value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
