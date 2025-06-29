@@ -372,8 +372,42 @@ export interface Database {
           created_at?: string | null
         }
       }
+      custom_fields: {
+        Row: {
+          id: string
+          field_name: string
+          entity_type: string
+          enabled: boolean
+          label: string
+          description: string | null
+          owner_id: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          field_name: string
+          entity_type: string
+          enabled?: boolean
+          label: string
+          description?: string | null
+          owner_id?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          field_name?: string
+          entity_type?: string
+          enabled?: boolean
+          label?: string
+          description?: string | null
+          owner_id?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+      }
     }
-  }
     Views: {
       [_ in never]: never
     }
@@ -470,38 +504,3 @@ export type Enums<
   : PublicEnumNameOrOptions extends keyof PublicSchema["Enums"]
   ? PublicSchema["Enums"][PublicEnumNameOrOptions]
   : never
-        Row: {
-          id: string
-          field_name: string
-          entity_type: string
-          enabled: boolean
-          label: string
-          description: string | null
-          owner_id: string | null
-          created_at: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          id?: string
-          field_name: string
-          entity_type: string
-          enabled?: boolean
-          label: string
-          description?: string | null
-          owner_id?: string | null
-          created_at?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          id?: string
-          field_name?: string
-          entity_type?: string
-          enabled?: boolean
-          label?: string
-          description?: string | null
-          owner_id?: string | null
-          created_at?: string | null
-          updated_at?: string | null
-        }
-      }
-}
