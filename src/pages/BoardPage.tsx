@@ -8,7 +8,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { ConnectionError } from '../components/ConnectionError';
 import { toast } from 'react-hot-toast';
-import { Database, TaskStatus } from '../lib/database.types';
+import { Database } from '../lib/database.types';
 import { TaskForm } from '../components/TaskForm';
 import { Header } from '../components/Header';
 import { TaskDetailsModal } from '../components/TaskDetailsModal';
@@ -306,34 +306,10 @@ export function BoardPage() {
     },
   });
 
-  const importData = useMutation({
-    mutationFn: async ({ projects, tasks }: { projects: ProjectInsert[], tasks: TaskInsert[] }) => {
-      const { error: projectsError } = await supabase
-        .from('projects')
-        .insert(projects);
-
-      if (projectsError) throw projectsError;
-
-      const { error: tasksError } = await supabase
-        .from('tasks')
-        .insert(tasks);
-
-      if (tasksError) throw tasksError;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['projects'] });
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
-      toast.success('Data imported successfully');
-    },
-    onError: () => {
-      toast.error('Failed to import data');
-    },
-  });
-
   const handleDragEnd = async (result: any) => {
     if (!result.destination) return;
 
-    const { source, destination, draggableId, type } = result;
+    const { destination, draggableId, type } = result;
 
     if (type === 'task') {
       const destinationProjectId = destination.droppableId;
@@ -635,7 +611,7 @@ export function BoardPage() {
                       >
                         <Menu.Items className="absolute right-0 z-50 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
                           <Menu.Item>
-                            {({ focus }) => (
+                            {({ active }) => (
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -648,7 +624,7 @@ export function BoardPage() {
                                   });
                                 }}
                                 className={`${
-                                  focus ? 'bg-gray-100' : ''
+                                  active ? 'bg-gray-100' : ''
                                 } flex items-center w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100`}
                               >
                                 <ArchiveBoxArrowDownIcon className="w-4 h-4 mr-2" />
@@ -657,7 +633,7 @@ export function BoardPage() {
                             )}
                           </Menu.Item>
                           <Menu.Item>
-                            {({ focus }) => (
+                            {({ active }) => (
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -670,7 +646,7 @@ export function BoardPage() {
                                   });
                                 }}
                                 className={`${
-                                  focus ? 'bg-gray-100' : ''
+                                  active ? 'bg-gray-100' : ''
                                 } flex items-center w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-gray-100`}
                               >
                                 <TrashIcon className="w-4 h-4 mr-2" />
@@ -888,7 +864,7 @@ export function BoardPage() {
                                         <Menu.Items className="absolute right-0 z-50 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
                                           {!task.parent_task_id && (
                                           <Menu.Item>
-                                            {({ focus }) => (
+                                            {({ active }) => (
                                               <button
                                                 onClick={(e) => {
                                                   e.stopPropagation();
@@ -897,7 +873,7 @@ export function BoardPage() {
                                                   setAddingSubtaskToTask({ projectId: project.id, parentTaskId: task.id });
                                                 }}
                                                 className={`${
-                                                  focus ? 'bg-gray-100' : ''
+                                                  active ? 'bg-gray-100' : ''
                                                 } block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100`}
                                               >
                                                 Adicionar Subtarefa
@@ -906,7 +882,7 @@ export function BoardPage() {
                                           </Menu.Item>
                                           )}
                                           <Menu.Item>
-                                            {({ focus }) => (
+                                            {({ active }) => (
                                               <button
                                                 onClick={(e) => {
                                                   e.stopPropagation();
@@ -915,7 +891,7 @@ export function BoardPage() {
                                                   setSelectedTask(task);
                                                 }}
                                                 className={`${
-                                                  focus ? 'bg-gray-100' : ''
+                                                  active ? 'bg-gray-100' : ''
                                                 } block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100`}
                                               >
                                                 {task.parent_task_id ? 'Editar Subtarefa' : 'Editar Tarefa'}
@@ -923,7 +899,7 @@ export function BoardPage() {
                                             )}
                                           </Menu.Item>
                                           <Menu.Item>
-                                            {({ focus }) => (
+                                            {({ active }) => (
                                               <button
                                                 onClick={(e) => {
                                                   e.stopPropagation();
@@ -938,7 +914,7 @@ export function BoardPage() {
                                                   });
                                                 }}
                                                 className={`${
-                                                  focus ? 'bg-gray-100' : ''
+                                                  active ? 'bg-gray-100' : ''
                                                 } block w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-gray-100`}
                                               >
                                                 {task.parent_task_id ? 'Excluir Subtarefa' : 'Excluir Tarefa'}
