@@ -47,6 +47,7 @@ export function BoardPage() {
   const [isAddingProject, setIsAddingProject] = useState(false);
   const [newProjectTitle, setNewProjectTitle] = useState('');
   const [addingTaskToProject, setAddingTaskToProject] = useState<number | null>(null);
+  const [addingSubtaskToTask, setAddingSubtaskToTask] = useState<number | null>(null);
   const [selectedTask, setSelectedTask] = useState<(Task & { task_labels: { label: Label }[] }) | null>(null);
   const [projectToEdit, setProjectToEdit] = useState<Project | null>(null);
   const [showProjectForm, setShowProjectForm] = useState(false);
@@ -626,6 +627,18 @@ export function BoardPage() {
                   />
                 )}
 
+                {addingSubtaskToTask && (
+                  <TaskForm
+                    projectId={project.id}
+                    parentTaskId={addingSubtaskToTask}
+                    onSubmit={(task, labels) => {
+                      createTask.mutate({ task, labels });
+                      setAddingSubtaskToTask(null);
+                    }}
+                    onCancel={() => setAddingSubtaskToTask(null)}
+                  />
+                )}
+
                 <div className={collapsedProjects[project.id] ? 'hidden' : ''}>
                   <DragDropContext onDragEnd={handleDragEnd}>
                     <Droppable droppableId={String(project.id)} type="task">
@@ -701,6 +714,21 @@ export function BoardPage() {
                                                 onClick={(e) => {
                                                   e.stopPropagation();
                                                   setAddingTaskToProject(task.project_id);
+                                                }}
+                                                className={`${
+                                                  focus ? 'bg-gray-100' : ''
+                                                } block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100`}
+                                              >
+                                                Adicionar Tarefa
+                                              </button>
+                                            )}
+                                          </Menu.Item>
+                                          <Menu.Item>
+                                            {({ focus }) => (
+                                              <button
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  setAddingSubtaskToTask(task.id);
                                                 }}
                                                 className={`${
                                                   focus ? 'bg-gray-100' : ''
