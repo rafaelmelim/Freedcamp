@@ -2,10 +2,11 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
-import { Database } from '../lib/database.types';
+import { Database, TaskStatus } from '../lib/database.types';
 import { toast } from 'react-hot-toast';
 import { parseHHMMSSToSeconds, formatSecondsToHHMMSS } from '../lib/utils';
 import { ConfirmationModal } from './ConfirmationModal';
+import { TimeTracking } from './TimeTracking';
 import { TrashIcon } from '@heroicons/react/24/outline';
 
 type Task = Database['public']['Tables']['tasks']['Row'];
@@ -27,7 +28,14 @@ interface SubtaskFormData {
   due_date: string;
   value: string;
   actual_hours: string;
+  status: TaskStatus;
 }
+
+const statusOptions: { value: TaskStatus; label: string }[] = [
+  { value: 'concluida', label: 'Concluída' },
+  { value: 'em_andamento', label: 'Em andamento' },
+  { value: 'nao_iniciada', label: 'Não iniciada' },
+];
 
 export function SubtaskForm({ 
   projectId, 
@@ -49,6 +57,7 @@ export function SubtaskForm({
       due_date: initialData?.due_date || '',
       value: initialData?.value?.toString() || '',
       actual_hours: formatSecondsToHHMMSS(initialData?.actual_hours),
+      status: initialData?.status || 'nao_iniciada',
     },
   });
 
@@ -81,6 +90,7 @@ export function SubtaskForm({
           due_date: data.due_date || null,
           value: data.value ? parseFloat(data.value) : null,
           actual_hours: data.actual_hours && data.actual_hours !== '00:00:00' ? parseHHMMSSToSeconds(data.actual_hours) : null,
+          status: data.status,
         };
 
         onUpdate(initialData.id, updateData);
@@ -97,6 +107,7 @@ export function SubtaskForm({
           priority: 'medium',
           value: data.value ? parseFloat(data.value) : null,
           actual_hours: data.actual_hours && data.actual_hours !== '00:00:00' ? parseHHMMSSToSeconds(data.actual_hours) : null,
+          status: data.status,
         };
 
         await onSubmit(taskData);
@@ -182,6 +193,23 @@ export function SubtaskForm({
             />
           </div>
 
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Status da Subtarefa
+            </label>
+            <select
+              {...register('status')}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+              disabled={isSubmitting}
+            >
+              {statusOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
           {/* Show value and hours fields only in edit mode */}
           {isEditing && (
             <>
@@ -211,6 +239,11 @@ export function SubtaskForm({
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                   disabled={isSubmitting}
                 />
+              </div>
+
+              {/* Time Tracking - only show in edit mode */}
+              <div>
+                <TimeTracking taskId={initialData!.id} />
               </div>
             </>
           )}
