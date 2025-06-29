@@ -763,6 +763,21 @@ export function BoardPage() {
                                               <button
                                                 onClick={(e) => {
                                                   e.stopPropagation();
+                                                  setAddingSubtaskToTask(task.id);
+                                                }}
+                                                className={`${
+                                                  focus ? 'bg-gray-100' : ''
+                                                } block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100`}
+                                              >
+                                                Adicionar Subtarefa
+                                              </button>
+                                            )}
+                                          </Menu.Item>
+                                          <Menu.Item>
+                                            {({ focus }) => (
+                                              <button
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
                                                   setSelectedTask(task);
                                                 }}
                                                 className={`${
