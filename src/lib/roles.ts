@@ -2,7 +2,6 @@ import { supabase } from '../lib/supabase';
 import { Database } from './database.types';
 
 type Role = Database['public']['Tables']['roles']['Row'];
-type UserRole = Database['public']['Tables']['user_roles']['Row'];
 
 export async function getUserRoles(userId: string): Promise<Role[]> {
   const { data: userRoles, error: userRolesError } = await supabase
