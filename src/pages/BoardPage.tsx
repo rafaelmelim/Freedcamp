@@ -56,16 +56,42 @@ export function BoardPage() {
   const [actualProjectSearchTerm, setActualProjectSearchTerm] = useState('');
   const [collapsedProjects, setCollapsedProjects] = useState<Record<number, boolean>>({});
   const [reportsMenuOpen, setReportsMenuOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const projectsPerPage = 10;
   const queryClient = useQueryClient();
 
-  const { data: projects, isLoading: isLoadingProjects } = useQuery({
-    queryKey: ['projects', actualProjectSearchTerm],
+  // Query for total count of projects
+  const { data: totalProjectsCount } = useQuery({
+    queryKey: ['projects-count', actualProjectSearchTerm],
     queryFn: async () => {
+      let query = supabase
+        .from('projects')
+        .select('*', { count: 'exact', head: true })
+        .eq('archived', false);
+
+      // Apply search filter if provided
+      if (actualProjectSearchTerm.trim()) {
+        query = query.or(`title.ilike.%${actualProjectSearchTerm}%,sequence_number.eq.${parseInt(actualProjectSearchTerm) || 0}`);
+      }
+
+      const { count, error } = await query;
+      if (error) throw error;
+      return count || 0;
+    },
+  });
+
+  const { data: projects, isLoading: isLoadingProjects } = useQuery({
+    queryKey: ['projects', actualProjectSearchTerm, currentPage],
+    queryFn: async () => {
+      const from = (currentPage - 1) * projectsPerPage;
+      const to = from + projectsPerPage - 1;
+
       let query = supabase
         .from('projects')
         .select('*')
         .eq('archived', false)
-        .order('sequence_number');
+        .order('sequence_number')
+        .range(from, to);
 
       // Apply search filter if provided
       if (actualProjectSearchTerm.trim()) {
@@ -78,6 +104,11 @@ export function BoardPage() {
       return data as Project[];
     },
   });
+
+  // Calculate pagination info
+  const totalPages = Math.ceil((totalProjectsCount || 0) / projectsPerPage);
+  const hasNextPage = currentPage < totalPages;
+  const hasPreviousPage = currentPage > 1;
 
   const { data: tasks, isLoading: isLoadingTasks } = useQuery({
     queryKey: ['tasks'],
@@ -423,12 +454,19 @@ export function BoardPage() {
 
   const handleSearch = () => {
     setActualProjectSearchTerm(inputProjectSearchTerm);
+    setCurrentPage(1); // Reset to first page when searching
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       handleSearch();
     }
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    // Scroll to top when changing pages
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const calculateProjectProgress = (projectId: number) => {
@@ -1008,6 +1046,69 @@ export function BoardPage() {
             />
           )}
         </main>
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-white/90 backdrop-blur-sm rounded-lg shadow-lg p-4 border border-gray-200">
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={!hasPreviousPage}
+                className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Anterior
+              </button>
+              
+              <div className="flex items-center space-x-1">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                  // Show first page, last page, current page, and pages around current page
+                  const showPage = 
+                    page === 1 || 
+                    page === totalPages || 
+                    (page >= currentPage - 1 && page <= currentPage + 1);
+                  
+                  if (!showPage) {
+                    // Show ellipsis for gaps
+                    if (page === currentPage - 2 || page === currentPage + 2) {
+                      return (
+                        <span key={page} className="px-2 py-1 text-gray-500">
+                          ...
+                        </span>
+                      );
+                    }
+                    return null;
+                  }
+                  
+                  return (
+                    <button
+                      key={page}
+                      onClick={() => handlePageChange(page)}
+                      className={`px-3 py-2 text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 ${
+                        page === currentPage
+                          ? 'bg-primary-600 text-white'
+                          : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  );
+                })}
+              </div>
+              
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={!hasNextPage}
+                className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Próxima
+              </button>
+            </div>
+            
+            <div className="mt-2 text-center text-sm text-gray-600">
+              Página {currentPage} de {totalPages} ({totalProjectsCount} projetos)
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
