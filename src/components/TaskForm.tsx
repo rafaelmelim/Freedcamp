@@ -203,7 +203,7 @@ export function TaskForm({ projectId, parentTaskId, onSubmit, onCancel }: TaskFo
                               type="date"
                               value={startDate}
                               onChange={(e) => setStartDate(e.target.value)}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors duration-200"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors duration-200 cursor-pointer"
                               disabled={isSubmitting}
                             />
                           </div>
@@ -216,7 +216,7 @@ export function TaskForm({ projectId, parentTaskId, onSubmit, onCancel }: TaskFo
                               type="date"
                               value={endDate}
                               onChange={(e) => setEndDate(e.target.value)}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors duration-200"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors duration-200 cursor-pointer"
                               disabled={isSubmitting}
                             />
                           </div>
