@@ -197,9 +197,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // If it's a network error, still navigate to login
           navigate('/login')
         } else {
-          throw error
+          // Don't re-throw the error, just navigate to login
+          navigate('/login')
         }
-        throw error
       }
     }
   }
