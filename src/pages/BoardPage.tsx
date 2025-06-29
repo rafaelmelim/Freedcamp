@@ -10,8 +10,6 @@ import { ConnectionError } from '../components/ConnectionError';
 import { toast } from 'react-hot-toast';
 import { Database, TaskPriority, TaskStatus } from '../lib/database.types';
 import { TaskForm } from '../components/TaskForm';
-import { ImportCSV } from '../components/ImportCSV';
-import { ExportCSV } from '../components/ExportCSV';
 import { Header } from '../components/Header';
 import { TaskDetailsModal } from '../components/TaskDetailsModal';
 import { ProjectForm } from '../components/ProjectForm';
@@ -47,7 +45,6 @@ const statusLabels = {
 
 export function BoardPage() {
   const { user, hasRole, signOut, loading, connectionError, retryConnection } = useAuth();
-  const [isAddingProject, setIsAddingProject] = useState(false);
   const [newProjectTitle, setNewProjectTitle] = useState('');
   const [addingTaskToProject, setAddingTaskToProject] = useState<number | null>(null);
   const [addingSubtaskToTask, setAddingSubtaskToTask] = useState<number | null>(null);
