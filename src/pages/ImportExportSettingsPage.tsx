@@ -16,11 +16,6 @@ import {
   ComputerDesktopIcon,
   ArrowDownTrayIcon,
   UserCircleIcon,
-  ChartBarIcon,
-  ChartPieIcon,
-  UserGroupIcon,
-  ChevronDownIcon,
-  ChevronRightIcon,
 } from '@heroicons/react/24/outline';
 
 type ImportExportSetting = Database['public']['Tables']['import_export_settings']['Row'];

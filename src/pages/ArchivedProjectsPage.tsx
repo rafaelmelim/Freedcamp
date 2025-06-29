@@ -5,7 +5,7 @@ import { Database, TaskPriority } from '../lib/database.types';
 import { Link } from 'react-router-dom';
 import { Header } from '../components/Header';
 import { useAuth } from '../contexts/AuthContext';
-import { HomeIcon, ArchiveBoxIcon, Cog6ToothIcon, ArrowRightOnRectangleIcon, ChevronUpIcon, ChevronDownIcon, ChartBarIcon, ChartPieIcon, UserGroupIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
+import { HomeIcon, ArchiveBoxIcon, Cog6ToothIcon, ArrowRightOnRectangleIcon, ChevronUpIcon, ChevronDownIcon, ChartBarIcon } from '@heroicons/react/24/outline';
 import { useState, useEffect } from 'react';
 import { formatSecondsToHHMMSS } from '../lib/utils';
 
