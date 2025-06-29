@@ -437,8 +437,6 @@ export interface Database {
           updated_at?: string | null
         }
       }
-    }
-  }
       import_export_settings: {
         Row: {
           id: string
@@ -474,4 +472,6 @@ export interface Database {
           updated_at?: string | null
         }
       }
+    }
+  }
 }
