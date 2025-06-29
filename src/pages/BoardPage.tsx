@@ -843,24 +843,19 @@ export function BoardPage() {
                     projectId={project.id}
                     parentTaskId={addingSubtaskToTask}
                     onSubmit={async (task, labels) => {
-                      try {
-                        const newTask = await createTask.mutateAsync({ task, labels });
-                        queryClient.invalidateQueries({ queryKey: ['tasks'] });
-                        setAddingSubtaskToTask(null);
-                        toast.success('Subtarefa criada com sucesso');
-                        
-                        // Abrir automaticamente o modal de detalhes da subtarefa recém-criada
-                        // para permitir o uso do TimeTracking
-                        if (newTask) {
-                          const taskWithLabels = {
-                            ...newTask,
-                            task_labels: []
-                          };
-                          setSelectedTask(taskWithLabels);
-                        }
-                      } catch (error) {
-                        console.error('Subtask creation error:', error);
-                        toast.error('Erro ao criar subtarefa. Por favor, tente novamente.');
+                      const newTask = await createTask.mutateAsync({ task, labels });
+                      await queryClient.invalidateQueries({ queryKey: ['tasks'] });
+                      setAddingSubtaskToTask(null);
+                      toast.success('Subtarefa criada com sucesso');
+                      
+                      // Abrir automaticamente o modal de detalhes da subtarefa recém-criada
+                      // para permitir o uso do TimeTracking
+                      if (newTask) {
+                        const taskWithLabels = {
+                          ...newTask,
+                          task_labels: []
+                        };
+                        setSelectedTask(taskWithLabels);
                       }
                     }}
                     onCancel={() => setAddingSubtaskToTask(null)}
