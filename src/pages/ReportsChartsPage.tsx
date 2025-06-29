@@ -872,8 +872,6 @@ export function ReportsChartsPage() {
                       <h4 className="text-lg font-medium text-gray-900 mb-4">
                         Produtividade por Colaborador
                       </h4>
-           <p className="text-sm text-gray-600 mb-4">
-  <strong>Colaboradores:</strong> {selectedAssignees && selectedAssignees.length > 0
-    ? selectedAssignees.map(a => a.name).join(', ')
-    : 'Nenhum selecionado'}
-</p>
+                      <p className="text-sm text-gray-600 mb-4">
+                        <strong>Colaboradores:</strong> {selectedAssigneesText}
+                      </p>
