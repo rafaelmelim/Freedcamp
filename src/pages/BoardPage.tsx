@@ -8,7 +8,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { ConnectionError } from '../components/ConnectionError';
 import { toast } from 'react-hot-toast';
-import { Database, TaskPriority, TaskStatus } from '../lib/database.types';
+import { Database, TaskStatus } from '../lib/database.types';
 import { TaskForm } from '../components/TaskForm';
 import { Header } from '../components/Header';
 import { TaskDetailsModal } from '../components/TaskDetailsModal';
@@ -306,26 +306,6 @@ export function BoardPage() {
     },
   });
 
-  const updateTaskStatus = useMutation({
-    mutationFn: async ({ taskId, status }: { taskId: number; status: TaskStatus }) => {
-      const { error } = await supabase
-        .from('tasks')
-        .update({ 
-          status,
-          completed: status === 'concluida'
-        })
-        .eq('id', taskId);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
-    },
-    onError: () => {
-      toast.error('Failed to update task');
-    },
-  });
-
   const importData = useMutation({
     mutationFn: async ({ projects, tasks }: { projects: ProjectInsert[], tasks: TaskInsert[] }) => {
       const { error: projectsError } = await supabase
@@ -356,11 +336,9 @@ export function BoardPage() {
     const { source, destination, draggableId, type } = result;
 
     if (type === 'task') {
-      const sourceProjectId = source.droppableId;
       const destinationProjectId = destination.droppableId;
       const taskId = parseInt(draggableId);
 
-      const projectTasks = tasks?.filter(t => t.project_id === parseInt(destinationProjectId)) || [];
       const updatedPosition = destination.index;
 
       const { error } = await supabase
@@ -378,10 +356,6 @@ export function BoardPage() {
 
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
     }
-  };
-
-  const handleImport = (projects: ProjectInsert[], tasks: TaskInsert[]) => {
-    importData.mutate({ projects, tasks });
   };
 
   const toggleCollapse = (projectId: number) => {
