@@ -1,6 +1,5 @@
-import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { PlusIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { PlusIcon } from '@heroicons/react/24/outline';
 import { toast } from 'react-hot-toast';
 import { formatSecondsToHHMMSS, parseHHMMSSToSeconds } from '../lib/utils';
 import { Database, Project } from '../lib/database.types';

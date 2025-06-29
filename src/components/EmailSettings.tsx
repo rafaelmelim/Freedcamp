@@ -33,10 +33,6 @@ const defaultSettings: Partial<EmailSettings> = {
 
 export function EmailSettings() {
   const [formSettings, setFormSettings] = useState<Partial<EmailSettings>>(defaultSettings);
-  const [testStatus, setTestStatus] = useState<{
-    step: 'idle' | 'validating' | 'connecting' | 'sending' | 'complete' | 'error';
-    error?: string;
-  }>({ step: 'idle' });
   const [testData, setTestData] = useState<TestEmailData>({
     email: '',
     subject: 'Test Email Configuration',
