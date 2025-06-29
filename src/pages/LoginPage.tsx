@@ -79,7 +79,7 @@ export function LoginPage() {
         </div>
       </header>
 
-      <main className="flex-1 flex items-center justify-center min-h-[calc(100vh-96px)] p-4 bg-gradient-to-br from-primary-50 to-primary-100">
+      <main className="flex-1 flex items-center justify-center overflow-y-auto p-4 bg-gradient-to-br from-primary-50 to-primary-100">
         <section className="w-full max-w-md bg-white rounded-xl shadow-xl p-8 mx-4">
           <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">
             Acesse sua conta
