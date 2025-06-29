@@ -1,8 +1,7 @@
 import { useForm } from 'react-hook-form';
 import { PlusIcon } from '@heroicons/react/24/outline';
-import { toast } from 'react-hot-toast';
 import { formatSecondsToHHMMSS, parseHHMMSSToSeconds } from '../lib/utils';
-import { Database, Project } from '../lib/database.types';
+import { Database } from '../lib/database.types';
 
 type ProjectInsert = Database['public']['Tables']['projects']['Insert'];
 type Project = Database['public']['Tables']['projects']['Row'];
@@ -37,8 +36,8 @@ export function ProjectForm({ initialData, onSubmit, onCancel }: ProjectFormProp
       actual_end_date: initialData?.actual_end_date || '',
       analyst: initialData?.analyst || '',
       description: initialData?.description || '',
-      estimated_hours: formatSecondsToHHMMSS(initialData?.estimated_hours),
-      actual_hours: formatSecondsToHHMMSS(initialData?.actual_hours),
+      estimated_hours: formatSecondsToHHMMSS(initialData?.estimated_hours ?? null),
+      actual_hours: formatSecondsToHHMMSS(initialData?.actual_hours ?? null),
     },
   });
 
