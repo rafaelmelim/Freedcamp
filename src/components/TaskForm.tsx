@@ -275,3 +275,4 @@ export function TaskForm({ projectId, parentTaskId, onSubmit, onCancel }: TaskFo
       </Dialog>
     </Transition.Root>
   );
+}
