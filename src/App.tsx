@@ -8,7 +8,7 @@ import { BoardPage } from './pages/BoardPage'
 import { AdminPage } from './pages/AdminPage'
 import { UserProfilesPage } from './pages/UserProfilesPage'
 import { EmailSettingsPage } from './pages/EmailSettingsPage'
-import { ArchivedTasksPage } from './pages/ArchivedTasksPage'
+import { ArchivedProjectsPage } from './pages/ArchivedProjectsPage'
 import { UsersPage } from './pages/UsersPage'
 import { ImportExportSettingsPage } from './pages/ImportExportSettingsPage'
 import { SystemSettingsPage } from './pages/SystemSettingsPage'
@@ -63,7 +63,7 @@ function App() {
           path="/archived"
           element={
             <ProtectedRoute>
-              <ArchivedTasksPage />
+              <ArchivedProjectsPage />
             </ProtectedRoute>
           }
         />
