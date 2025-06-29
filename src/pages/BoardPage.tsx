@@ -9,6 +9,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { ConnectionError } from '../components/ConnectionError';
 import { toast } from 'react-hot-toast';
 import { Database, TaskPriority, TaskStatus } from '../lib/database.types';
+import { Database, TaskStatus } from '../lib/database.types';
 import { TaskForm } from '../components/TaskForm';
 import { Header } from '../components/Header';
 import { TaskDetailsModal } from '../components/TaskDetailsModal';
@@ -45,7 +46,6 @@ const statusLabels = {
 
 export function BoardPage() {
   const { user, hasRole, signOut, loading, connectionError, retryConnection } = useAuth();
-  const [newProjectTitle, setNewProjectTitle] = useState('');
   const [addingTaskToProject, setAddingTaskToProject] = useState<number | null>(null);
   const [addingSubtaskToTask, setAddingSubtaskToTask] = useState<number | null>(null);
   const [selectedTask, setSelectedTask] = useState<(Task & { task_labels: { label: Label }[] }) | null>(null);
@@ -247,24 +247,6 @@ export function BoardPage() {
     },
   });
 
-  const archiveProject = useMutation({
-    mutationFn: async (projectId: number) => {
-      const { error } = await supabase
-        .from('projects')
-        .update({ archived: true })
-        .eq('id', projectId);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['projects'] });
-      toast.success('Projeto arquivado com sucesso');
-    },
-    onError: () => {
-      toast.error('Erro ao arquivar projeto');
-    },
-  });
-
   const deleteProject = useMutation({
     mutationFn: async (projectId: number) => {
       const { error } = await supabase
@@ -322,24 +304,6 @@ export function BoardPage() {
     onError: () => {
       setConfirmationModal({ isOpen: false, type: 'task', id: 0, title: '', isSubtask: false });
       toast.error('Failed to delete task');
-    },
-  });
-
-  const archiveTask = useMutation({
-    mutationFn: async (taskId: number) => {
-      const { error } = await supabase
-        .from('tasks')
-        .update({ archived: true })
-        .eq('id', taskId);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
-      toast.success('Task archived successfully');
-    },
-    onError: () => {
-      toast.error('Failed to archive task');
     },
   });
 
