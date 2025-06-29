@@ -869,10 +869,10 @@ export function ReportsChartsPage() {
                     </h4>
                     <div className="mb-4 text-sm text-gray-600">
                       <p>
-                        <strong>Período Atual:</strong> {format(dateRange.startDate, 'dd/MM/yyyy')} a {format(dateRange.endDate,'dd/MM/yyyy')}
+                        <strong>Período Atual:</strong> {format(dateRange.startDate, 'dd/MM/yyyy')} a {format(dateRange.endDate,\'dd/MM/yyyy')}
                       </p>
                       <p>
-                        <strong>Período Anterior:</strong> {format(previousPeriodRange.startDate, 'dd/MM/yyyy')} a {format(previousPeriodRange.endDate,'dd/MM/yyyy')}
+                        <strong>Período Anterior:</strong> {format(previousPeriodRange.startDate, 'dd/MM/yyyy')} a {format(previousPeriodRange.endDate,\'dd/MM/yyyy')}
                       </p>
                     </div>
                     <p className="text-sm text-gray-600 mb-4">
@@ -893,10 +893,10 @@ export function ReportsChartsPage() {
                     </h4>
                     <div className="mb-4 text-sm text-gray-600">
                       <p>
-                        <strong>Período Atual:</strong> {format(dateRange.startDate, 'dd/MM/yyyy')} a {format(dateRange.endDate,'dd/MM/yyyy')}
+                        <strong>Período Atual:</strong> {format(dateRange.startDate, 'dd/MM/yyyy')} a {format(dateRange.endDate,\'dd/MM/yyyy')}
                       </p>
                       <p>
-                        <strong>Período Anterior:</strong> {format(previousPeriodRange.startDate, 'dd/MM/yyyy')} a {format(previousPeriodRange.endDate,'dd/MM/yyyy')}
+                        <strong>Período Anterior:</strong> {format(previousPeriodRange.startDate, 'dd/MM/yyyy')} a {format(previousPeriodRange.endDate,\'dd/MM/yyyy')}
                       </p>
                     </div>
                     <p className="text-sm text-gray-600 mb-4">
