@@ -35,7 +35,7 @@ import {
   Filler,
 } from 'chart.js';
 import { Bar, Line, Pie, Doughnut } from 'react-chartjs-2';
-import { format, startOfWeek, endOfWeek, eachDayOfInterval, parseISO, isWithinInterval } from 'date-fns';
+import { format, startOfWeek, endOfWeek, eachDayOfInterval, parseISO, isWithinInterval, differenceInDays } from 'date-fns';
 
 // Register Chart.js components
 ChartJS.register(
@@ -65,6 +65,7 @@ export function ReportsChartsPage() {
   const [reportsMenuOpen, setReportsMenuOpen] = useState(true);
   const [selectedWeek, setSelectedWeek] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [selectedProjects, setSelectedProjects] = useState<number[]>([]);
+  const [selectedAssignees, setSelectedAssignees] = useState<string[]>([]);
   const [showCharts, setShowCharts] = useState(false);
 
   // Fetch projects
@@ -82,7 +83,7 @@ export function ReportsChartsPage() {
     },
   });
 
-  // Fetch tasks
+  // Fetch tasks with assignee information
   const { data: tasks } = useQuery({
     queryKey: ['tasks'],
     queryFn: async () => {
@@ -90,12 +91,26 @@ export function ReportsChartsPage() {
         .from('tasks')
         .select(`
           *,
-          assignee:profiles(name)
+          assignee:profiles(id, name)
         `)
         .eq('archived', false);
 
       if (error) throw error;
-      return data as (Task & { assignee: Pick<Profile, 'name'> | null })[];
+      return data as (Task & { assignee: Pick<Profile, 'id' | 'name'> | null })[];
+    },
+  });
+
+  // Fetch all profiles for assignee filter
+  const { data: profiles } = useQuery({
+    queryKey: ['profiles'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, name')
+        .order('name');
+
+      if (error) throw error;
+      return data as Pick<Profile, 'id' | 'name'>[];
     },
   });
 
@@ -113,6 +128,20 @@ export function ReportsChartsPage() {
     return selectedProjectNames;
   }, [selectedProjects, projects]);
 
+  // Format selected assignees for display
+  const selectedAssigneesText = useMemo(() => {
+    if (selectedAssignees.length === 0) {
+      return 'Todos os colaboradores';
+    }
+    
+    const selectedAssigneeNames = profiles
+      ?.filter(p => selectedAssignees.includes(p.id))
+      .map(p => p.name)
+      .join(', ') || '';
+    
+    return selectedAssigneeNames;
+  }, [selectedAssignees, profiles]);
+
   // Calculate week range
   const weekRange = useMemo(() => {
     const startDate = startOfWeek(parseISO(selectedWeek), { weekStartsOn: 1 });
@@ -128,7 +157,7 @@ export function ReportsChartsPage() {
     return { startDate: previousWeekStart, endDate: previousWeekEnd };
   }, [selectedWeek]);
 
-  // Filter tasks by selected projects and week
+  // Filter tasks by selected projects, week, and assignees
   const filteredTasks = useMemo(() => {
     if (!tasks) return [];
     
@@ -138,11 +167,16 @@ export function ReportsChartsPage() {
         return false;
       }
       
+      // Filter by selected assignees
+      if (selectedAssignees.length > 0 && (!task.assignee || !selectedAssignees.includes(task.assignee.id))) {
+        return false;
+      }
+      
       // Filter by week range (using created_at or due_date)
       const taskDate = task.due_date ? parseISO(task.due_date) : parseISO(task.created_at!);
       return isWithinInterval(taskDate, weekRange);
     });
-  }, [tasks, selectedProjects, weekRange]);
+  }, [tasks, selectedProjects, selectedAssignees, weekRange]);
 
   // Filter tasks for previous week
   const previousWeekTasks = useMemo(() => {
@@ -154,11 +188,282 @@ export function ReportsChartsPage() {
         return false;
       }
       
+      // Filter by selected assignees
+      if (selectedAssignees.length > 0 && (!task.assignee || !selectedAssignees.includes(task.assignee.id))) {
+        return false;
+      }
+      
       // Filter by previous week range
       const taskDate = task.due_date ? parseISO(task.due_date) : parseISO(task.created_at!);
       return isWithinInterval(taskDate, previousWeekRange);
     });
-  }, [tasks, selectedProjects, previousWeekRange]);
+  }, [tasks, selectedProjects, selectedAssignees, previousWeekRange]);
+
+  // Get filtered projects for financial calculations
+  const filteredProjects = useMemo(() => {
+    if (!projects) return [];
+    
+    return projects.filter(project => {
+      if (selectedProjects.length > 0) {
+        return selectedProjects.includes(project.id);
+      }
+      return true;
+    });
+  }, [projects, selectedProjects]);
+
+  // Financial Indicators Charts
+  const financialCostComparisonChartData: ChartData = useMemo(() => {
+    const totalPlannedCost = filteredProjects.reduce((sum, project) => sum + (project.estimated_value || 0), 0);
+    const totalActualCost = filteredProjects.reduce((sum, project) => sum + (project.actual_value || 0), 0);
+
+    return {
+      labels: ['Custo Planejado', 'Custo Real'],
+      datasets: [
+        {
+          label: 'Valores (R$)',
+          data: [totalPlannedCost, totalActualCost],
+          backgroundColor: ['rgba(59, 130, 246, 0.8)', 'rgba(239, 68, 68, 0.8)'],
+          borderColor: ['rgb(59, 130, 246)', 'rgb(239, 68, 68)'],
+          borderWidth: 1,
+        },
+      ],
+    };
+  }, [filteredProjects]);
+
+  const financialBudgetComparisonChartData: ChartData = useMemo(() => {
+    const totalBudget = filteredProjects.reduce((sum, project) => sum + (project.estimated_value || 0), 0);
+    const utilizedBudget = filteredTasks.reduce((sum, task) => sum + (task.value || 0), 0);
+
+    return {
+      labels: ['Orçamento Total', 'Orçamento Utilizado'],
+      datasets: [
+        {
+          label: 'Valores (R$)',
+          data: [totalBudget, utilizedBudget],
+          backgroundColor: ['rgba(34, 197, 94, 0.8)', 'rgba(251, 191, 36, 0.8)'],
+          borderColor: ['rgb(34, 197, 94)', 'rgb(251, 191, 36)'],
+          borderWidth: 1,
+        },
+      ],
+    };
+  }, [filteredProjects, filteredTasks]);
+
+  const financialROIChartData: ChartData = useMemo(() => {
+    const projectROI = filteredProjects.map(project => {
+      const estimatedValue = project.estimated_value || 0;
+      const actualValue = project.actual_value || 0;
+      const roi = estimatedValue > 0 ? ((actualValue - estimatedValue) / estimatedValue) * 100 : 0;
+      return {
+        name: `#${project.sequence_number} - ${project.title}`,
+        roi: roi
+      };
+    });
+
+    return {
+      labels: projectROI.map(p => p.name),
+      datasets: [
+        {
+          label: 'ROI (%)',
+          data: projectROI.map(p => p.roi),
+          backgroundColor: projectROI.map(p => p.roi >= 0 ? 'rgba(34, 197, 94, 0.8)' : 'rgba(239, 68, 68, 0.8)'),
+          borderColor: projectROI.map(p => p.roi >= 0 ? 'rgb(34, 197, 94)' : 'rgb(239, 68, 68)'),
+          borderWidth: 1,
+        },
+      ],
+    };
+  }, [filteredProjects]);
+
+  // Time Indicators Charts
+  const timeAverageTaskDurationChartData: ChartData = useMemo(() => {
+    const tasksByAssignee = filteredTasks.reduce((acc, task) => {
+      const assigneeName = task.assignee?.name || 'Não Atribuído';
+      if (!acc[assigneeName]) {
+        acc[assigneeName] = [];
+      }
+      acc[assigneeName].push(task.actual_hours || 0);
+      return acc;
+    }, {} as Record<string, number[]>);
+
+    const averageDurations = Object.entries(tasksByAssignee).map(([assignee, hours]) => {
+      const avgHours = hours.length > 0 ? hours.reduce((sum, h) => sum + h, 0) / hours.length : 0;
+      return {
+        assignee,
+        avgHours: avgHours / 3600 // Convert seconds to hours
+      };
+    });
+
+    return {
+      labels: averageDurations.map(d => d.assignee),
+      datasets: [
+        {
+          label: 'Duração Média (horas)',
+          data: averageDurations.map(d => d.avgHours),
+          backgroundColor: 'rgba(59, 130, 246, 0.8)',
+          borderColor: 'rgb(59, 130, 246)',
+          borderWidth: 1,
+        },
+      ],
+    };
+  }, [filteredTasks]);
+
+  const timeDeliveryByPhaseChartData: ChartData = useMemo(() => {
+    const projectDelivery = filteredProjects.map(project => {
+      const plannedDuration = project.estimated_end_date && project.created_at 
+        ? differenceInDays(parseISO(project.estimated_end_date), parseISO(project.created_at))
+        : 0;
+      const actualDuration = project.actual_end_date && project.created_at
+        ? differenceInDays(parseISO(project.actual_end_date), parseISO(project.created_at))
+        : 0;
+      
+      return {
+        name: `#${project.sequence_number}`,
+        planned: plannedDuration,
+        actual: actualDuration
+      };
+    });
+
+    return {
+      labels: projectDelivery.map(p => p.name),
+      datasets: [
+        {
+          label: 'Duração Planejada (dias)',
+          data: projectDelivery.map(p => p.planned),
+          backgroundColor: 'rgba(59, 130, 246, 0.8)',
+          borderColor: 'rgb(59, 130, 246)',
+          borderWidth: 1,
+        },
+        {
+          label: 'Duração Real (dias)',
+          data: projectDelivery.map(p => p.actual),
+          backgroundColor: 'rgba(239, 68, 68, 0.8)',
+          borderColor: 'rgb(239, 68, 68)',
+          borderWidth: 1,
+        },
+      ],
+    };
+  }, [filteredProjects]);
+
+  const timeStartEndDatesChartData: ChartData = useMemo(() => {
+    const today = new Date();
+    const projectDates = filteredProjects.map(project => {
+      const estimatedDays = project.estimated_end_date 
+        ? differenceInDays(parseISO(project.estimated_end_date), today)
+        : 0;
+      const actualDays = project.actual_end_date
+        ? differenceInDays(parseISO(project.actual_end_date), today)
+        : 0;
+      
+      return {
+        name: `#${project.sequence_number}`,
+        estimated: estimatedDays,
+        actual: actualDays
+      };
+    });
+
+    return {
+      labels: projectDates.map(p => p.name),
+      datasets: [
+        {
+          label: 'Data Planejada (dias até hoje)',
+          data: projectDates.map(p => p.estimated),
+          backgroundColor: 'rgba(34, 197, 94, 0.8)',
+          borderColor: 'rgb(34, 197, 94)',
+          borderWidth: 1,
+        },
+        {
+          label: 'Data Real (dias até hoje)',
+          data: projectDates.map(p => p.actual),
+          backgroundColor: 'rgba(251, 191, 36, 0.8)',
+          borderColor: 'rgb(251, 191, 36)',
+          borderWidth: 1,
+        },
+      ],
+    };
+  }, [filteredProjects]);
+
+  // Team Indicators Charts
+  const teamProductivityChartData: ChartData = useMemo(() => {
+    const productivityByAssignee = filteredTasks.reduce((acc, task) => {
+      const assigneeName = task.assignee?.name || 'Não Atribuído';
+      if (!acc[assigneeName]) {
+        acc[assigneeName] = { completed: 0, total: 0 };
+      }
+      acc[assigneeName].total++;
+      if (task.status === 'concluida') {
+        acc[assigneeName].completed++;
+      }
+      return acc;
+    }, {} as Record<string, { completed: number; total: number }>);
+
+    const productivity = Object.entries(productivityByAssignee).map(([assignee, data]) => ({
+      assignee,
+      completed: data.completed,
+      productivity: data.total > 0 ? (data.completed / data.total) * 100 : 0
+    }));
+
+    return {
+      labels: productivity.map(p => p.assignee),
+      datasets: [
+        {
+          label: 'Tarefas Concluídas',
+          data: productivity.map(p => p.completed),
+          backgroundColor: 'rgba(34, 197, 94, 0.8)',
+          borderColor: 'rgb(34, 197, 94)',
+          borderWidth: 1,
+        },
+      ],
+    };
+  }, [filteredTasks]);
+
+  const teamWorkloadDistributionChartData: ChartData = useMemo(() => {
+    const workloadByAssignee = filteredTasks.reduce((acc, task) => {
+      const assigneeName = task.assignee?.name || 'Não Atribuído';
+      if (!acc[assigneeName]) {
+        acc[assigneeName] = 0;
+      }
+      if (task.status !== 'concluida') {
+        acc[assigneeName]++;
+      }
+      return acc;
+    }, {} as Record<string, number>);
+
+    return {
+      labels: Object.keys(workloadByAssignee),
+      datasets: [
+        {
+          label: 'Tarefas Pendentes',
+          data: Object.values(workloadByAssignee),
+          backgroundColor: 'rgba(251, 191, 36, 0.8)',
+          borderColor: 'rgb(251, 191, 36)',
+          borderWidth: 1,
+        },
+      ],
+    };
+  }, [filteredTasks]);
+
+  const teamHoursAllocatedChartData: ChartData = useMemo(() => {
+    const hoursByAssignee = filteredTasks.reduce((acc, task) => {
+      const assigneeName = task.assignee?.name || 'Não Atribuído';
+      if (!acc[assigneeName]) {
+        acc[assigneeName] = 0;
+      }
+      acc[assigneeName] += (task.actual_hours || 0) / 3600; // Convert seconds to hours
+      return acc;
+    }, {} as Record<string, number>);
+
+    return {
+      labels: Object.keys(hoursByAssignee),
+      datasets: [
+        {
+          label: 'Horas Alocadas',
+          data: Object.values(hoursByAssignee),
+          backgroundColor: 'rgba(147, 51, 234, 0.8)',
+          borderColor: 'rgb(147, 51, 234)',
+          borderWidth: 1,
+        },
+      ],
+    };
+  }, [filteredTasks]);
 
   // Chart 6: Weekly Comparison Chart
   const weeklyComparisonChartData: ChartData = useMemo(() => {
@@ -195,206 +500,19 @@ export function ReportsChartsPage() {
     };
   }, [filteredTasks, previousWeekTasks]);
 
-  // Chart 1: Bar Chart - Horas previstas vs realizadas por dia da semana
-  const hoursBarChartData: ChartData = useMemo(() => {
-    const daysOfWeek = eachDayOfInterval(weekRange);
-    const labels = daysOfWeek.map(day => format(day, 'EEE'));
-    
-    const estimatedHours = daysOfWeek.map(day => {
-      const dayTasks = filteredTasks.filter(task => {
-        const taskDate = task.due_date ? parseISO(task.due_date) : parseISO(task.created_at!);
-        return format(taskDate, 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd');
-      });
-      
-      return dayTasks.reduce((sum, task) => {
-        const projectEstimatedHours = projects?.find(p => p.id === task.project_id)?.estimated_hours || 0;
-        return sum + (projectEstimatedHours / Math.max(tasks?.filter(t => t.project_id === task.project_id).length || 1, 1));
-      }, 0) / 3600; // Convert seconds to hours
-    });
-    
-    const actualHours = daysOfWeek.map(day => {
-      const dayTasks = filteredTasks.filter(task => {
-        const taskDate = task.due_date ? parseISO(task.due_date) : parseISO(task.created_at!);
-        return format(taskDate, 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd');
-      });
-      
-      return dayTasks.reduce((sum, task) => sum + ((task.actual_hours || 0) / 3600), 0); // Convert seconds to hours
-    });
-
-    return {
-      labels,
-      datasets: [
-        {
-          label: 'Horas Previstas',
-          data: estimatedHours,
-          backgroundColor: 'rgba(59, 130, 246, 0.5)',
-          borderColor: 'rgb(59, 130, 246)',
-          borderWidth: 1,
-        },
-        {
-          label: 'Horas Realizadas',
-          data: actualHours,
-          backgroundColor: 'rgba(16, 185, 129, 0.5)',
-          borderColor: 'rgb(16, 185, 129)',
-          borderWidth: 1,
-        },
-      ],
-    };
-  }, [filteredTasks, projects, weekRange, tasks]);
-
-  // Chart 2: Line Chart - Progresso de tarefas concluídas no período
-  const progressLineChartData: ChartData = useMemo(() => {
-    const daysOfWeek = eachDayOfInterval(weekRange);
-    const labels = daysOfWeek.map(day => format(day, 'dd/MM'));
-    
-    const completedTasks = daysOfWeek.map(day => {
-      return filteredTasks.filter(task => {
-        const taskDate = task.due_date ? parseISO(task.due_date) : parseISO(task.created_at!);
-        return format(taskDate, 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd') && task.status === 'concluida';
-      }).length;
-    });
-
-    return {
-      labels,
-      datasets: [
-        {
-          label: 'Tarefas Concluídas',
-          data: completedTasks,
-          borderColor: 'rgb(34, 197, 94)',
-          backgroundColor: 'rgba(34, 197, 94, 0.2)',
-          tension: 0.1,
-          fill: true,
-        },
-      ],
-    };
-  }, [filteredTasks, weekRange]);
-
-  // Chart 3: Pie Chart - Distribuição percentual de tarefas por status
-  const statusPieChartData: ChartData = useMemo(() => {
-    const statusCounts = {
-      'concluida': filteredTasks.filter(t => t.status === 'concluida').length,
-      'em_andamento': filteredTasks.filter(t => t.status === 'em_andamento').length,
-      'nao_iniciada': filteredTasks.filter(t => t.status === 'nao_iniciada').length,
-    };
-
-    return {
-      labels: ['Concluídas', 'Em Andamento', 'Não Iniciadas'],
-      datasets: [
-        {
-          data: [statusCounts.concluida, statusCounts.em_andamento, statusCounts.nao_iniciada],
-          backgroundColor: [
-            'rgba(34, 197, 94, 0.8)',
-            'rgba(251, 191, 36, 0.8)',
-            'rgba(156, 163, 175, 0.8)',
-          ],
-          borderColor: [
-            'rgb(34, 197, 94)',
-            'rgb(251, 191, 36)',
-            'rgb(156, 163, 175)',
-          ],
-          borderWidth: 1,
-        },
-      ],
-    };
-  }, [filteredTasks]);
-
-  // Chart 4: Area Chart - Acúmulo de tarefas por prioridade
-  const priorityAreaChartData: ChartData = useMemo(() => {
-    const daysOfWeek = eachDayOfInterval(weekRange);
-    const labels = daysOfWeek.map(day => format(day, 'dd/MM'));
-    
-    const highPriorityTasks = daysOfWeek.map(day => {
-      return filteredTasks.filter(task => {
-        const taskDate = task.due_date ? parseISO(task.due_date) : parseISO(task.created_at!);
-        return format(taskDate, 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd') && task.priority === 'high';
-      }).length;
-    });
-    
-    const mediumPriorityTasks = daysOfWeek.map(day => {
-      return filteredTasks.filter(task => {
-        const taskDate = task.due_date ? parseISO(task.due_date) : parseISO(task.created_at!);
-        return format(taskDate, 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd') && task.priority === 'medium';
-      }).length;
-    });
-    
-    const lowPriorityTasks = daysOfWeek.map(day => {
-      return filteredTasks.filter(task => {
-        const taskDate = task.due_date ? parseISO(task.due_date) : parseISO(task.created_at!);
-        return format(taskDate, 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd') && task.priority === 'low';
-      }).length;
-    });
-
-    return {
-      labels,
-      datasets: [
-        {
-          label: 'Alta Prioridade',
-          data: highPriorityTasks,
-          borderColor: 'rgb(239, 68, 68)',
-          backgroundColor: 'rgba(239, 68, 68, 0.3)',
-          fill: true,
-        },
-        {
-          label: 'Média Prioridade',
-          data: mediumPriorityTasks,
-          borderColor: 'rgb(251, 191, 36)',
-          backgroundColor: 'rgba(251, 191, 36, 0.3)',
-          fill: true,
-        },
-        {
-          label: 'Baixa Prioridade',
-          data: lowPriorityTasks,
-          borderColor: 'rgb(59, 130, 246)',
-          backgroundColor: 'rgba(59, 130, 246, 0.3)',
-          fill: true,
-        },
-      ],
-    };
-  }, [filteredTasks, weekRange]);
-
-  // Chart 5: Stacked Column Chart - Tarefas por responsável e status
-  const assigneeStackedChartData: ChartData = useMemo(() => {
-    const assignees = Array.from(new Set(filteredTasks.map(t => t.assignee?.name || 'Não Atribuído')));
-    
-    const completedData = assignees.map(assignee => 
-      filteredTasks.filter(t => (t.assignee?.name || 'Não Atribuído') === assignee && t.status === 'concluida').length
-    );
-    
-    const inProgressData = assignees.map(assignee => 
-      filteredTasks.filter(t => (t.assignee?.name || 'Não Atribuído') === assignee && t.status === 'em_andamento').length
-    );
-    
-    const notStartedData = assignees.map(assignee => 
-      filteredTasks.filter(t => (t.assignee?.name || 'Não Atribuído') === assignee && t.status === 'nao_iniciada').length
-    );
-
-    return {
-      labels: assignees,
-      datasets: [
-        {
-          label: 'Concluídas',
-          data: completedData,
-          backgroundColor: 'rgba(34, 197, 94, 0.8)',
-        },
-        {
-          label: 'Em Andamento',
-          data: inProgressData,
-          backgroundColor: 'rgba(251, 191, 36, 0.8)',
-        },
-        {
-          label: 'Não Iniciadas',
-          data: notStartedData,
-          backgroundColor: 'rgba(156, 163, 175, 0.8)',
-        },
-      ],
-    };
-  }, [filteredTasks]);
-
   const handleProjectToggle = (projectId: number) => {
     setSelectedProjects(prev => 
       prev.includes(projectId) 
         ? prev.filter(id => id !== projectId)
         : [...prev, projectId]
+    );
+  };
+
+  const handleAssigneeToggle = (assigneeId: string) => {
+    setSelectedAssignees(prev => 
+      prev.includes(assigneeId) 
+        ? prev.filter(id => id !== assigneeId)
+        : [...prev, assigneeId]
     );
   };
 
@@ -519,7 +637,7 @@ export function ReportsChartsPage() {
             {/* Filters */}
             <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
               <h3 className="text-lg font-medium text-gray-900 mb-4">Filtros</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Week Selection */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -562,6 +680,33 @@ export function ReportsChartsPage() {
                     {selectedProjects.length === 0 ? 'Todos os projetos' : `${selectedProjects.length} projeto(s) selecionado(s)`}
                   </p>
                 </div>
+
+                {/* Assignee Selection */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Selecionar Colaboradores
+                  </label>
+                  <div className="max-h-32 overflow-y-auto border border-gray-300 rounded-md p-2">
+                    <div className="space-y-2">
+                      {profiles?.map((profile) => (
+                        <label key={profile.id} className="flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={selectedAssignees.includes(profile.id)}
+                            onChange={() => handleAssigneeToggle(profile.id)}
+                            className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                          />
+                          <span className="ml-2 text-sm text-gray-700">
+                            {profile.name}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {selectedAssignees.length === 0 ? 'Todos os colaboradores' : `${selectedAssignees.length} colaborador(es) selecionado(s)`}
+                  </p>
+                </div>
               </div>
             </div>
 
@@ -569,7 +714,6 @@ export function ReportsChartsPage() {
             <div className="flex justify-center mb-8">
               <button
                 onClick={() => {
-                  // Always show charts when button is clicked, regardless of data availability
                   setShowCharts(true);
                 }}
                 className="inline-flex items-center px-6 py-3 text-base font-medium text-white bg-primary-600 rounded-lg shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all duration-200 transform hover:scale-105"
@@ -581,75 +725,137 @@ export function ReportsChartsPage() {
 
             {/* Charts Grid */}
             {showCharts && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* Chart 1: Bar Chart - Hours */}
-              <div className="bg-white rounded-lg shadow-sm p-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">
-                  Horas Previstas vs. Realizadas por Dia
-                </h3>
-                <p className="text-sm text-gray-600 mb-4">
-                  <strong>Projetos:</strong> {selectedProjectsText}
-                </p>
-                <Bar data={hoursBarChartData} options={chartOptions} />
-              </div>
+              <div className="space-y-12">
+                {/* Financial Indicators */}
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
+                    💰 Indicadores Financeiros
+                  </h3>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div className="bg-white rounded-lg shadow-sm p-6">
+                      <h4 className="text-lg font-medium text-gray-900 mb-4">
+                        Custo Planejado vs. Custo Real
+                      </h4>
+                      <p className="text-sm text-gray-600 mb-4">
+                        <strong>Projetos:</strong> {selectedProjectsText}
+                      </p>
+                      <Bar data={financialCostComparisonChartData} options={chartOptions} />
+                    </div>
 
-              {/* Chart 2: Line Chart - Progress */}
-              <div className="bg-white rounded-lg shadow-sm p-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">
-                  Progresso de Tarefas Concluídas
-                </h3>
-                <p className="text-sm text-gray-600 mb-4">
-                  <strong>Projetos:</strong> {selectedProjectsText}
-                </p>
-                <Line data={progressLineChartData} options={chartOptions} />
-              </div>
+                    <div className="bg-white rounded-lg shadow-sm p-6">
+                      <h4 className="text-lg font-medium text-gray-900 mb-4">
+                        Orçamento Total vs. Orçamento Utilizado
+                      </h4>
+                      <p className="text-sm text-gray-600 mb-4">
+                        <strong>Projetos:</strong> {selectedProjectsText}
+                      </p>
+                      <Bar data={financialBudgetComparisonChartData} options={chartOptions} />
+                    </div>
 
-              {/* Chart 3: Pie Chart - Status Distribution */}
-              <div className="bg-white rounded-lg shadow-sm p-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">
-                  Distribuição de Tarefas por Status
-                </h3>
-                <p className="text-sm text-gray-600 mb-4">
-                  <strong>Projetos:</strong> {selectedProjectsText}
-                </p>
-                <Pie data={statusPieChartData} options={{ responsive: true, plugins: { legend: { position: 'top' as const } } }} />
-              </div>
-
-              {/* Chart 4: Area Chart - Priority */}
-              <div className="bg-white rounded-lg shadow-sm p-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">
-                  Acúmulo de Tarefas por Prioridade
-                </h3>
-                <p className="text-sm text-gray-600 mb-4">
-                  <strong>Projetos:</strong> {selectedProjectsText}
-                </p>
-                <Line data={priorityAreaChartData} options={chartOptions} />
-              </div>
-
-              {/* Chart 5: Stacked Column Chart - Assignees */}
-              <div className="bg-white rounded-lg shadow-sm p-6 lg:col-span-2">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">
-                  Tarefas por Responsável e Status
-                </h3>
-                <p className="text-sm text-gray-600 mb-4">
-                  <strong>Projetos:</strong> {selectedProjectsText}
-                </p>
-                <Bar data={assigneeStackedChartData} options={stackedChartOptions} />
-              </div>
-
-              {/* Chart 6: Weekly Comparison Chart */}
-              <div className="bg-white rounded-lg shadow-sm p-6 lg:col-span-2">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">
-                  Comparação Semanal: Atual vs. Anterior
-                </h3>
-                <p className="text-sm text-gray-600 mb-4">
-                  <strong>Projetos:</strong> {selectedProjectsText}
-                </p>
-                <div className="mb-4 text-sm text-gray-600">
+                    <div className="bg-white rounded-lg shadow-sm p-6 lg:col-span-2">
+                      <h4 className="text-lg font-medium text-gray-900 mb-4">
+                        Retorno sobre o Investimento (ROI) por Projeto
+                      </h4>
+                      <p className="text-sm text-gray-600 mb-4">
+                        <strong>Projetos:</strong> {selectedProjectsText}
+                      </p>
+                      <Bar data={financialROIChartData} options={chartOptions} />
+                    </div>
+                  </div>
                 </div>
-                <Bar data={weeklyComparisonChartData} options={chartOptions} />
+
+                {/* Time Indicators */}
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
+                    ⏱️ Indicadores de Tempo
+                  </h3>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div className="bg-white rounded-lg shadow-sm p-6">
+                      <h4 className="text-lg font-medium text-gray-900 mb-4">
+                        Duração Média das Tarefas por Colaborador
+                      </h4>
+                      <p className="text-sm text-gray-600 mb-4">
+                        <strong>Colaboradores:</strong> {selectedAssigneesText}
+                      </p>
+                      <Bar data={timeAverageTaskDurationChartData} options={chartOptions} />
+                    </div>
+
+                    <div className="bg-white rounded-lg shadow-sm p-6">
+                      <h4 className="text-lg font-medium text-gray-900 mb-4">
+                        Tempo de Entrega por Projeto
+                      </h4>
+                      <p className="text-sm text-gray-600 mb-4">
+                        <strong>Projetos:</strong> {selectedProjectsText}
+                      </p>
+                      <Bar data={timeDeliveryByPhaseChartData} options={chartOptions} />
+                    </div>
+
+                    <div className="bg-white rounded-lg shadow-sm p-6 lg:col-span-2">
+                      <h4 className="text-lg font-medium text-gray-900 mb-4">
+                        Datas de Início e Fim: Reais vs. Planejadas
+                      </h4>
+                      <p className="text-sm text-gray-600 mb-4">
+                        <strong>Projetos:</strong> {selectedProjectsText}
+                      </p>
+                      <Bar data={timeStartEndDatesChartData} options={chartOptions} />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Team Indicators */}
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
+                    🧑‍🤝‍🧑 Indicadores de Equipe
+                  </h3>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div className="bg-white rounded-lg shadow-sm p-6">
+                      <h4 className="text-lg font-medium text-gray-900 mb-4">
+                        Produtividade por Colaborador
+                      </h4>
+                      <p className="text-sm text-gray-600 mb-4">
+                        <strong>Colaboradores:</strong> {selectedAssigneesText}
+                      </p>
+                      <Bar data={teamProductivityChartData} options={chartOptions} />
+                    </div>
+
+                    <div className="bg-white rounded-lg shadow-sm p-6">
+                      <h4 className="text-lg font-medium text-gray-900 mb-4">
+                        Carga de Trabalho Distribuída
+                      </h4>
+                      <p className="text-sm text-gray-600 mb-4">
+                        <strong>Colaboradores:</strong> {selectedAssigneesText}
+                      </p>
+                      <Bar data={teamWorkloadDistributionChartData} options={chartOptions} />
+                    </div>
+
+                    <div className="bg-white rounded-lg shadow-sm p-6 lg:col-span-2">
+                      <h4 className="text-lg font-medium text-gray-900 mb-4">
+                        Horas Alocadas por Colaborador
+                      </h4>
+                      <p className="text-sm text-gray-600 mb-4">
+                        <strong>Colaboradores:</strong> {selectedAssigneesText}
+                      </p>
+                      <Bar data={teamHoursAllocatedChartData} options={chartOptions} />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Weekly Comparison Chart */}
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-6">
+                    Comparação Semanal
+                  </h3>
+                  <div className="bg-white rounded-lg shadow-sm p-6">
+                    <h4 className="text-lg font-medium text-gray-900 mb-4">
+                      Comparação Semanal: Atual vs. Anterior
+                    </h4>
+                    <p className="text-sm text-gray-600 mb-4">
+                      <strong>Projetos:</strong> {selectedProjectsText} | <strong>Colaboradores:</strong> {selectedAssigneesText}
+                    </p>
+                    <Bar data={weeklyComparisonChartData} options={chartOptions} />
+                  </div>
+                </div>
               </div>
-            </div>
             )}
           </div>
         </main>
