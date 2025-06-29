@@ -12,7 +12,7 @@ import { SubtaskForm } from './SubtaskForm';
 import { formatSecondsToHHMMSS, parseHHMMSSToSeconds } from '../lib/utils';
 import { ConfirmationModal } from './ConfirmationModal';
 import { toast } from 'react-hot-toast';
-import { PaperClipIcon, TrashIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline';
+import { PaperClipIcon, TrashIcon, ArrowDownTrayIcon, PlusIcon } from '@heroicons/react/24/outline';
 
 type Task = Database['public']['Tables']['tasks']['Row'];
 type TaskAttachment = Database['public']['Tables']['task_attachments']['Row'];
@@ -48,6 +48,7 @@ function TaskDetailsModal({
   const queryClient = useQueryClient();
   const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [showAddSubtaskForm, setShowAddSubtaskForm] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState<{
     isOpen: boolean;
     attachmentId: number;
@@ -82,6 +83,27 @@ function TaskDetailsModal({
 
       if (error) throw error;
       return data as TaskAttachment[];
+    },
+  });
+
+  // Create subtask mutation
+  const createSubtaskMutation = useMutation({
+    mutationFn: async (subtaskData: Database['public']['Tables']['tasks']['Insert']) => {
+      const { error } = await supabase
+        .from('tasks')
+        .insert([subtaskData]);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      setShowAddSubtaskForm(false);
+      toast.success('Subtarefa criada com sucesso');
+    },
+    onError: (error) => {
+      console.error('Create subtask error:', error);
+      toast.error('Erro ao criar subtarefa');
     },
   });
 
@@ -258,10 +280,19 @@ function TaskDetailsModal({
             >
               <Dialog.Panel className="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white p-6 shadow-xl transition-all">
                 <Dialog.Title as="h3" className="text-lg font-medium leading-6 text-gray-900 mb-4">
-                  {task.parent_task_id ? 'Detalhes da Subtarefa' : 'Detalhes da Tarefa'}
+                  {showAddSubtaskForm ? 'Adicionar Nova Subtarefa' : 
+                   task.parent_task_id ? 'Detalhes da Subtarefa' : 'Detalhes da Tarefa'}
                 </Dialog.Title>
 
-                {task.parent_task_id ? (
+                {showAddSubtaskForm ? (
+                  // Render SubtaskForm for creating new subtasks
+                  <SubtaskForm
+                    projectId={task.project_id!}
+                    parentTaskId={task.id}
+                    onSubmit={createSubtaskMutation.mutateAsync}
+                    onCancel={() => setShowAddSubtaskForm(false)}
+                  />
+                ) : task.parent_task_id ? (
                   // Render SubtaskForm for subtasks
                   <SubtaskForm
                     projectId={task.project_id!}
@@ -371,6 +402,18 @@ function TaskDetailsModal({
 
                   <div>
                     <TimeTracking taskId={task.id} />
+                  </div>
+
+                  {/* Add Subtask Button - only show for main tasks */}
+                  <div className="pt-4 border-t border-gray-200">
+                    <button
+                      type="button"
+                      onClick={() => setShowAddSubtaskForm(true)}
+                      className="flex items-center px-4 py-2 text-sm font-medium text-primary-600 hover:text-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                    >
+                      <PlusIcon className="w-4 h-4 mr-2" />
+                      Adicionar Subtarefa
+                    </button>
                   </div>
 
                   {/* Attachments Section */}
