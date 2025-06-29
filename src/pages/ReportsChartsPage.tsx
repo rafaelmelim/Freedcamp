@@ -979,7 +979,7 @@ export default function ReportsChartsPage() {
                       Comparação com a Semana Anterior
                     </h4>
                     <p className="text-sm text-gray-600 mb-4">
-                      <strong>Período:</strong> {format(appliedDateRange.startDate, 'dd/MM/yyyy')} a {format(appliedDateRange.endDate, \'dd/MM/yyyy')}
+                      <strong>Período:</strong> {format(appliedDateRange.startDate, 'dd/MM/yyyy')} a {format(appliedDateRange.endDate, 'dd/MM/yyyy')}
                     </p>
                     <Bar data={weeklyComparisonChartData} options={stackedChartOptions} />
                   </div>
