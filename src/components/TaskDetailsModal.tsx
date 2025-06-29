@@ -9,6 +9,7 @@ import { Database, TaskPriority, TaskStatus } from '../lib/database.types';
 import { TaskComments } from './TaskComments';
 import { TimeTracking } from './TimeTracking';
 import { formatSecondsToHHMMSS, parseHHMMSSToSeconds } from '../lib/utils';
+import { ConfirmationModal } from './ConfirmationModal';
 import { toast } from 'react-hot-toast';
 import { PaperClipIcon, TrashIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline';
 
@@ -46,6 +47,15 @@ function TaskDetailsModal({
   const queryClient = useQueryClient();
   const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState<{
+    isOpen: boolean;
+    attachmentId: number;
+    fileName: string;
+  }>({
+    isOpen: false,
+    attachmentId: 0,
+    fileName: '',
+  });
 
   const { register, handleSubmit, formState: { errors } } = useForm({
     defaultValues: {
@@ -141,10 +151,12 @@ function TaskDetailsModal({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['task-attachments', task.id] });
+      setDeleteConfirmation({ isOpen: false, attachmentId: 0, fileName: '' });
       toast.success('Anexo removido com sucesso');
     },
     onError: (error) => {
       console.error('Delete error:', error);
+      setDeleteConfirmation({ isOpen: false, attachmentId: 0, fileName: '' });
       toast.error('Erro ao remover anexo');
     },
   });
@@ -414,9 +426,11 @@ function TaskDetailsModal({
                                 <button
                                   type="button"
                                   onClick={() => {
-                                    if (confirm('Tem certeza que deseja remover este anexo?')) {
-                                      deleteAttachmentMutation.mutate(attachment);
-                                    }
+                                    setDeleteConfirmation({
+                                      isOpen: true,
+                                      attachmentId: attachment.id,
+                                      fileName: attachment.file_name,
+                                    });
                                   }}
                                   className="p-1 text-gray-400 hover:text-red-600 focus:outline-none"
                                   title="Remover anexo"
@@ -473,6 +487,22 @@ function TaskDetailsModal({
                     </div>
                   </div>
                 </form>
+
+                {/* Delete Attachment Confirmation Modal */}
+                <ConfirmationModal
+                  isOpen={deleteConfirmation.isOpen}
+                  onClose={() => setDeleteConfirmation({ isOpen: false, attachmentId: 0, fileName: '' })}
+                  onConfirm={() => {
+                    const attachment = attachments?.find(a => a.id === deleteConfirmation.attachmentId);
+                    if (attachment) {
+                      deleteAttachmentMutation.mutate(attachment);
+                    }
+                  }}
+                  title="Excluir Anexo"
+                  message={`Tem certeza que deseja excluir o anexo "${deleteConfirmation.fileName}"? Esta ação não pode ser desfeita.`}
+                  confirmText="Confirmar exclusão"
+                  isLoading={deleteAttachmentMutation.isPending}
+                />
               </Dialog.Panel>
             </Transition.Child>
           </div>

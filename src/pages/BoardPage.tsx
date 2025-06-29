@@ -16,6 +16,7 @@ import { Header } from '../components/Header';
 import { TaskDetailsModal } from '../components/TaskDetailsModal';
 import { ProjectForm } from '../components/ProjectForm';
 import { SubtaskForm } from '../components/SubtaskForm';
+import { ConfirmationModal } from '../components/ConfirmationModal';
 import { HomeIcon, ArchiveBoxIcon, Cog6ToothIcon, ArrowRightOnRectangleIcon, PlusIcon, ChevronUpIcon, ChevronDownIcon, MagnifyingGlassIcon, EllipsisVerticalIcon, TrashIcon, ArchiveBoxArrowDownIcon, ChartBarIcon, ChartPieIcon, UserGroupIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import { Link } from 'react-router-dom';
 import { formatSecondsToHHMMSS } from '../lib/utils';
@@ -59,6 +60,19 @@ export function BoardPage() {
   const [reportsMenuOpen, setReportsMenuOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const projectsPerPage = 10;
+  const [confirmationModal, setConfirmationModal] = useState<{
+    isOpen: boolean;
+    type: 'project' | 'task';
+    id: number;
+    title: string;
+    isSubtask?: boolean;
+  }>({
+    isOpen: false,
+    type: 'project',
+    id: 0,
+    title: '',
+    isSubtask: false,
+  });
   const queryClient = useQueryClient();
 
   // Query for total count of projects
@@ -265,9 +279,11 @@ export function BoardPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
+      setConfirmationModal({ isOpen: false, type: 'project', id: 0, title: '', isSubtask: false });
       toast.success('Projeto excluído com sucesso');
     },
     onError: () => {
+      setConfirmationModal({ isOpen: false, type: 'project', id: 0, title: '', isSubtask: false });
       toast.error('Erro ao excluir projeto');
     },
   });
@@ -303,9 +319,11 @@ export function BoardPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      setConfirmationModal({ isOpen: false, type: 'task', id: 0, title: '', isSubtask: false });
       toast.success('Task deleted successfully');
     },
     onError: () => {
+      setConfirmationModal({ isOpen: false, type: 'task', id: 0, title: '', isSubtask: false });
       toast.error('Failed to delete task');
     },
   });
@@ -687,9 +705,13 @@ export function BoardPage() {
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  if (confirm('Tem certeza que deseja arquivar este projeto? Ele será removido da visualização principal.')) {
-                                    archiveProject.mutate(project.id);
-                                  }
+                                  setConfirmationModal({
+                                    isOpen: true,
+                                    type: 'project',
+                                    id: project.id,
+                                    title: project.title,
+                                    isSubtask: false,
+                                  });
                                 }}
                                 className={`${
                                   focus ? 'bg-gray-100' : ''
@@ -705,9 +727,13 @@ export function BoardPage() {
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  if (confirm('Tem certeza que deseja excluir este projeto? Esta ação não pode ser desfeita e todas as tarefas associadas também serão excluídas.')) {
-                                    deleteProject.mutate(project.id);
-                                  }
+                                  setConfirmationModal({
+                                    isOpen: true,
+                                    type: 'project',
+                                    id: project.id,
+                                    title: project.title,
+                                    isSubtask: false,
+                                  });
                                 }}
                                 className={`${
                                   focus ? 'bg-gray-100' : ''
@@ -969,9 +995,13 @@ export function BoardPage() {
                                                   e.stopPropagation();
                                                   // Fechar formulário de subtarefa se estiver aberto
                                                   setAddingSubtaskToTask(null);
-                                                  if (confirm(`Tem certeza que deseja excluir esta ${task.parent_task_id ? 'subtarefa' : 'tarefa'}?`)) {
-                                                    deleteTask.mutate(task.id);
-                                                  }
+                                                  setConfirmationModal({
+                                                    isOpen: true,
+                                                    type: 'task',
+                                                    id: task.id,
+                                                    title: task.title,
+                                                    isSubtask: !!task.parent_task_id,
+                                                  });
                                                 }}
                                                 className={`${
                                                   focus ? 'bg-gray-100' : ''
@@ -1053,6 +1083,23 @@ export function BoardPage() {
             onCancel={() => setAddingSubtaskToTask(null)}
           />
         )}
+
+        {/* Confirmation Modal */}
+        <ConfirmationModal
+          isOpen={confirmationModal.isOpen}
+          onClose={() => setConfirmationModal({ isOpen: false, type: 'project', id: 0, title: '', isSubtask: false })}
+          onConfirm={() => {
+            if (confirmationModal.type === 'project') {
+              deleteProject.mutate(confirmationModal.id);
+            } else {
+              deleteTask.mutate(confirmationModal.id);
+            }
+          }}
+          title={`Excluir ${confirmationModal.type === 'project' ? 'Projeto' : confirmationModal.isSubtask ? 'Subtarefa' : 'Tarefa'}`}
+          message={`Tem certeza que deseja excluir ${confirmationModal.type === 'project' ? 'o projeto' : confirmationModal.isSubtask ? 'a subtarefa' : 'a tarefa'} "${confirmationModal.title}"? ${confirmationModal.type === 'project' ? 'Esta ação não pode ser desfeita e todas as tarefas associadas também serão excluídas.' : 'Esta ação não pode ser desfeita.'}`}
+          confirmText="Confirmar exclusão"
+          isLoading={deleteProject.isPending || deleteTask.isPending}
+        />
 
         {/* Pagination Controls */}
         {totalPages > 1 && (
