@@ -91,14 +91,8 @@ export function TaskForm({ projectId, parentTaskId, onSubmit, onCancel }: TaskFo
 
   const onFormSubmit: SubmitHandler<TaskFormData> = async (data) => {
     try {
-      // Para subtarefas, gerar título automaticamente baseado na tarefa pai
-      let taskTitle = data.title.trim();
-      if (parentTaskId && parentTask) {
-        taskTitle = `Subtarefa de ${parentTask.title}`;
-      }
-
-      // Validar se o título foi fornecido para tarefas principais
-      if (!parentTaskId && !taskTitle) {
+      // Validar campos obrigatórios
+      if (!data.title.trim()) {
         toast.error('O nome da tarefa é obrigatório');
         return;
       }
@@ -109,27 +103,24 @@ export function TaskForm({ projectId, parentTaskId, onSubmit, onCancel }: TaskFo
         return;
       }
 
-      // Format issue links as part of the description (only for main tasks)
-      let fullDescription = data.description.trim() || null;
-      if (!parentTaskId) {
-        const issueLinksText = data.issueLinks
-          .filter(link => link.url.trim())
-          .map(link => link.url.trim())
-          .join('\n');
+      // Format issue links as part of the description
+      const issueLinksText = data.issueLinks
+        .filter(link => link.url.trim())
+        .map(link => link.url.trim())
+        .join('\n');
 
-        fullDescription = data.description.trim() + (issueLinksText ? `\n\nIssues:\n${issueLinksText}` : '');
-      }
+      const fullDescription = data.description.trim() + (issueLinksText ? `\n\nIssues:\n${issueLinksText}` : '');
 
       const taskData: Task = {
-        title: taskTitle,
-        description: fullDescription,
+        title: data.title.trim(),
+        description: fullDescription || null,
         project_id: projectId,
         parent_task_id: parentTaskId || null,
         position: 0,
         due_date: data.endDate || data.startDate || null,
         priority: 'medium',
-        value: !parentTaskId && data.value ? parseFloat(data.value) : null,
-        actual_hours: !parentTaskId && data.actualHours !== '00:00:00' ? parseHHMMSSToSeconds(data.actualHours) : null,
+        value: data.value ? parseFloat(data.value) : null,
+        actual_hours: data.actualHours !== '00:00:00' ? parseHHMMSSToSeconds(data.actualHours) : null,
       };
 
       await onSubmit(taskData, []); // Pass empty array for labels
@@ -191,28 +182,25 @@ export function TaskForm({ projectId, parentTaskId, onSubmit, onCancel }: TaskFo
                           </div>
                         )}
 
-                        {/* Nome da Tarefa - Apenas para tarefas principais */}
-                        {!parentTaskId && (
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                              Nome da Tarefa *
-                            </label>
-                            <input
-                              type="text"
-                              {...register('title', { 
-                                required: 'O nome da tarefa é obrigatório'
-                              })}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors duration-200"
-                              placeholder="Digite o nome da tarefa"
-                              disabled={isSubmitting}
-                            />
-                            {errors.title && (
-                              <p className="mt-1 text-sm text-red-600">{errors.title.message}</p>
-                            )}
-                          </div>
-                        )}
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            {parentTaskId ? 'Nome da Subtarefa *' : 'Nome da Tarefa *'}
+                          </label>
+                          <input
+                            type="text"
+                            {...register('title', { 
+                              required: parentTaskId ? 'O nome da subtarefa é obrigatório' : 'O nome da tarefa é obrigatório'
+                            })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors duration-200"
+                            placeholder={parentTaskId ? "Digite o nome da subtarefa" : "Digite o nome da tarefa"}
+                            disabled={isSubmitting}
+                          />
+                          {errors.title && (
+                            <p className="mt-1 text-sm text-red-600">{errors.title.message}</p>
+                          )}
+                        </div>
 
-                        {/* Descrição - Sempre presente */}
+                        {/* Descrição */}
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">
                             {parentTaskId ? 'Descrição da subtarefa' : 'Descrição da tarefa'}
@@ -226,11 +214,22 @@ export function TaskForm({ projectId, parentTaskId, onSubmit, onCancel }: TaskFo
                           />
                         </div>
 
-                        {/* Datas - Para subtarefas, apenas data de entrega */}
-                        {parentTaskId ? (
+                        <div className="grid grid-cols-2 gap-4">
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
-                              Data de entrega da subtarefa
+                              {parentTaskId ? 'Data inicial da subtarefa' : 'Data inicial da tarefa'}
+                            </label>
+                            <input
+                              type="date"
+                              {...register('startDate')}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors duration-200 cursor-pointer"
+                              disabled={isSubmitting}
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              {parentTaskId ? 'Data fim da subtarefa' : 'Data fim da tarefa'}
                             </label>
                             <input
                               type="date"
@@ -239,111 +238,76 @@ export function TaskForm({ projectId, parentTaskId, onSubmit, onCancel }: TaskFo
                               disabled={isSubmitting}
                             />
                           </div>
-                        ) : (
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Data inicial da tarefa
-                              </label>
-                              <input
-                                type="date"
-                                {...register('startDate')}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors duration-200 cursor-pointer"
-                                disabled={isSubmitting}
-                              />
-                            </div>
+                        </div>
 
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Data fim da tarefa
-                              </label>
-                              <input
-                                type="date"
-                                {...register('endDate')}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors duration-200 cursor-pointer"
-                                disabled={isSubmitting}
-                              />
-                            </div>
-                          </div>
-                        )}
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            {parentTaskId ? 'Valor da Subtarefa (R$)' : 'Valor da Tarefa (R$)'}
+                          </label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            {...register('value')}
+                            placeholder="0,00"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors duration-200"
+                            disabled={isSubmitting}
+                          />
+                        </div>
 
-                        {/* Valor da Tarefa - Apenas para tarefas principais */}
-                        {!parentTaskId && (
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                              Valor da Tarefa (R$)
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Horas Realizadas (hh:mm:ss)
+                          </label>
+                          <input
+                            type="text"
+                            {...register('actualHours')}
+                            placeholder="00:00:00"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors duration-200"
+                            disabled={isSubmitting}
+                          />
+                        </div>
+
+                        <div>
+                          <div className="flex justify-between items-center mb-2">
+                            <label className="block text-sm font-medium text-gray-700">
+                              Vincular Link da Issue
                             </label>
-                            <input
-                              type="number"
-                              step="0.01"
-                              min="0"
-                              {...register('value')}
-                              placeholder="0,00"
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors duration-200"
+                            <button
+                              type="button"
+                              onClick={handleAddIssueLink}
+                              className="text-sm text-primary-600 hover:text-primary-700 flex items-center disabled:opacity-50"
                               disabled={isSubmitting}
-                            />
+                            >
+                              <PlusIcon className="w-4 h-4 mr-1" />
+                              Adicionar Issue
+                            </button>
                           </div>
-                        )}
-
-                        {/* Horas Realizadas - Apenas para tarefas principais */}
-                        {!parentTaskId && (
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                              Horas Realizadas (hh:mm:ss)
-                            </label>
-                            <input
-                              type="text"
-                              {...register('actualHours')}
-                              placeholder="00:00:00"
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors duration-200"
-                              disabled={isSubmitting}
-                            />
-                          </div>
-                        )}
-
-                        {/* Vincular Link da Issue - Apenas para tarefas principais */}
-                        {!parentTaskId && (
-                          <div>
-                            <div className="flex justify-between items-center mb-2">
-                              <label className="block text-sm font-medium text-gray-700">
-                                Vincular Link da Issue
-                              </label>
-                              <button
-                                type="button"
-                                onClick={handleAddIssueLink}
-                                className="text-sm text-primary-600 hover:text-primary-700 flex items-center disabled:opacity-50"
-                                disabled={isSubmitting}
-                              >
-                                <PlusIcon className="w-4 h-4 mr-1" />
-                                Adicionar Issue
-                              </button>
-                            </div>
-                            <div className="space-y-2">
-                              {issueLinks.map((link, index) => (
-                                <div key={link.id} className="flex gap-2">
-                                  <input
-                                    type="url"
-                                    value={link.url}
-                                    onChange={(e) => handleUpdateIssueLink(link.id, e.target.value)}
-                                    placeholder="https://..."
-                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors duration-200"
+                          <div className="space-y-2">
+                            {issueLinks.map((link, index) => (
+                              <div key={link.id} className="flex gap-2">
+                                <input
+                                  type="url"
+                                  value={link.url}
+                                  onChange={(e) => handleUpdateIssueLink(link.id, e.target.value)}
+                                  placeholder="https://..."
+                                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors duration-200"
+                                  disabled={isSubmitting}
+                                />
+                                {issueLinks.length > 1 && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRemoveIssueLink(link.id)}
+                                    className="text-gray-400 hover:text-gray-600 disabled:opacity-50"
                                     disabled={isSubmitting}
-                                  />
-                                  {issueLinks.length > 1 && (
-                                    <button
-                                      type="button"
-                                      onClick={() => handleRemoveIssueLink(link.id)}
-                                      className="text-gray-400 hover:text-gray-600 disabled:opacity-50"
-                                      disabled={isSubmitting}
-                                    >
-                                      <XMarkIcon className="w-5 h-5" />
-                                    </button>
-                                  )}
-                                </div>
-                              ))}
-                            </div>
+                                  >
+                                    <XMarkIcon className="w-5 h-5" />
+                                  </button>
+                                )}
+                              </div>
+                            ))}
                           </div>
-                        )}
+                        </div>
 
                         <div className="flex justify-end space-x-2 pt-4">
                           <button
