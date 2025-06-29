@@ -331,7 +331,10 @@ export function ArchivedProjectsPage() {
                     return (
                       <div className="space-y-2">
                         <div className="flex justify-between text-sm text-gray-600">
-                          <span>Progresso do Projeto ({totalTasks} tarefas)</span>
+                          <span>
+                            Progresso do Projeto ({progress.mainTaskCount} tarefas
+                            {progress.subtaskCount > 0 && `, ${progress.subtaskCount} subtarefas`})
+                          </span>
                           <span>{progress.completedPercentage}% concluído</span>
                         </div>
                         <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden" style={{ width: '8cm' }}>
