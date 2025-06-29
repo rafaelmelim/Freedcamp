@@ -767,8 +767,8 @@ export function BoardPage() {
                 {addingTaskToProject === project.id && (
                   <TaskForm
                     projectId={project.id}
-                    onSubmit={(task, labels) => {
-                      createTask.mutate({ task, labels });
+                    onSubmit={async (task, labels) => {
+                      await createTask.mutateAsync({ task, labels });
                       setAddingTaskToProject(null);
                     }}
                     onCancel={() => setAddingTaskToProject(null)}
