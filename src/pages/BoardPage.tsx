@@ -14,7 +14,6 @@ import { ExportCSV } from '../components/ExportCSV';
 import { Header } from '../components/Header';
 import { TaskDetailsModal } from '../components/TaskDetailsModal';
 import { ProjectForm } from '../components/ProjectForm';
-import { TaskItem } from '../components/TaskItem';
 import { HomeIcon, ArchiveBoxIcon, Cog6ToothIcon, ArrowRightOnRectangleIcon, PlusIcon, ChevronUpIcon, ChevronDownIcon, MagnifyingGlassIcon, EllipsisVerticalIcon } from '@heroicons/react/24/outline';
 import { Link } from 'react-router-dom';
 import { formatSecondsToHHMMSS } from '../lib/utils';
@@ -48,7 +47,6 @@ export function BoardPage() {
   const [isAddingProject, setIsAddingProject] = useState(false);
   const [newProjectTitle, setNewProjectTitle] = useState('');
   const [addingTaskToProject, setAddingTaskToProject] = useState<number | null>(null);
-  const [addingSubtaskToTask, setAddingSubtaskToTask] = useState<number | null>(null);
   const [selectedTask, setSelectedTask] = useState<(Task & { task_labels: { label: Label }[] }) | null>(null);
   const [projectToEdit, setProjectToEdit] = useState<Project | null>(null);
   const [showProjectForm, setShowProjectForm] = useState(false);
@@ -368,11 +366,6 @@ export function BoardPage() {
       });
   };
 
-  const getSubtasks = (parentTaskId: number) => {
-    if (!tasks) return [];
-    return tasks.filter(task => task.parent_task_id === parentTaskId);
-  };
-
   const handleSearch = () => {
     setActualProjectSearchTerm(inputProjectSearchTerm);
   };
@@ -633,18 +626,6 @@ export function BoardPage() {
                   />
                 )}
 
-                {addingSubtaskToTask && (
-                  <TaskForm
-                    projectId={project.id}
-                    parentTaskId={addingSubtaskToTask}
-                    onSubmit={(task, labels) => {
-                      createTask.mutate({ task, labels });
-                      setAddingSubtaskToTask(null);
-                    }}
-                    onCancel={() => setAddingSubtaskToTask(null)}
-                  />
-                )}
-
                 <div className={collapsedProjects[project.id] ? 'hidden' : ''}>
                   <DragDropContext onDragEnd={handleDragEnd}>
                     <Droppable droppableId={String(project.id)} type="task">
@@ -661,32 +642,95 @@ export function BoardPage() {
                               index={index}
                             >
                               {(provided) => (
-                                <div>
-                                  <div
-                                    ref={provided.innerRef}
-                                    {...provided.draggableProps}
-                                    {...provided.dragHandleProps}
-                                  >
-                                    {/* Tarefa Principal */}
-                                    <TaskItem
-                                      task={task}
-                                      onEdit={setSelectedTask}
-                                      onDelete={(taskId) => deleteTask.mutate(taskId)}
-                                      onAddSubtask={setAddingSubtaskToTask}
-                                      onAddTask={setAddingTaskToProject}
-                                    />
-                                  </div>
+                                <div
+                                  ref={provided.innerRef}
+                                  {...provided.draggableProps}
+                                  {...provided.dragHandleProps}
+                                  className={`bg-white rounded-md shadow-sm p-3 hover:shadow-md transition-shadow cursor-pointer ${
+                                    task.completed ? 'opacity-50' : ''
+                                  }`}
+                                >
+                                  <div className="flex items-center gap-3">
+                                    {/* Priority */}
+                                    <span
+                                      className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${
+                                        priorityColors[task.priority]
+                                      }`}
+                                    >
+                                      {task.priority}
+                                    </span>
+                                    
+                                    {/* Task Name */}
+                                    <div className="flex-1">
+                                      <h4 className={`font-medium text-gray-900 ${
+                                        task.status === 'concluida' ? 'line-through' : ''
+                                      }`}>
+                                        {task.title}
+                                      </h4>
+                                    </div>
+                                    
+                                    {/* Due Date */}
+                                    <div className="text-sm text-gray-600 min-w-[100px]">
+                                      {task.due_date ? format(new Date(task.due_date), 'dd/MM/yyyy') : '-'}
+                                    </div>
+                                    
+                                    {/* Status */}
+                                    <div className={`text-sm font-medium min-w-[120px] text-right ${getTaskStatus(task).color}`}>
+                                      {getTaskStatus(task).label}
+                                    </div>
 
-                                  {/* Subtarefas */}
-                                  {getSubtasks(task.id).map((subtask) => (
-                                    <TaskItem
-                                      key={subtask.id}
-                                      task={subtask}
-                                      isSubtask={true}
-                                      onEdit={setSelectedTask}
-                                      onDelete={(taskId) => deleteTask.mutate(taskId)}
-                                    />
-                                  ))}
+                                    {/* Context Menu */}
+                                    <Menu as="div" className="relative inline-block text-left">
+                                      <Menu.Button className="flex items-center justify-center w-8 h-8 text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded-full hover:bg-gray-100">
+                                        <EllipsisVerticalIcon className="w-5 h-5" />
+                                      </Menu.Button>
+
+                                      <Transition
+                                        as={Fragment}
+                                        enter="transition ease-out duration-100"
+                                        enterFrom="transform opacity-0 scale-95"
+                                        enterTo="transform opacity-100 scale-100"
+                                        leave="transition ease-in duration-75"
+                                        leaveFrom="transform opacity-100 scale-100"
+                                        leaveTo="transform opacity-0 scale-95"
+                                      >
+                                        <Menu.Items className="absolute right-0 z-50 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                          <Menu.Item>
+                                            {({ focus }) => (
+                                              <button
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  setSelectedTask(task);
+                                                }}
+                                                className={`${
+                                                  focus ? 'bg-gray-100' : ''
+                                                } block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100`}
+                                              >
+                                                Editar Tarefa
+                                              </button>
+                                            )}
+                                          </Menu.Item>
+                                          <Menu.Item>
+                                            {({ focus }) => (
+                                              <button
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  if (confirm('Tem certeza que deseja excluir esta tarefa?')) {
+                                                    deleteTask.mutate(task.id);
+                                                  }
+                                                }}
+                                                className={`${
+                                                  focus ? 'bg-gray-100' : ''
+                                                } block w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-gray-100`}
+                                              >
+                                                Excluir Tarefa
+                                              </button>
+                                            )}
+                                          </Menu.Item>
+                                        </Menu.Items>
+                                      </Transition>
+                                    </Menu>
+                                  </div>
                                 </div>
                               )}
                             </Draggable>

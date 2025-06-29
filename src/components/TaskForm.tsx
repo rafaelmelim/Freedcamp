@@ -1,21 +1,17 @@
 import { Fragment, useState } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { PlusIcon, XMarkIcon } from '@heroicons/react/24/outline';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '../lib/supabase';
 import { Database } from '../lib/database.types';
 import { toast } from 'react-hot-toast';
 import { parseHHMMSSToSeconds } from '../lib/utils';
 
 type Task = Database['public']['Tables']['tasks']['Insert'];
 type Label = Database['public']['Tables']['labels']['Row'];
-type TaskRow = Database['public']['Tables']['tasks']['Row'];
 
 interface TaskFormProps {
   projectId: number;
   onSubmit: (data: Task, labels: Label[]) => void;
   onCancel: () => void;
-  parentTaskId?: number | null;
 }
 
 interface IssueLink {
@@ -23,7 +19,7 @@ interface IssueLink {
   url: string;
 }
 
-export function TaskForm({ projectId, onSubmit, onCancel, parentTaskId }: TaskFormProps) {
+export function TaskForm({ projectId, onSubmit, onCancel }: TaskFormProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [startDate, setStartDate] = useState('');
@@ -31,23 +27,6 @@ export function TaskForm({ projectId, onSubmit, onCancel, parentTaskId }: TaskFo
   const [issueLinks, setIssueLinks] = useState<IssueLink[]>([{ id: '1', url: '' }]);
   const [value, setValue] = useState('');
   const [actualHours, setActualHours] = useState('00:00:00');
-  const [selectedParentTaskId, setSelectedParentTaskId] = useState<number | null>(parentTaskId || null);
-
-  // Buscar tarefas do projeto para seleção de tarefa pai
-  const { data: projectTasks } = useQuery({
-    queryKey: ['project-tasks', projectId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('tasks')
-        .select('id, title')
-        .eq('project_id', projectId)
-        .eq('archived', false)
-        .order('title');
-
-      if (error) throw error;
-      return data as TaskRow[];
-    },
-  });
 
   const handleAddIssueLink = () => {
     setIssueLinks([...issueLinks, { id: Date.now().toString(), url: '' }]);
@@ -95,7 +74,6 @@ export function TaskForm({ projectId, onSubmit, onCancel, parentTaskId }: TaskFo
       priority: 'medium',
       value: value ? parseFloat(value) : null,
       actual_hours: actualHours !== '00:00:00' ? parseHHMMSSToSeconds(actualHours) : null,
-      parent_task_id: selectedParentTaskId,
     };
 
     try {
@@ -146,62 +124,41 @@ export function TaskForm({ projectId, onSubmit, onCancel, parentTaskId }: TaskFo
                 <div className="sm:flex sm:items-start">
                   <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
                     <Dialog.Title as="h3" className="text-lg font-semibold leading-6 text-gray-900">
-                      {parentTaskId ? 'Nova Subtarefa' : 'Nova Tarefa'}
+                      Nova Tarefa
                     </Dialog.Title>
                     <div className="mt-4">
                       <form onSubmit={handleSubmit} className="space-y-4">
-                        {/* Campo de seleção de tarefa pai */}
-                        {!parentTaskId && projectTasks && projectTasks.length > 0 && (
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                              Tarefa Pai (opcional)
-                            </label>
-                            <select
-                              value={selectedParentTaskId || ''}
-                              onChange={(e) => setSelectedParentTaskId(e.target.value ? parseInt(e.target.value) : null)}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors duration-200"
-                            >
-                              <option value="">Selecione uma tarefa pai (opcional)</option>
-                              {projectTasks.map((task) => (
-                                <option key={task.id} value={task.id}>
-                                  {task.title}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                        )}
-
                         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            {parentTaskId ? 'Nome da Subtarefa *' : 'Nome da Tarefa *'}
+            Nome da Tarefa *
           </label>
           <input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors duration-200"
-            placeholder={parentTaskId ? "Digite o nome da subtarefa" : "Digite o nome da tarefa"}
+            placeholder="Digite o nome da tarefa"
             required
           />
         </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            {parentTaskId ? 'Descrição da subtarefa' : 'Descrição da tarefa'}
+            Descrição da tarefa
           </label>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={3}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors duration-200"
-            placeholder={parentTaskId ? "Descreva a subtarefa" : "Descreva a tarefa"}
+            placeholder="Descreva a tarefa"
           />
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Data inicial
+              Data inicial da tarefa
             </label>
             <input
               type="date"
@@ -213,7 +170,7 @@ export function TaskForm({ projectId, onSubmit, onCancel, parentTaskId }: TaskFo
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Data fim
+              Data fim da tarefa
             </label>
             <input
               type="date"
@@ -226,7 +183,7 @@ export function TaskForm({ projectId, onSubmit, onCancel, parentTaskId }: TaskFo
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Valor (R$)
+            Valor da Tarefa (R$)
           </label>
           <input
             type="number"
