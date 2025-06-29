@@ -647,11 +647,11 @@ export function ReportsChartsPage() {
                 </p>
                 <div className="mb-4 text-sm text-gray-600">
                   <p>
-  <strong>Semana Atual:</strong> {format(weekRange.startDate, 'dd/MM/yyyy')} a {format(weekRange.endDate, \'dd/MM/yyyy')}
-</p>
-<p>
-  <strong>Semana Anterior:</strong> {format(previousWeekRange.startDate, 'dd/MM/yyyy')} a {format(previousWeekRange.endDate, \'dd/MM/yyyy')}
-</p>
+                    <strong>Semana Atual:</strong> {format(weekRange.startDate, 'dd/MM/yyyy')} a {format(weekRange.endDate, 'dd/MM/yyyy')}
+                  </p>
+                  <p>
+                    <strong>Semana Anterior:</strong> {format(previousWeekRange.startDate, 'dd/MM/yyyy')} a {format(previousWeekRange.endDate, 'dd/MM/yyyy')}
+                  </p>
                 </div>
                 <Bar data={weeklyComparisonChartData} options={chartOptions} />
               </div>
