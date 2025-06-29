@@ -8,6 +8,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { Database, TaskPriority, TaskStatus } from '../lib/database.types';
 import { TaskComments } from './TaskComments';
 import { TimeTracking } from './TimeTracking';
+import { SubtaskForm } from './SubtaskForm';
 import { formatSecondsToHHMMSS, parseHHMMSSToSeconds } from '../lib/utils';
 import { ConfirmationModal } from './ConfirmationModal';
 import { toast } from 'react-hot-toast';
@@ -257,10 +258,23 @@ function TaskDetailsModal({
             >
               <Dialog.Panel className="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white p-6 shadow-xl transition-all">
                 <Dialog.Title as="h3" className="text-lg font-medium leading-6 text-gray-900 mb-4">
-                  Task Details
+                  {task.parent_task_id ? 'Detalhes da Subtarefa' : 'Detalhes da Tarefa'}
                 </Dialog.Title>
 
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                {task.parent_task_id ? (
+                  // Render SubtaskForm for subtasks
+                  <SubtaskForm
+                    projectId={task.project_id!}
+                    parentTaskId={task.parent_task_id}
+                    initialData={task}
+                    onSubmit={async () => {}} // Not used in edit mode
+                    onUpdate={onUpdate}
+                    onDelete={onDelete}
+                    onCancel={onClose}
+                  />
+                ) : (
+                  // Render regular task form for main tasks
+                  <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                   <div>
                     <input
                       type="text"
@@ -487,6 +501,7 @@ function TaskDetailsModal({
                     </div>
                   </div>
                 </form>
+                )}
 
                 {/* Delete Attachment Confirmation Modal */}
                 <ConfirmationModal
