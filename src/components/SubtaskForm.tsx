@@ -131,11 +131,21 @@ export function SubtaskForm({
 
   return (
     <>
-      <div className="space-y-4">
+      <div className="fixed inset-0 bg-black bg-opacity-50 grid place-items-center p-4 z-50">
+        <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-semibold text-gray-900">
             {isEditing ? 'Editar Subtarefa' : 'Nova Subtarefa'}
           </h3>
+          <button
+            onClick={onCancel}
+            className="text-gray-400 hover:text-gray-600"
+            disabled={isSubmitting}
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
 
         {/* Parent Task Reference */}
@@ -280,6 +290,7 @@ export function SubtaskForm({
             </div>
           </div>
         </form>
+        </div>
       </div>
 
       {/* Delete Confirmation Modal */}
