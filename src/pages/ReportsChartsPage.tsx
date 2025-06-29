@@ -612,10 +612,10 @@ export function ReportsChartsPage() {
                 </h3>
                 <div className="mb-4 text-sm text-gray-600">
                   <p>
-                    <strong>Semana Atual:</strong> {format(weekRange.startDate, 'dd/MM/yyyy')} a {format(weekRange.endDate, \'dd/MM/yyyy')}
+                    <strong>Semana Atual:</strong> {format(weekRange.startDate, 'dd/MM/yyyy')} a {format(weekRange.endDate, 'dd/MM/yyyy')}
                   </p>
                   <p>
-                    <strong>Semana Anterior:</strong> {format(previousWeekRange.startDate, 'dd/MM/yyyy')} a {format(previousWeekRange.endDate, \'dd/MM/yyyy')}
+                    <strong>Semana Anterior:</strong> {format(previousWeekRange.startDate, 'dd/MM/yyyy')} a {format(previousWeekRange.endDate, 'dd/MM/yyyy')}
                   </p>
                 </div>
                 <Bar data={weeklyComparisonChartData} options={chartOptions} />
