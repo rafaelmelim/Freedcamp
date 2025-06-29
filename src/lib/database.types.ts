@@ -402,6 +402,41 @@ export interface Database {
           created_at?: string | null
         }
       }
+      task_attachments: {
+        Row: {
+          id: number
+          task_id: number
+          file_name: string
+          file_url: string
+          file_size: number
+          file_type: string
+          owner_id: string
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: number
+          task_id: number
+          file_name: string
+          file_url: string
+          file_size: number
+          file_type: string
+          owner_id: string
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: number
+          task_id?: number
+          file_name?: string
+          file_url?: string
+          file_size?: number
+          file_type?: string
+          owner_id?: string
+          created_at?: string | null
+          updated_at?: string | null
+        }
+      }
     }
   }
       import_export_settings: {

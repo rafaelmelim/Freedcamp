@@ -1039,10 +1039,6 @@ export function BoardPage() {
                 deleteTask.mutate(taskId);
                 setSelectedTask(null);
               }}
-              onArchive={(taskId) => {
-                archiveTask.mutate(taskId);
-                setSelectedTask(null);
-              }}
             />
           )}
         </main>
