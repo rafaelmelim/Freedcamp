@@ -65,6 +65,7 @@ export function ReportsChartsPage() {
   const [reportsMenuOpen, setReportsMenuOpen] = useState(true);
   const [selectedWeek, setSelectedWeek] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [selectedProjects, setSelectedProjects] = useState<number[]>([]);
+  const [showCharts, setShowCharts] = useState(false);
 
   // Fetch projects
   const { data: projects } = useQuery({
@@ -491,8 +492,20 @@ export function ReportsChartsPage() {
               </div>
             </div>
 
+            {/* Generate Charts Button */}
+            <div className="flex justify-center mb-8">
+              <button
+                onClick={() => setShowCharts(true)}
+                className="inline-flex items-center px-6 py-3 text-base font-medium text-white bg-primary-600 rounded-lg shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all duration-200 transform hover:scale-105"
+              >
+                <ChartBarIcon className="w-5 h-5 mr-2" />
+                Gerar Gráficos
+              </button>
+            </div>
+
             {/* Charts Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {showCharts && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Chart 1: Bar Chart - Hours */}
               <div className="bg-white rounded-lg shadow-sm p-6">
                 <h3 className="text-lg font-medium text-gray-900 mb-4">
@@ -533,6 +546,7 @@ export function ReportsChartsPage() {
                 <Bar data={assigneeStackedChartData} options={stackedChartOptions} />
               </div>
             </div>
+            )}
           </div>
         </main>
       </div>
