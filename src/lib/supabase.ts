@@ -55,7 +55,6 @@ export const testSupabaseConnection = async (retries = 3): Promise<boolean> => {
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
       
-      const { data, error } = await supabase
       const { data: _data, error } = await supabase
         .from('system_settings')
         .select('id')

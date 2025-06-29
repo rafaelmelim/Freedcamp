@@ -9,7 +9,6 @@ import { useAuth } from '../contexts/AuthContext';
 import { ConnectionError } from '../components/ConnectionError';
 import { toast } from 'react-hot-toast';
 import { Database, TaskPriority, TaskStatus } from '../lib/database.types';
-import { Database, TaskStatus } from '../lib/database.types';
 import { TaskForm } from '../components/TaskForm';
 import { Header } from '../components/Header';
 import { TaskDetailsModal } from '../components/TaskDetailsModal';
