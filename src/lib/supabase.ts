@@ -58,9 +58,9 @@ export const testSupabaseConnection = async (retries = 3): Promise<boolean> => {
       const { data, error } = await supabase
         .from('system_settings')
         .select('id')
+        .abortSignal(controller.signal)
         .limit(1)
         .maybeSingle()
-        .abortSignal(controller.signal)
       
       clearTimeout(timeoutId)
       

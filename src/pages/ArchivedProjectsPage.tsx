@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
-import { format, isPast, isToday } from 'date-fns';
+import { format } from 'date-fns';
 import { supabase } from '../lib/supabase';
-import { Database, TaskPriority } from '../lib/database.types';
+import { Database } from '../lib/database.types';
 import { Link } from 'react-router-dom';
 import { Header } from '../components/Header';
 import { useAuth } from '../contexts/AuthContext';
