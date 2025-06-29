@@ -63,6 +63,7 @@ export function BoardPage() {
       let query = supabase
         .from('projects')
         .select('*')
+        .eq('archived', false)
         .order('sequence_number');
 
       // Apply search filter if provided
@@ -199,6 +200,24 @@ export function BoardPage() {
     onError: (error: Error) => {
       console.error('Task creation error:', error);
       toast.error(error.message || 'Failed to create task');
+    },
+  });
+
+  const archiveProject = useMutation({
+    mutationFn: async (projectId: number) => {
+      const { error } = await supabase
+        .from('projects')
+        .update({ archived: true })
+        .eq('id', projectId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      toast.success('Projeto arquivado com sucesso');
+    },
+    onError: () => {
+      toast.error('Erro ao arquivar projeto');
     },
   });
 
@@ -589,7 +608,9 @@ export function BoardPage() {
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  toast.error('A funcionalidade de arquivar projetos não está disponível no momento, pois o esquema do banco de dados não possui um campo "arquivado" para projetos.');
+                                  if (confirm('Tem certeza que deseja arquivar este projeto? Ele será removido da visualização principal.')) {
+                                    archiveProject.mutate(project.id);
+                                  }
                                 }}
                                 className={`${
                                   focus ? 'bg-gray-100' : ''

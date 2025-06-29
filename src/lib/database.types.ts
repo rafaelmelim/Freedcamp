@@ -163,6 +163,16 @@ export interface Database {
           owner_id: string | null
           created_at: string | null
           updated_at: string | null
+          sequence_number: number
+          estimated_value: number | null
+          actual_value: number | null
+          estimated_end_date: string | null
+          actual_end_date: string | null
+          analyst: string | null
+          description: string | null
+          estimated_hours: number | null
+          actual_hours: number | null
+          archived: boolean
         }
         Insert: {
           id?: number
@@ -171,6 +181,16 @@ export interface Database {
           owner_id?: string | null
           created_at?: string | null
           updated_at?: string | null
+          sequence_number?: number
+          estimated_value?: number | null
+          actual_value?: number | null
+          estimated_end_date?: string | null
+          actual_end_date?: string | null
+          analyst?: string | null
+          description?: string | null
+          estimated_hours?: number | null
+          actual_hours?: number | null
+          archived?: boolean
         }
         Update: {
           id?: number
@@ -179,6 +199,16 @@ export interface Database {
           owner_id?: string | null
           created_at?: string | null
           updated_at?: string | null
+          sequence_number?: number
+          estimated_value?: number | null
+          actual_value?: number | null
+          estimated_end_date?: string | null
+          actual_end_date?: string | null
+          analyst?: string | null
+          description?: string | null
+          estimated_hours?: number | null
+          actual_hours?: number | null
+          archived?: boolean
         }
       }
       roles: {
