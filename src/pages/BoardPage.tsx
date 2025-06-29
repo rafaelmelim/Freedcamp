@@ -839,7 +839,7 @@ export function BoardPage() {
                   />
                 )}
 
-                {addingSubtaskToTask && addingTaskToProject === null && (
+                {addingSubtaskToTask === project.id && (
                   <SubtaskForm
                     projectId={project.id}
                     parentTaskId={addingSubtaskToTask}
