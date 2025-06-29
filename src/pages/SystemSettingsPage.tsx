@@ -68,6 +68,7 @@ export function SystemSettingsPage() {
 
   const { data: currentSettings, isLoading, error } = useQuery({
     queryKey: ['system-settings'],
+    initialData: undefined,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('system_settings')
@@ -119,9 +120,8 @@ export function SystemSettingsPage() {
         }
       }
     },
-    onError: (error) => {
+    onError: () => {
       toast.error('Erro ao carregar configurações');
-      console.error('Error:', error);
     }
   });
 
