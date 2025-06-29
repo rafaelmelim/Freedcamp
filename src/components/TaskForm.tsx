@@ -1,4 +1,4 @@
-import { Fragment, useState, forwardRef, useImperativeHandle } from 'react';
+import { Fragment, useState } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { PlusIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { Database } from '../lib/database.types';
@@ -7,10 +7,6 @@ import { parseHHMMSSToSeconds } from '../lib/utils';
 
 type Task = Database['public']['Tables']['tasks']['Insert'];
 type Label = Database['public']['Tables']['labels']['Row'];
-
-export interface TaskFormRef {
-  resetForm: () => void;
-}
 
 interface TaskFormProps {
   projectId: number;
@@ -24,7 +20,7 @@ interface IssueLink {
   url: string;
 }
 
-export const TaskForm = forwardRef<TaskFormRef, TaskFormProps>(({ projectId, parentTaskId, onSubmit, onCancel }, ref) => {
+export function TaskForm({ projectId, parentTaskId, onSubmit, onCancel }: TaskFormProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [startDate, setStartDate] = useState('');
@@ -32,20 +28,6 @@ export const TaskForm = forwardRef<TaskFormRef, TaskFormProps>(({ projectId, par
   const [issueLinks, setIssueLinks] = useState<IssueLink[]>([{ id: '1', url: '' }]);
   const [value, setValue] = useState('');
   const [actualHours, setActualHours] = useState('00:00:00');
-
-  const resetForm = () => {
-    setTitle('');
-    setDescription('');
-    setStartDate('');
-    setEndDate('');
-    setIssueLinks([{ id: '1', url: '' }]);
-    setValue('');
-    setActualHours('00:00:00');
-  };
-
-  useImperativeHandle(ref, () => ({
-    resetForm,
-  }));
 
   const handleAddIssueLink = () => {
     setIssueLinks([...issueLinks, { id: Date.now().toString(), url: '' }]);
@@ -293,6 +275,3 @@ export const TaskForm = forwardRef<TaskFormRef, TaskFormProps>(({ projectId, par
       </Dialog>
     </Transition.Root>
   );
-});
-
-TaskForm.displayName = 'TaskForm';

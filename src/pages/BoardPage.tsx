@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format, isPast, isToday, addDays, startOfDay, isFuture } from 'date-fns';
@@ -9,7 +9,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { ConnectionError } from '../components/ConnectionError';
 import { toast } from 'react-hot-toast';
 import { Database, TaskPriority, TaskStatus } from '../lib/database.types';
-import { TaskForm, TaskFormRef } from '../components/TaskForm';
+import { TaskForm } from '../components/TaskForm';
 import { ImportCSV } from '../components/ImportCSV';
 import { ExportCSV } from '../components/ExportCSV';
 import { Header } from '../components/Header';
@@ -55,7 +55,6 @@ export function BoardPage() {
   const [inputProjectSearchTerm, setInputProjectSearchTerm] = useState('');
   const [actualProjectSearchTerm, setActualProjectSearchTerm] = useState('');
   const [collapsedProjects, setCollapsedProjects] = useState<Record<number, boolean>>({});
-  const subtaskFormRef = useRef<TaskFormRef>(null);
   const queryClient = useQueryClient();
 
   const { data: projects, isLoading: isLoadingProjects } = useQuery({
@@ -192,6 +191,14 @@ export function BoardPage() {
       }
 
       return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      toast.success('Task created successfully');
+    },
+    onError: (error: Error) => {
+      console.error('Task creation error:', error);
+      toast.error(error.message || 'Failed to create task');
     },
   });
 
@@ -649,16 +656,9 @@ export function BoardPage() {
                 {addingTaskToProject === project.id && (
                   <TaskForm
                     projectId={project.id}
-                    onSubmit={async (task, labels) => {
-                      try {
-                        await createTask.mutateAsync({ task, labels });
-                        queryClient.invalidateQueries({ queryKey: ['tasks'] });
-                        setAddingTaskToProject(null);
-                        toast.success('Tarefa criada com sucesso');
-                      } catch (error) {
-                        console.error('Task creation error:', error);
-                        toast.error('Erro ao criar tarefa. Por favor, tente novamente.');
-                      }
+                    onSubmit={(task, labels) => {
+                      createTask.mutate({ task, labels });
+                      setAddingTaskToProject(null);
                     }}
                     onCancel={() => setAddingTaskToProject(null)}
                   />
@@ -666,15 +666,24 @@ export function BoardPage() {
 
                 {addingSubtaskToTask && (
                   <TaskForm
-                    ref={subtaskFormRef}
                     projectId={project.id}
                     parentTaskId={addingSubtaskToTask}
                     onSubmit={async (task, labels) => {
                       try {
-                        await createTask.mutateAsync({ task, labels });
+                        const newTask = await createTask.mutateAsync({ task, labels });
                         queryClient.invalidateQueries({ queryKey: ['tasks'] });
-                        subtaskFormRef.current?.resetForm();
+                        setAddingSubtaskToTask(null);
                         toast.success('Subtarefa criada com sucesso');
+                        
+                        // Abrir automaticamente o modal de detalhes da subtarefa recém-criada
+                        // para permitir o uso do TimeTracking
+                        if (newTask) {
+                          const taskWithLabels = {
+                            ...newTask,
+                            task_labels: []
+                          };
+                          setSelectedTask(taskWithLabels);
+                        }
                       } catch (error) {
                         console.error('Subtask creation error:', error);
                         toast.error('Erro ao criar subtarefa. Por favor, tente novamente.');
