@@ -8,8 +8,16 @@ import { useAuth } from '../contexts/AuthContext';
 import {
   HomeIcon,
   ArchiveBoxIcon,
+  Cog6ToothIcon,
   ArrowRightOnRectangleIcon,
+  EnvelopeIcon,
+  UsersIcon,
+  ComputerDesktopIcon,
+  ArrowDownTrayIcon,
+  UserCircleIcon,
   ChartBarIcon,
+  ChartPieIcon,
+  UserGroupIcon,
   ChevronDownIcon,
   ChevronRightIcon,
 } from '@heroicons/react/24/outline';
@@ -630,10 +638,33 @@ export function ReportsChartsPage() {
                     <ChartBarIcon className="w-4 h-4" />
                     <span>Gráficos</span>
                   </Link>
+                  <Link
+                    to="/reports/statistics"
+                    className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md"
+                  >
+                    <ChartPieIcon className="w-4 h-4" />
+                    <span>Estatísticas</span>
+                  </Link>
+                  <Link
+                    to="/reports/analysts"
+                    className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md"
+                  >
+                    <UserGroupIcon className="w-4 h-4" />
+                    <span>Analistas</span>
+                  </Link>
                 </div>
               )}
             </div>
             <div className="pt-4 mt-4 border-t border-gray-200">
+              {hasRole('admin') && (
+                <Link
+                  to="/admin"
+                  className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md"
+                >
+                  <Cog6ToothIcon className="w-5 h-5" />
+                  <span>Configurações</span>
+                </Link>
+              )}
               <button
                 onClick={() => signOut()}
                 className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md w-full text-left"
