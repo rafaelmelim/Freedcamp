@@ -14,7 +14,7 @@ interface SystemSettingsContextType {
 const SystemSettingsContext = createContext<SystemSettingsContextType | undefined>(undefined);
 
 export function SystemSettingsProvider({ children }: { children: React.ReactNode }) {
-  const { data: settings, isLoading } = useQuery({
+  const { data: settings, isLoading, error } = useQuery({
     queryKey: ['system-settings'],
     queryFn: async () => {
       const { data, error } = await supabase
