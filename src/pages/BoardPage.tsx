@@ -585,7 +585,7 @@ export function BoardPage() {
         </aside>
         <main className="flex-1 ml-64 p-8">
           <div className="flex justify-between items-center mb-8">
-            <h2 className="text-2xl font-bold text-gray-900">Página Inicial</h2>
+            <h2 className="text-2xl font-bold text-gray-900">Projetos em Andamento</h2>
           </div>
 
           <div className="mb-6">
