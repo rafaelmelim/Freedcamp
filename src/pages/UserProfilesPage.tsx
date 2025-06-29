@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Header } from '../components/Header';
 import { useAuth } from '../contexts/AuthContext';
-import { HomeIcon, ArchiveBoxIcon, Cog6ToothIcon, ArrowRightOnRectangleIcon, EnvelopeIcon, UsersIcon, ComputerDesktopIcon, ArrowDownTrayIcon, UserCircleIcon } from '@heroicons/react/24/outline';
+import { HomeIcon, ArchiveBoxIcon, Cog6ToothIcon, ArrowRightOnRectangleIcon, EnvelopeIcon, UsersIcon, ComputerDesktopIcon, ArrowDownTrayIcon, UserCircleIcon, ChartBarIcon, ChartPieIcon, UserGroupIcon } from '@heroicons/react/24/outline';
 import { UserManagement } from '../components/UserManagement';
 
 export function UserProfilesPage() {
@@ -28,6 +28,36 @@ export function UserProfilesPage() {
                 <ArchiveBoxIcon className="w-5 h-5" />
                 <span>Projetos Arquivados</span>
               </Link>
+              <Link
+                to="/reports"
+                className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md"
+              >
+                <ChartBarIcon className="w-5 h-5" />
+                <span>Relatórios Gerenciais</span>
+              </Link>
+              <div className="ml-4 space-y-2">
+                <Link
+                  to="/reports/charts"
+                  className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md"
+                >
+                  <ChartBarIcon className="w-4 h-4" />
+                  <span>Gráficos</span>
+                </Link>
+                <Link
+                  to="/reports/statistics"
+                  className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md"
+                >
+                  <ChartPieIcon className="w-4 h-4" />
+                  <span>Estatísticas</span>
+                </Link>
+                <Link
+                  to="/reports/analysts"
+                  className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md"
+                >
+                  <UserGroupIcon className="w-4 h-4" />
+                  <span>Analistas</span>
+                </Link>
+              </div>
             </div>
             <div className="pt-4 mt-4 border-t border-gray-200">
               {hasRole('admin') && (<>
