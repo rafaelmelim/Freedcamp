@@ -249,14 +249,6 @@ export function TaskForm({ projectId, parentTaskId, onSubmit, onCancel }: TaskFo
                                   colorScheme: 'light',
                                   cursor: 'pointer'
                                 }}
-                                onFocus={(e) => {
-                                  // Force show date picker on focus
-                                  e.target.showPicker?.();
-                                }}
-                                onClick={(e) => {
-                                  // Force show date picker on click
-                                  e.target.showPicker?.();
-                                }}
                               />
                               <div 
                                 className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none"
@@ -305,14 +297,6 @@ export function TaskForm({ projectId, parentTaskId, onSubmit, onCancel }: TaskFo
                                 style={{
                                   colorScheme: 'light',
                                   cursor: 'pointer'
-                                }}
-                                onFocus={(e) => {
-                                  // Force show date picker on focus
-                                  e.target.showPicker?.();
-                                }}
-                                onClick={(e) => {
-                                  // Force show date picker on click
-                                  e.target.showPicker?.();
                                 }}
                               />
                               <div 
