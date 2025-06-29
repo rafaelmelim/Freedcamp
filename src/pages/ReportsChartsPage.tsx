@@ -106,6 +106,14 @@ export function ReportsChartsPage() {
     return { startDate, endDate };
   }, [selectedWeek]);
 
+  // Calculate previous week range
+  const previousWeekRange = useMemo(() => {
+    const selectedDate = parseISO(selectedWeek);
+    const previousWeekStart = startOfWeek(new Date(selectedDate.getTime() - 7 * 24 * 60 * 60 * 1000), { weekStartsOn: 1 });
+    const previousWeekEnd = endOfWeek(new Date(selectedDate.getTime() - 7 * 24 * 60 * 60 * 1000), { weekStartsOn: 1 });
+    return { startDate: previousWeekStart, endDate: previousWeekEnd };
+  }, [selectedWeek]);
+
   // Filter tasks by selected projects and week
   const filteredTasks = useMemo(() => {
     if (!tasks) return [];
@@ -121,6 +129,57 @@ export function ReportsChartsPage() {
       return isWithinInterval(taskDate, weekRange);
     });
   }, [tasks, selectedProjects, weekRange]);
+
+  // Filter tasks for previous week
+  const previousWeekTasks = useMemo(() => {
+    if (!tasks) return [];
+    
+    return tasks.filter(task => {
+      // Filter by selected projects
+      if (selectedProjects.length > 0 && !selectedProjects.includes(task.project_id!)) {
+        return false;
+      }
+      
+      // Filter by previous week range
+      const taskDate = task.due_date ? parseISO(task.due_date) : parseISO(task.created_at!);
+      return isWithinInterval(taskDate, previousWeekRange);
+    });
+  }, [tasks, selectedProjects, previousWeekRange]);
+
+  // Chart 6: Weekly Comparison Chart
+  const weeklyComparisonChartData: ChartData = useMemo(() => {
+    // Calculate metrics for current week
+    const currentWeekCompletedTasks = filteredTasks.filter(t => t.status === 'concluida').length;
+    const currentWeekTotalHours = filteredTasks.reduce((sum, task) => sum + ((task.actual_hours || 0) / 3600), 0);
+    const currentWeekTotalTasks = filteredTasks.length;
+    const currentWeekProgressPercentage = currentWeekTotalTasks > 0 ? (currentWeekCompletedTasks / currentWeekTotalTasks) * 100 : 0;
+    
+    // Calculate metrics for previous week
+    const previousWeekCompletedTasks = previousWeekTasks.filter(t => t.status === 'concluida').length;
+    const previousWeekTotalHours = previousWeekTasks.reduce((sum, task) => sum + ((task.actual_hours || 0) / 3600), 0);
+    const previousWeekTotalTasks = previousWeekTasks.length;
+    const previousWeekProgressPercentage = previousWeekTotalTasks > 0 ? (previousWeekCompletedTasks / previousWeekTotalTasks) * 100 : 0;
+
+    return {
+      labels: ['Tarefas Concluídas', 'Horas Trabalhadas', 'Total de Tarefas', 'Progresso (%)'],
+      datasets: [
+        {
+          label: 'Semana Atual',
+          data: [currentWeekCompletedTasks, currentWeekTotalHours, currentWeekTotalTasks, currentWeekProgressPercentage],
+          backgroundColor: 'rgba(59, 130, 246, 0.8)',
+          borderColor: 'rgb(59, 130, 246)',
+          borderWidth: 1,
+        },
+        {
+          label: 'Semana Anterior',
+          data: [previousWeekCompletedTasks, previousWeekTotalHours, previousWeekTotalTasks, previousWeekProgressPercentage],
+          backgroundColor: 'rgba(156, 163, 175, 0.8)',
+          borderColor: 'rgb(156, 163, 175)',
+          borderWidth: 1,
+        },
+      ],
+    };
+  }, [filteredTasks, previousWeekTasks]);
 
   // Chart 1: Bar Chart - Horas previstas vs realizadas por dia da semana
   const hoursBarChartData: ChartData = useMemo(() => {
@@ -544,6 +603,22 @@ export function ReportsChartsPage() {
                   Tarefas por Responsável e Status
                 </h3>
                 <Bar data={assigneeStackedChartData} options={stackedChartOptions} />
+              </div>
+
+              {/* Chart 6: Weekly Comparison Chart */}
+              <div className="bg-white rounded-lg shadow-sm p-6 lg:col-span-2">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">
+                  Comparação Semanal: Atual vs. Anterior
+                </h3>
+                <div className="mb-4 text-sm text-gray-600">
+                  <p>
+                    <strong>Semana Atual:</strong> {format(weekRange.startDate, 'dd/MM/yyyy')} a {format(weekRange.endDate, 'dd/MM/yyyy')}
+                  </p>
+                  <p>
+                    <strong>Semana Anterior:</strong> {format(previousWeekRange.startDate, 'dd/MM/yyyy')} a {format(previousWeekRange.endDate, 'dd/MM/yyyy')}
+                  </p>
+                </div>
+                <Bar data={weeklyComparisonChartData} options={chartOptions} />
               </div>
             </div>
             )}
