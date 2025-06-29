@@ -14,6 +14,7 @@ import { ExportCSV } from '../components/ExportCSV';
 import { Header } from '../components/Header';
 import { TaskDetailsModal } from '../components/TaskDetailsModal';
 import { ProjectForm } from '../components/ProjectForm';
+import { TaskItem } from '../components/TaskItem';
 import { HomeIcon, ArchiveBoxIcon, Cog6ToothIcon, ArrowRightOnRectangleIcon, PlusIcon, ChevronUpIcon, ChevronDownIcon, MagnifyingGlassIcon, EllipsisVerticalIcon } from '@heroicons/react/24/outline';
 import { Link } from 'react-router-dom';
 import { formatSecondsToHHMMSS } from '../lib/utils';
@@ -85,9 +86,7 @@ export function BoardPage() {
           *,
           task_labels (
             label: labels (*)
-          ),
-          parent_task:tasks!parent_task_id(id, title),
-          subtasks:tasks!parent_task_id(id, title, status, priority, completed)
+          )
         `)
         .eq('archived', false)
         .order('position');
@@ -95,14 +94,8 @@ export function BoardPage() {
       if (error) throw error;
       return (data || []).map(task => ({
         ...task,
-        task_labels: task.task_labels || [],
-        parent_task: task.parent_task,
-        subtasks: task.subtasks || []
-      })) as (Task & { 
-        task_labels: { label: Label }[]; 
-        parent_task?: { id: number; title: string } | null;
-        subtasks: { id: number; title: string; status: TaskStatus; priority: TaskPriority; completed: boolean }[];
-      })[];
+        task_labels: task.task_labels || []
+      })) as (Task & { task_labels: { label: Label }[] })[];
     },
   });
 
@@ -362,10 +355,8 @@ export function BoardPage() {
   const filterTasks = (tasks: (Task & { task_labels: { label: Label }[] })[] | undefined, projectId: number) => {
     if (!tasks) return [];
 
-    // Filtrar apenas tarefas principais (sem parent_task_id) do projeto
-    const mainTasks = tasks
+    return tasks
       .filter(task => task.project_id === projectId)
-      .filter(task => !task.parent_task_id) // Apenas tarefas principais
       .sort((a, b) => {
         // Sort by priority (high to low)
         const priorityOrder = { high: 0, medium: 1, low: 2 };
@@ -375,8 +366,6 @@ export function BoardPage() {
         // Then by position
         return a.position - b.position;
       });
-
-    return mainTasks;
   };
 
   const getSubtasks = (parentTaskId: number) => {
@@ -673,224 +662,30 @@ export function BoardPage() {
                             >
                               {(provided) => (
                                 <div>
-                                  {/* Tarefa Principal */}
                                   <div
                                     ref={provided.innerRef}
                                     {...provided.draggableProps}
                                     {...provided.dragHandleProps}
-                                    className={`bg-white rounded-md shadow-sm p-3 hover:shadow-md transition-shadow cursor-pointer ${
-                                      task.completed ? 'opacity-50' : ''
-                                    }`}
                                   >
-                                    <div className="flex items-center gap-3">
-                                      {/* Priority */}
-                                      <span
-                                        className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${
-                                          priorityColors[task.priority]
-                                        }`}
-                                      >
-                                        {task.priority}
-                                      </span>
-                                      
-                                      {/* Task Name */}
-                                      <div className="flex-1">
-                                        <h4 className={`font-medium text-gray-900 ${
-                                          task.status === 'concluida' ? 'line-through' : ''
-                                        }`}>
-                                          {task.title}
-                                        </h4>
-                                      </div>
-                                      
-                                      {/* Due Date */}
-                                      <div className="text-sm text-gray-600 min-w-[100px]">
-                                        {task.due_date ? format(new Date(task.due_date), 'dd/MM/yyyy') : '-'}
-                                      </div>
-                                      
-                                      {/* Status */}
-                                      <div className={`text-sm font-medium min-w-[120px] text-right ${getTaskStatus(task).color}`}>
-                                        {getTaskStatus(task).label}
-                                      </div>
-
-                                      {/* Context Menu */}
-                                      <Menu as="div" className="relative inline-block text-left">
-                                        <Menu.Button className="flex items-center justify-center w-8 h-8 text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded-full hover:bg-gray-100">
-                                          <EllipsisVerticalIcon className="w-5 h-5" />
-                                        </Menu.Button>
-
-                                        <Transition
-                                          as={Fragment}
-                                          enter="transition ease-out duration-100"
-                                          enterFrom="transform opacity-0 scale-95"
-                                          enterTo="transform opacity-100 scale-100"
-                                          leave="transition ease-in duration-75"
-                                          leaveFrom="transform opacity-100 scale-100"
-                                          leaveTo="transform opacity-0 scale-95"
-                                        >
-                                          <Menu.Items className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-                                            <Menu.Item>
-                                              {({ focus }) => (
-                                                <button
-                                                  onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setAddingTaskToProject(task.project_id);
-                                                  }}
-                                                  className={`${
-                                                    focus ? 'bg-gray-100' : ''
-                                                  } block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100`}
-                                                >
-                                                  Adicionar Tarefa
-                                                </button>
-                                              )}
-                                            </Menu.Item>
-                                            <Menu.Item>
-                                              {({ focus }) => (
-                                                <button
-                                                  onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setAddingSubtaskToTask(task.id);
-                                                  }}
-                                                  className={`${
-                                                    focus ? 'bg-gray-100' : ''
-                                                  } block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100`}
-                                                >
-                                                  Adicionar Subtarefa
-                                                </button>
-                                              )}
-                                            </Menu.Item>
-                                            <Menu.Item>
-                                              {({ focus }) => (
-                                                <button
-                                                  onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setSelectedTask(task);
-                                                  }}
-                                                  className={`${
-                                                    focus ? 'bg-gray-100' : ''
-                                                  } block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100`}
-                                                >
-                                                  Editar Tarefa
-                                                </button>
-                                              )}
-                                            </Menu.Item>
-                                            <Menu.Item>
-                                              {({ focus }) => (
-                                                <button
-                                                  onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    if (confirm('Tem certeza que deseja excluir esta tarefa?')) {
-                                                      deleteTask.mutate(task.id);
-                                                    }
-                                                  }}
-                                                  className={`${
-                                                    focus ? 'bg-gray-100' : ''
-                                                  } block w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-gray-100`}
-                                                >
-                                                  Excluir Tarefa
-                                                </button>
-                                              )}
-                                            </Menu.Item>
-                                          </Menu.Items>
-                                        </Transition>
-                                      </Menu>
-                                    </div>
+                                    {/* Tarefa Principal */}
+                                    <TaskItem
+                                      task={task}
+                                      onEdit={setSelectedTask}
+                                      onDelete={(taskId) => deleteTask.mutate(taskId)}
+                                      onAddSubtask={setAddingSubtaskToTask}
+                                      onAddTask={setAddingTaskToProject}
+                                    />
                                   </div>
 
                                   {/* Subtarefas */}
                                   {getSubtasks(task.id).map((subtask) => (
-                                    <div
+                                    <TaskItem
                                       key={subtask.id}
-                                      className={`ml-8 mt-2 bg-gray-50 rounded-md shadow-sm p-3 hover:shadow-md transition-shadow cursor-pointer border-l-4 border-primary-200 ${
-                                        subtask.completed ? 'opacity-50' : ''
-                                      }`}
-                                      onClick={() => setSelectedTask(subtask)}
-                                    >
-                                      <div className="flex items-center gap-3">
-                                        {/* Subtask Indicator */}
-                                        <span className="text-xs text-gray-500 bg-gray-200 px-2 py-1 rounded">
-                                          Subtarefa
-                                        </span>
-                                        
-                                        {/* Priority */}
-                                        <span
-                                          className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${
-                                            priorityColors[subtask.priority]
-                                          }`}
-                                        >
-                                          {subtask.priority}
-                                        </span>
-                                        
-                                        {/* Subtask Name */}
-                                        <div className="flex-1">
-                                          <h5 className={`text-sm font-medium text-gray-800 ${
-                                            subtask.status === 'concluida' ? 'line-through' : ''
-                                          }`}>
-                                            {subtask.title}
-                                          </h5>
-                                        </div>
-                                        
-                                        {/* Due Date */}
-                                        <div className="text-xs text-gray-500 min-w-[100px]">
-                                          {subtask.due_date ? format(new Date(subtask.due_date), 'dd/MM/yyyy') : '-'}
-                                        </div>
-                                        
-                                        {/* Status */}
-                                        <div className={`text-xs font-medium min-w-[120px] text-right ${getTaskStatus(subtask).color}`}>
-                                          {getTaskStatus(subtask).label}
-                                        </div>
-
-                                        {/* Context Menu for Subtask */}
-                                        <Menu as="div" className="relative inline-block text-left">
-                                          <Menu.Button className="flex items-center justify-center w-6 h-6 text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded-full hover:bg-gray-100">
-                                            <EllipsisVerticalIcon className="w-4 h-4" />
-                                          </Menu.Button>
-
-                                          <Transition
-                                            as={Fragment}
-                                            enter="transition ease-out duration-100"
-                                            enterFrom="transform opacity-0 scale-95"
-                                            enterTo="transform opacity-100 scale-100"
-                                            leave="transition ease-in duration-75"
-                                            leaveFrom="transform opacity-100 scale-100"
-                                            leaveTo="transform opacity-0 scale-95"
-                                          >
-                                            <Menu.Items className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-                                              <Menu.Item>
-                                                {({ focus }) => (
-                                                  <button
-                                                    onClick={(e) => {
-                                                      e.stopPropagation();
-                                                      setSelectedTask(subtask);
-                                                    }}
-                                                    className={`${
-                                                      focus ? 'bg-gray-100' : ''
-                                                    } block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100`}
-                                                  >
-                                                    Editar Subtarefa
-                                                  </button>
-                                                )}
-                                              </Menu.Item>
-                                              <Menu.Item>
-                                                {({ focus }) => (
-                                                  <button
-                                                    onClick={(e) => {
-                                                      e.stopPropagation();
-                                                      if (confirm('Tem certeza que deseja excluir esta subtarefa?')) {
-                                                        deleteTask.mutate(subtask.id);
-                                                      }
-                                                    }}
-                                                    className={`${
-                                                      focus ? 'bg-gray-100' : ''
-                                                    } block w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-gray-100`}
-                                                  >
-                                                    Excluir Subtarefa
-                                                  </button>
-                                                )}
-                                              </Menu.Item>
-                                            </Menu.Items>
-                                          </Transition>
-                                        </Menu>
-                                      </div>
-                                    </div>
+                                      task={subtask}
+                                      isSubtask={true}
+                                      onEdit={setSelectedTask}
+                                      onDelete={(taskId) => deleteTask.mutate(taskId)}
+                                    />
                                   ))}
                                 </div>
                               )}
