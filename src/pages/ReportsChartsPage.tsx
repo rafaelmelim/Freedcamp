@@ -67,20 +67,6 @@ export function ReportsChartsPage() {
   const [selectedProjects, setSelectedProjects] = useState<number[]>([]);
   const [showCharts, setShowCharts] = useState(false);
 
-  // Format selected project names for display
-  const selectedProjectsText = useMemo(() => {
-    if (selectedProjects.length === 0) {
-      return 'Todos os projetos';
-    }
-    
-    const selectedProjectNames = projects
-      ?.filter(p => selectedProjects.includes(p.id))
-      .map(p => `#${p.sequence_number} - ${p.title}`)
-      .join(', ') || '';
-    
-    return selectedProjectNames;
-  }, [selectedProjects, projects]);
-
   // Fetch projects
   const { data: projects } = useQuery({
     queryKey: ['projects'],
@@ -112,6 +98,20 @@ export function ReportsChartsPage() {
       return data as (Task & { assignee: Pick<Profile, 'name'> | null })[];
     },
   });
+
+  // Format selected project names for display
+  const selectedProjectsText = useMemo(() => {
+    if (selectedProjects.length === 0) {
+      return 'Todos os projetos';
+    }
+    
+    const selectedProjectNames = projects
+      ?.filter(p => selectedProjects.includes(p.id))
+      .map(p => `#${p.sequence_number} - ${p.title}`)
+      .join(', ') || '';
+    
+    return selectedProjectNames;
+  }, [selectedProjects, projects]);
 
   // Calculate week range
   const weekRange = useMemo(() => {

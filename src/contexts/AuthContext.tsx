@@ -95,6 +95,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error: any) {
       console.error('Error initializing auth:', error)
       
+      // Check for refresh token errors
+      if (error.message?.includes('Refresh Token Not Found') || 
+          error.message?.includes('Invalid Refresh Token')) {
+        console.warn('🔐 Invalid refresh token detected, clearing session')
+        await supabase.auth.signOut()
+        setUser(null)
+        setRoles([])
+        navigate('/login')
+        return
+      }
+      
       // Check if it's a network error or connection issue
       if (error.message?.includes('NetworkError') || 
           error.message?.includes('fetch') || 
@@ -143,6 +154,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       } catch (error: any) {
         console.error('Error in auth state change:', error)
+        
+        // Check for refresh token errors
+        if (error.message?.includes('Refresh Token Not Found') || 
+            error.message?.includes('Invalid Refresh Token')) {
+          console.warn('🔐 Invalid refresh token detected in auth state change, clearing session')
+          await supabase.auth.signOut()
+          setUser(null)
+          setRoles([])
+          navigate('/login')
+          return
+        }
         
         // Check if it's a network error or connection issue
         if (error.message?.includes('NetworkError') || 
