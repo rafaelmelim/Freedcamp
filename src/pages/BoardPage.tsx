@@ -865,124 +865,114 @@ export function BoardPage() {
                           className="space-y-2"
                         >
                           {filterTasks(tasks, project.id).map((task, index) => (
-                            <Draggable
+                            <div
                               key={task.id}
-                              draggableId={String(task.id)}
-                              index={index}
+                              className={`bg-white rounded-md shadow-sm p-3 hover:shadow-md transition-shadow ${
+                                task.completed ? 'opacity-50' : ''
+                              } ${task.parent_task_id ? 'ml-6 border-l-4 border-gray-300' : ''}`}
                             >
-                              {(provided) => (
-                                <div
-                                  ref={provided.innerRef}
-                                  {...provided.draggableProps}
-                                  {...provided.dragHandleProps}
-                                  className={`bg-white rounded-md shadow-sm p-3 hover:shadow-md transition-shadow cursor-pointer ${
-                                    task.completed ? 'opacity-50' : ''
-                                  } ${task.parent_task_id ? 'ml-6 border-l-4 border-gray-300' : ''}`}
-                                >
-                                  {task.parent_task_id && (
-                                    <div className="text-xs text-gray-500 mb-1">
-                                      Subtarefa de: {getParentTask(task.parent_task_id)?.title}
-                                    </div>
-                                  )}
-                                  <div className="flex items-center gap-3">
-                                    {/* Priority */}
-                                    <span
-                                      className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${
-                                        priorityColors[task.priority]
-                                      }`}
-                                    >
-                                      {task.priority}
-                                    </span>
-                                    
-                                    {/* Task Name */}
-                                    <div className="flex-1">
-                                      <h4 className={`font-medium text-gray-900 ${
-                                        task.status === 'concluida' ? 'line-through' : ''
-                                      }`}>
-                                        {task.title}
-                                      </h4>
-                                    </div>
-                                    
-                                    {/* Due Date */}
-                                    <div className="text-sm text-gray-600 min-w-[100px]">
-                                      {task.due_date ? format(new Date(task.due_date), 'dd/MM/yyyy') : '-'}
-                                    </div>
-                                    
-                                    {/* Status */}
-                                    <div className={`text-sm font-medium min-w-[120px] text-right ${getTaskStatus(task).color}`}>
-                                      {getTaskStatus(task).label}
-                                    </div>
-
-                                    {/* Context Menu */}
-                                    <Menu as="div" className="relative inline-block text-left">
-                                      <Menu.Button className="flex items-center justify-center w-8 h-8 text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded-full hover:bg-gray-100">
-                                        <EllipsisVerticalIcon className="w-5 h-5" />
-                                      </Menu.Button>
-
-                                      <Transition
-                                        as={Fragment}
-                                        enter="transition ease-out duration-100"
-                                        enterFrom="transform opacity-0 scale-95"
-                                        enterTo="transform opacity-100 scale-100"
-                                        leave="transition ease-in duration-75"
-                                        leaveFrom="transform opacity-100 scale-100"
-                                        leaveTo="transform opacity-0 scale-95"
-                                      >
-                                        <Menu.Items className="absolute right-0 z-50 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-                                          <Menu.Item>
-                                            {({ focus }) => (
-                                              <button
-                                                onClick={(e) => {
-                                                  e.stopPropagation();
-                                                  setAddingSubtaskToTask(task.id);
-                                                }}
-                                                className={`${
-                                                  focus ? 'bg-gray-100' : ''
-                                                } block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100`}
-                                              >
-                                                Adicionar Subtarefa
-                                              </button>
-                                            )}
-                                          </Menu.Item>
-                                          <Menu.Item>
-                                            {({ focus }) => (
-                                              <button
-                                                onClick={(e) => {
-                                                  e.stopPropagation();
-                                                  setSelectedTask(task);
-                                                }}
-                                                className={`${
-                                                  focus ? 'bg-gray-100' : ''
-                                                } block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100`}
-                                              >
-                                                Editar Tarefa
-                                              </button>
-                                            )}
-                                          </Menu.Item>
-                                          <Menu.Item>
-                                            {({ focus }) => (
-                                              <button
-                                                onClick={(e) => {
-                                                  e.stopPropagation();
-                                                  if (confirm('Tem certeza que deseja excluir esta tarefa?')) {
-                                                    deleteTask.mutate(task.id);
-                                                  }
-                                                }}
-                                                className={`${
-                                                  focus ? 'bg-gray-100' : ''
-                                                } block w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-gray-100`}
-                                              >
-                                                Excluir Tarefa
-                                              </button>
-                                            )}
-                                          </Menu.Item>
-                                        </Menu.Items>
-                                      </Transition>
-                                    </Menu>
-                                  </div>
+                              {task.parent_task_id && (
+                                <div className="text-xs text-gray-500 mb-1">
+                                  Subtarefa de: {getParentTask(task.parent_task_id)?.title}
                                 </div>
                               )}
-                            </Draggable>
+                              <div className="flex items-center gap-3">
+                                {/* Priority */}
+                                <span
+                                  className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${
+                                    priorityColors[task.priority]
+                                  }`}
+                                >
+                                  {task.priority}
+                                </span>
+                                
+                                {/* Task Name */}
+                                <div className="flex-1">
+                                  <h4 className={`font-medium text-gray-900 ${
+                                    task.status === 'concluida' ? 'line-through' : ''
+                                  }`}>
+                                    {task.title}
+                                  </h4>
+                                </div>
+                                
+                                {/* Due Date */}
+                                <div className="text-sm text-gray-600 min-w-[100px]">
+                                  {task.due_date ? format(new Date(task.due_date), 'dd/MM/yyyy') : '-'}
+                                </div>
+                                
+                                {/* Status */}
+                                <div className={`text-sm font-medium min-w-[120px] text-right ${getTaskStatus(task).color}`}>
+                                  {getTaskStatus(task).label}
+                                </div>
+
+                                {/* Context Menu */}
+                                <Menu as="div" className="relative inline-block text-left">
+                                  <Menu.Button className="flex items-center justify-center w-8 h-8 text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded-full hover:bg-gray-100">
+                                    <EllipsisVerticalIcon className="w-5 h-5" />
+                                  </Menu.Button>
+
+                                  <Transition
+                                    as={Fragment}
+                                    enter="transition ease-out duration-100"
+                                    enterFrom="transform opacity-0 scale-95"
+                                    enterTo="transform opacity-100 scale-100"
+                                    leave="transition ease-in duration-75"
+                                    leaveFrom="transform opacity-100 scale-100"
+                                    leaveTo="transform opacity-0 scale-95"
+                                  >
+                                    <Menu.Items className="absolute right-0 z-50 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                      <Menu.Item>
+                                        {({ focus }) => (
+                                          <button
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setAddingSubtaskToTask(task.id);
+                                            }}
+                                            className={`${
+                                              focus ? 'bg-gray-100' : ''
+                                            } block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100`}
+                                          >
+                                            Adicionar Subtarefa
+                                          </button>
+                                        )}
+                                      </Menu.Item>
+                                      <Menu.Item>
+                                        {({ focus }) => (
+                                          <button
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setSelectedTask(task);
+                                            }}
+                                            className={`${
+                                              focus ? 'bg-gray-100' : ''
+                                            } block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100`}
+                                          >
+                                            Editar Tarefa
+                                          </button>
+                                        )}
+                                      </Menu.Item>
+                                      <Menu.Item>
+                                        {({ focus }) => (
+                                          <button
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              if (confirm('Tem certeza que deseja excluir esta tarefa?')) {
+                                                deleteTask.mutate(task.id);
+                                              }
+                                            }}
+                                            className={`${
+                                              focus ? 'bg-gray-100' : ''
+                                            } block w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-gray-100`}
+                                          >
+                                            Excluir Tarefa
+                                          </button>
+                                        )}
+                                      </Menu.Item>
+                                    </Menu.Items>
+                                  </Transition>
+                                </Menu>
+                              </div>
+                            </div>
                           ))}
                           {provided.placeholder}
                         </div>
