@@ -728,12 +728,12 @@ export function BoardPage() {
                       <div className="flex items-center space-x-2 flex-wrap justify-end">
                         {project.estimated_value && (
                           <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">
-                            Previsto: {project.estimated_value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                            Valor Previsto: {project.estimated_value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                           </span>
                         )}
                         {project.actual_value && project.actual_value > 0 && (
                           <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">
-                            Real: {project.actual_value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                            Valor Real: {project.actual_value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                           </span>
                         )}
                         {project.estimated_hours && (
