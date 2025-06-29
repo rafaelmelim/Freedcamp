@@ -1,6 +1,8 @@
 import { Fragment, useState } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { PlusIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '../lib/supabase';
 import { Database } from '../lib/database.types';
 import { toast } from 'react-hot-toast';
 import { parseHHMMSSToSeconds } from '../lib/utils';
@@ -29,6 +31,24 @@ export function TaskForm({ projectId, parentTaskId, onSubmit, onCancel }: TaskFo
   const [value, setValue] = useState('');
   const [actualHours, setActualHours] = useState('00:00:00');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Fetch parent task information if parentTaskId is provided
+  const { data: parentTask } = useQuery({
+    queryKey: ['parent-task', parentTaskId],
+    queryFn: async () => {
+      if (!parentTaskId) return null;
+      
+      const { data, error } = await supabase
+        .from('tasks')
+        .select('id, title')
+        .eq('id', parentTaskId)
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!parentTaskId,
+  });
 
   const handleAddIssueLink = () => {
     setIssueLinks([...issueLinks, { id: Date.now().toString(), url: '' }]);
@@ -95,7 +115,7 @@ export function TaskForm({ projectId, parentTaskId, onSubmit, onCancel }: TaskFo
 
   return (
     <Transition.Root show={true} as={Fragment}>
-      <Dialog as="div" className="relative z-50" onClose={parentTaskId ? () => {} : onCancel}>
+      <Dialog as="div" className="relative z-50" onClose={onCancel}>
         <Transition.Child
           as={Fragment}
           enter="ease-out duration-300"
@@ -123,18 +143,16 @@ export function TaskForm({ projectId, parentTaskId, onSubmit, onCancel }: TaskFo
                 className="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6"
                 onClick={(e) => e.stopPropagation()}
               >
-                {!parentTaskId && (
-                  <div className="absolute right-0 top-0 pr-4 pt-4">
-                    <button
-                      type="button"
-                      className="rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
-                      onClick={onCancel}
-                    >
-                      <span className="sr-only">Close</span>
-                      <XMarkIcon className="h-6 w-6" aria-hidden="true" />
-                    </button>
-                  </div>
-                )}
+                <div className="absolute right-0 top-0 pr-4 pt-4">
+                  <button
+                    type="button"
+                    className="rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                    onClick={onCancel}
+                  >
+                    <span className="sr-only">Close</span>
+                    <XMarkIcon className="h-6 w-6" aria-hidden="true" />
+                  </button>
+                </div>
                 <div className="sm:flex sm:items-start">
                   <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
                     <Dialog.Title as="h3" className="text-lg font-semibold leading-6 text-gray-900">
@@ -142,6 +160,21 @@ export function TaskForm({ projectId, parentTaskId, onSubmit, onCancel }: TaskFo
                     </Dialog.Title>
                     <div className="mt-4">
                       <form onSubmit={handleSubmit} className="space-y-4">
+                        {/* Parent Task Reference - Only show for subtasks */}
+                        {parentTaskId && parentTask && (
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Tarefa Pai
+                            </label>
+                            <div className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md text-gray-700">
+                              {parentTask.title}
+                            </div>
+                            <p className="mt-1 text-xs text-gray-500">
+                              Esta subtarefa será associada hierarquicamente à tarefa acima
+                            </p>
+                          </div>
+                        )}
+
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">
                             {parentTaskId ? 'Nome da Subtarefa *' : 'Nome da Tarefa *'}
