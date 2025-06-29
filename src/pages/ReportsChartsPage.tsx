@@ -10,16 +10,7 @@ import {
   ArchiveBoxIcon,
   Cog6ToothIcon,
   ArrowRightOnRectangleIcon,
-  EnvelopeIcon,
-  UsersIcon,
-  ComputerDesktopIcon,
-  ArrowDownTrayIcon,
-  UserCircleIcon,
   ChartBarIcon,
-  ChartPieIcon,
-  UserGroupIcon,
-  ChevronDownIcon,
-  ChevronRightIcon,
 } from '@heroicons/react/24/outline';
 import {
   Chart as ChartJS,
@@ -35,7 +26,7 @@ import {
   Filler,
 } from 'chart.js';
 import { Bar, Line, Pie, Doughnut } from 'react-chartjs-2';
-import { format, startOfWeek, endOfWeek, eachDayOfInterval, parseISO, isWithinInterval, differenceInDays } from 'date-fns';
+import { format, startOfWeek, endOfWeek, eachDayOfInterval, parseISO, isWithinInterval, differenceInDays, addDays } from 'date-fns';
 
 // Register Chart.js components
 ChartJS.register(
@@ -62,8 +53,8 @@ interface ChartData {
 
 export function ReportsChartsPage() {
   const { signOut, hasRole } = useAuth();
-  const [reportsMenuOpen, setReportsMenuOpen] = useState(true);
-  const [selectedWeek, setSelectedWeek] = useState(format(new Date(), 'yyyy-MM-dd'));
+  const [selectedStartDate, setSelectedStartDate] = useState(format(startOfWeek(new Date(), { weekStartsOn: 1 }), 'yyyy-MM-dd'));
+  const [selectedEndDate, setSelectedEndDate] = useState(format(endOfWeek(new Date(), { weekStartsOn: 1 }), 'yyyy-MM-dd'));
   const [selectedProjects, setSelectedProjects] = useState<number[]>([]);
   const [selectedAssignees, setSelectedAssignees] = useState<string[]>([]);
   const [showCharts, setShowCharts] = useState(false);
@@ -142,22 +133,26 @@ export function ReportsChartsPage() {
     return selectedAssigneeNames;
   }, [selectedAssignees, profiles]);
 
-  // Calculate week range
-  const weekRange = useMemo(() => {
-    const startDate = startOfWeek(parseISO(selectedWeek), { weekStartsOn: 1 });
-    const endDate = endOfWeek(parseISO(selectedWeek), { weekStartsOn: 1 });
+  // Calculate date range
+  const dateRange = useMemo(() => {
+    const startDate = parseISO(selectedStartDate);
+    const endDate = parseISO(selectedEndDate);
     return { startDate, endDate };
-  }, [selectedWeek]);
+  }, [selectedStartDate, selectedEndDate]);
 
-  // Calculate previous week range
-  const previousWeekRange = useMemo(() => {
-    const selectedDate = parseISO(selectedWeek);
-    const previousWeekStart = startOfWeek(new Date(selectedDate.getTime() - 7 * 24 * 60 * 60 * 1000), { weekStartsOn: 1 });
-    const previousWeekEnd = endOfWeek(new Date(selectedDate.getTime() - 7 * 24 * 60 * 60 * 1000), { weekStartsOn: 1 });
-    return { startDate: previousWeekStart, endDate: previousWeekEnd };
-  }, [selectedWeek]);
+  // Calculate previous period range (same duration as selected range)
+  const previousPeriodRange = useMemo(() => {
+    const startDate = parseISO(selectedStartDate);
+    const endDate = parseISO(selectedEndDate);
+    const duration = differenceInDays(endDate, startDate);
+    
+    const previousEndDate = addDays(startDate, -1);
+    const previousStartDate = addDays(previousEndDate, -duration);
+    
+    return { startDate: previousStartDate, endDate: previousEndDate };
+  }, [selectedStartDate, selectedEndDate]);
 
-  // Filter tasks by selected projects, week, and assignees
+  // Filter tasks by selected projects, date range, and assignees
   const filteredTasks = useMemo(() => {
     if (!tasks) return [];
     
@@ -172,14 +167,14 @@ export function ReportsChartsPage() {
         return false;
       }
       
-      // Filter by week range (using created_at or due_date)
+      // Filter by date range (using created_at or due_date)
       const taskDate = task.due_date ? parseISO(task.due_date) : parseISO(task.created_at!);
-      return isWithinInterval(taskDate, weekRange);
+      return isWithinInterval(taskDate, dateRange);
     });
-  }, [tasks, selectedProjects, selectedAssignees, weekRange]);
+  }, [tasks, selectedProjects, selectedAssignees, dateRange]);
 
-  // Filter tasks for previous week
-  const previousWeekTasks = useMemo(() => {
+  // Filter tasks for previous period
+  const previousPeriodTasks = useMemo(() => {
     if (!tasks) return [];
     
     return tasks.filter(task => {
@@ -193,11 +188,11 @@ export function ReportsChartsPage() {
         return false;
       }
       
-      // Filter by previous week range
+      // Filter by previous period range
       const taskDate = task.due_date ? parseISO(task.due_date) : parseISO(task.created_at!);
-      return isWithinInterval(taskDate, previousWeekRange);
+      return isWithinInterval(taskDate, previousPeriodRange);
     });
-  }, [tasks, selectedProjects, selectedAssignees, previousWeekRange]);
+  }, [tasks, selectedProjects, selectedAssignees, previousPeriodRange]);
 
   // Get filtered projects for financial calculations
   const filteredProjects = useMemo(() => {
@@ -465,40 +460,40 @@ export function ReportsChartsPage() {
     };
   }, [filteredTasks]);
 
-  // Chart 6: Weekly Comparison Chart
+  // Weekly Comparison Chart
   const weeklyComparisonChartData: ChartData = useMemo(() => {
-    // Calculate metrics for current week
-    const currentWeekCompletedTasks = filteredTasks.filter(t => t.status === 'concluida').length;
-    const currentWeekTotalHours = filteredTasks.reduce((sum, task) => sum + ((task.actual_hours || 0) / 3600), 0);
-    const currentWeekTotalTasks = filteredTasks.length;
-    const currentWeekProgressPercentage = currentWeekTotalTasks > 0 ? (currentWeekCompletedTasks / currentWeekTotalTasks) * 100 : 0;
+    // Calculate metrics for current period
+    const currentPeriodCompletedTasks = filteredTasks.filter(t => t.status === 'concluida').length;
+    const currentPeriodTotalHours = filteredTasks.reduce((sum, task) => sum + ((task.actual_hours || 0) / 3600), 0);
+    const currentPeriodTotalTasks = filteredTasks.length;
+    const currentPeriodProgressPercentage = currentPeriodTotalTasks > 0 ? (currentPeriodCompletedTasks / currentPeriodTotalTasks) * 100 : 0;
     
-    // Calculate metrics for previous week
-    const previousWeekCompletedTasks = previousWeekTasks.filter(t => t.status === 'concluida').length;
-    const previousWeekTotalHours = previousWeekTasks.reduce((sum, task) => sum + ((task.actual_hours || 0) / 3600), 0);
-    const previousWeekTotalTasks = previousWeekTasks.length;
-    const previousWeekProgressPercentage = previousWeekTotalTasks > 0 ? (previousWeekCompletedTasks / previousWeekTotalTasks) * 100 : 0;
+    // Calculate metrics for previous period
+    const previousPeriodCompletedTasks = previousPeriodTasks.filter(t => t.status === 'concluida').length;
+    const previousPeriodTotalHours = previousPeriodTasks.reduce((sum, task) => sum + ((task.actual_hours || 0) / 3600), 0);
+    const previousPeriodTotalTasks = previousPeriodTasks.length;
+    const previousPeriodProgressPercentage = previousPeriodTotalTasks > 0 ? (previousPeriodCompletedTasks / previousPeriodTotalTasks) * 100 : 0;
 
     return {
       labels: ['Tarefas Concluídas', 'Horas Trabalhadas', 'Total de Tarefas', 'Progresso (%)'],
       datasets: [
         {
-          label: 'Semana Atual',
-          data: [currentWeekCompletedTasks, currentWeekTotalHours, currentWeekTotalTasks, currentWeekProgressPercentage],
+          label: 'Período Atual',
+          data: [currentPeriodCompletedTasks, currentPeriodTotalHours, currentPeriodTotalTasks, currentPeriodProgressPercentage],
           backgroundColor: 'rgba(59, 130, 246, 0.8)',
           borderColor: 'rgb(59, 130, 246)',
           borderWidth: 1,
         },
         {
-          label: 'Semana Anterior',
-          data: [previousWeekCompletedTasks, previousWeekTotalHours, previousWeekTotalTasks, previousWeekProgressPercentage],
+          label: 'Período Anterior',
+          data: [previousPeriodCompletedTasks, previousPeriodTotalHours, previousPeriodTotalTasks, previousPeriodProgressPercentage],
           backgroundColor: 'rgba(156, 163, 175, 0.8)',
           borderColor: 'rgb(156, 163, 175)',
           borderWidth: 1,
         },
       ],
     };
-  }, [filteredTasks, previousWeekTasks]);
+  }, [filteredTasks, previousPeriodTasks]);
 
   const handleProjectToggle = (projectId: number) => {
     setSelectedProjects(prev => 
@@ -569,45 +564,13 @@ export function ReportsChartsPage() {
                 <ArchiveBoxIcon className="w-5 h-5" />
                 <span>Projetos Arquivados</span>
               </Link>
-              <button
-                onClick={() => setReportsMenuOpen(!reportsMenuOpen)}
-                className="flex items-center justify-between w-full px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md"
+              <Link
+                to="/reports/charts"
+                className="flex items-center space-x-2 px-4 py-2 bg-gray-100 text-gray-900 rounded-md"
               >
-                <div className="flex items-center space-x-2">
-                  <ChartBarIcon className="w-5 h-5" />
-                  <span>Relatórios Gerenciais</span>
-                </div>
-                {reportsMenuOpen ? (
-                  <ChevronDownIcon className="w-4 h-4" />
-                ) : (
-                  <ChevronRightIcon className="w-4 h-4" />
-                )}
-              </button>
-              {reportsMenuOpen && (
-                <div className="ml-4 space-y-2">
-                  <Link
-                    to="/reports/charts"
-                    className="flex items-center space-x-2 px-4 py-2 bg-gray-100 text-gray-900 rounded-md"
-                  >
-                    <ChartBarIcon className="w-4 h-4" />
-                    <span>Gráficos</span>
-                  </Link>
-                  <Link
-                    to="/reports/statistics"
-                    className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md"
-                  >
-                    <ChartPieIcon className="w-4 h-4" />
-                    <span>Estatísticas</span>
-                  </Link>
-                  <Link
-                    to="/reports/analysts"
-                    className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md"
-                  >
-                    <UserGroupIcon className="w-4 h-4" />
-                    <span>Analistas</span>
-                  </Link>
-                </div>
-              )}
+                <ChartBarIcon className="w-5 h-5" />
+                <span>Estatísticas</span>
+              </Link>
             </div>
             <div className="pt-4 mt-4 border-t border-gray-200">
               {hasRole('admin') && (
@@ -632,25 +595,39 @@ export function ReportsChartsPage() {
 
         <main className="flex-1 ml-64 p-8">
           <div className="max-w-7xl mx-auto">
-            <h2 className="text-2xl font-bold text-gray-900 mb-8">Gráficos de Evolução de Projetos</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-8">Estatísticas de Projetos</h2>
 
             {/* Filters */}
             <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
               <h3 className="text-lg font-medium text-gray-900 mb-4">Filtros</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Week Selection */}
-                <div>
+                {/* Date Range Selection */}
+                <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Selecionar Semana
+                    Intervalo de Datas
                   </label>
-                  <input
-                    type="date"
-                    value={selectedWeek}
-                    onChange={(e) => setSelectedWeek(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Data de Início</label>
+                      <input
+                        type="date"
+                        value={selectedStartDate}
+                        onChange={(e) => setSelectedStartDate(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Data de Fim</label>
+                      <input
+                        type="date"
+                        value={selectedEndDate}
+                        onChange={(e) => setSelectedEndDate(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      />
+                    </div>
+                  </div>
                   <p className="text-xs text-gray-500 mt-1">
-                    Semana de {format(weekRange.startDate, 'dd/MM/yyyy')} a {format(weekRange.endDate, 'dd/MM/yyyy')}
+                    Período selecionado: {format(dateRange.startDate, 'dd/MM/yyyy')} a {format(dateRange.endDate, 'dd/MM/yyyy')}
                   </p>
                 </div>
 
@@ -680,33 +657,33 @@ export function ReportsChartsPage() {
                     {selectedProjects.length === 0 ? 'Todos os projetos' : `${selectedProjects.length} projeto(s) selecionado(s)`}
                   </p>
                 </div>
+              </div>
 
-                {/* Assignee Selection */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Selecionar Colaboradores
-                  </label>
-                  <div className="max-h-32 overflow-y-auto border border-gray-300 rounded-md p-2">
-                    <div className="space-y-2">
-                      {profiles?.map((profile) => (
-                        <label key={profile.id} className="flex items-center">
-                          <input
-                            type="checkbox"
-                            checked={selectedAssignees.includes(profile.id)}
-                            onChange={() => handleAssigneeToggle(profile.id)}
-                            className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                          />
-                          <span className="ml-2 text-sm text-gray-700">
-                            {profile.name}
-                          </span>
-                        </label>
-                      ))}
-                    </div>
+              {/* Assignee Selection */}
+              <div className="mt-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Selecionar Colaboradores
+                </label>
+                <div className="max-h-32 overflow-y-auto border border-gray-300 rounded-md p-2">
+                  <div className="space-y-2">
+                    {profiles?.map((profile) => (
+                      <label key={profile.id} className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={selectedAssignees.includes(profile.id)}
+                          onChange={() => handleAssigneeToggle(profile.id)}
+                          className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                        />
+                        <span className="ml-2 text-sm text-gray-700">
+                          {profile.name}
+                        </span>
+                      </label>
+                    ))}
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {selectedAssignees.length === 0 ? 'Todos os colaboradores' : `${selectedAssignees.length} colaborador(es) selecionado(s)`}
-                  </p>
                 </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  {selectedAssignees.length === 0 ? 'Todos os colaboradores' : `${selectedAssignees.length} colaborador(es) selecionado(s)`}
+                </p>
               </div>
             </div>
 
@@ -840,15 +817,23 @@ export function ReportsChartsPage() {
                   </div>
                 </div>
 
-                {/* Weekly Comparison Chart */}
+                {/* Period Comparison Chart */}
                 <div>
                   <h3 className="text-xl font-bold text-gray-900 mb-6">
-                    Comparação Semanal
+                    Comparação de Períodos
                   </h3>
                   <div className="bg-white rounded-lg shadow-sm p-6">
                     <h4 className="text-lg font-medium text-gray-900 mb-4">
-                      Comparação Semanal: Atual vs. Anterior
+                      Comparação: Período Atual vs. Período Anterior
                     </h4>
+                    <div className="mb-4 text-sm text-gray-600">
+                      <p>
+                        <strong>Período Atual:</strong> {format(dateRange.startDate, 'dd/MM/yyyy')} a {format(dateRange.endDate, 'dd/MM/yyyy')}
+                      </p>
+                      <p>
+                        <strong>Período Anterior:</strong> {format(previousPeriodRange.startDate, 'dd/MM/yyyy')} a {format(previousPeriodRange.endDate, 'dd/MM/yyyy')}
+                      </p>
+                    </div>
                     <p className="text-sm text-gray-600 mb-4">
                       <strong>Projetos:</strong> {selectedProjectsText} | <strong>Colaboradores:</strong> {selectedAssigneesText}
                     </p>
