@@ -12,7 +12,7 @@ import { ArchivedProjectsPage } from './pages/ArchivedProjectsPage'
 import { UsersPage } from './pages/UsersPage'
 import { ImportExportSettingsPage } from './pages/ImportExportSettingsPage'
 import { SystemSettingsPage } from './pages/SystemSettingsPage'
-import { ReportsChartsPage } from './pages/ReportsChartsPage'
+import ReportsChartsPage from './pages/ReportsChartsPage'
 
 function App() {
   return (
