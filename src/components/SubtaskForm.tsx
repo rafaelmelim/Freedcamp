@@ -131,9 +131,7 @@ export function SubtaskForm({
 
   return (
     <>
-      <div className="fixed inset-0 bg-black bg-opacity-50 grid place-items-center p-4 z-50">
-        <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
-          <div className="space-y-4">
+      <div className="space-y-4">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-semibold text-gray-900">
             {isEditing ? 'Editar Subtarefa' : 'Nova Subtarefa'}
@@ -282,8 +280,6 @@ export function SubtaskForm({
             </div>
           </div>
         </form>
-      </div>
-        </div>
       </div>
 
       {/* Delete Confirmation Modal */}
