@@ -246,7 +246,7 @@ function TaskDetailsModal({
         </Transition.Child>
 
         <div className="fixed inset-0 overflow-y-auto">
-          <div className="grid min-h-full place-items-center p-4 text-center">
+          <div className="grid min-h-full place-items-center p-4">
             <Transition.Child
               as={Fragment}
               enter="ease-out duration-300"
