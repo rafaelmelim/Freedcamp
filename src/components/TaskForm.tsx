@@ -261,7 +261,7 @@ export function TaskForm({ projectId, onSubmit, onCancel, parentTaskId }: TaskFo
               type="button"
               onClick={handleAddIssueLink}
               className="text-sm text-primary-600 hover:text-primary-700 flex items-center"
-              {parentTaskId ? 'Criar Subtarefa' : 'Criar Tarefa'}
+            >
               <PlusIcon className="w-4 h-4 mr-1" />
               Adicionar Issue
             </button>
