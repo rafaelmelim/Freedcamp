@@ -210,42 +210,39 @@ export function SubtaskForm({
             </select>
           </div>
 
-          {/* Show value and hours fields only in edit mode */}
-          {isEditing && (
-            <>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Valor da Subtarefa (R$)
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  {...register('value')}
-                  placeholder="0,00"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  disabled={isSubmitting}
-                />
-              </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Valor da Subtarefa (R$)
+            </label>
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              {...register('value')}
+              placeholder="0,00"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+              disabled={isSubmitting}
+            />
+          </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Horas Realizadas (hh:mm:ss)
-                </label>
-                <input
-                  type="text"
-                  {...register('actual_hours')}
-                  placeholder="00:00:00"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  disabled={isSubmitting}
-                />
-              </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Horas Realizadas (hh:mm:ss)
+            </label>
+            <input
+              type="text"
+              {...register('actual_hours')}
+              placeholder="00:00:00"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+              disabled={isSubmitting}
+            />
+          </div>
 
-              {/* Time Tracking - only show in edit mode */}
-              <div>
-                <TimeTracking taskId={initialData!.id} />
-              </div>
-            </>
+          {/* Time Tracking - only show in edit mode when task ID exists */}
+          {isEditing && initialData && (
+            <div>
+              <TimeTracking taskId={initialData.id} />
+            </div>
           )}
 
           <div className="flex justify-between pt-4">
