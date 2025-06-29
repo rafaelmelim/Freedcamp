@@ -326,7 +326,6 @@ export function ArchivedProjectsPage() {
                 <div className="mb-4">
                   {(() => {
                     const progress = calculateProjectProgress(project.id);
-                    const totalTasks = tasks?.filter(t => t.project_id === project.id).length || 0;
                     
                     return (
                       <div className="space-y-2">
