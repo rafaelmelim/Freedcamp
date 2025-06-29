@@ -555,12 +555,8 @@ export function ReportsChartsPage() {
             <div className="flex justify-center mb-8">
               <button
                 onClick={() => {
-                  // Only show charts if there is filtered data available
-                  if (filteredTasks.length > 0) {
-                    setShowCharts(true);
-                  } else {
-                    setShowCharts(false);
-                  }
+                  // Always show charts when button is clicked, regardless of data availability
+                  setShowCharts(true);
                 }}
                 className="inline-flex items-center px-6 py-3 text-base font-medium text-white bg-primary-600 rounded-lg shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all duration-200 transform hover:scale-105"
               >
