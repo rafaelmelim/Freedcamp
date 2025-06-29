@@ -150,35 +150,35 @@ export const TaskForm = forwardRef<TaskFormRef, TaskFormProps>(({ projectId, par
                       <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Nome da Tarefa *
+            {parentTaskId ? 'Nome da Subtarefa *' : 'Nome da Tarefa *'}
           </label>
           <input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors duration-200"
-            placeholder="Digite o nome da tarefa"
+            placeholder={parentTaskId ? "Digite o nome da subtarefa" : "Digite o nome da tarefa"}
             required
           />
         </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Descrição da tarefa
+            {parentTaskId ? 'Descrição da subtarefa' : 'Descrição da tarefa'}
           </label>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={3}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors duration-200"
-            placeholder="Descreva a tarefa"
+            placeholder={parentTaskId ? "Descreva a subtarefa" : "Descreva a tarefa"}
           />
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Data inicial da tarefa
+              {parentTaskId ? 'Data inicial da subtarefa' : 'Data inicial da tarefa'}
             </label>
             <input
               type="date"
@@ -190,7 +190,7 @@ export const TaskForm = forwardRef<TaskFormRef, TaskFormProps>(({ projectId, par
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Data fim da tarefa
+              {parentTaskId ? 'Data fim da subtarefa' : 'Data fim da tarefa'}
             </label>
             <input
               type="date"
@@ -203,7 +203,7 @@ export const TaskForm = forwardRef<TaskFormRef, TaskFormProps>(({ projectId, par
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Valor da Tarefa (R$)
+            {parentTaskId ? 'Valor da Subtarefa (R$)' : 'Valor da Tarefa (R$)'}
           </label>
           <input
             type="number"
