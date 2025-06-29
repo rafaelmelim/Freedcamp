@@ -14,8 +14,6 @@ interface SystemSettingsContextType {
 const SystemSettingsContext = createContext<SystemSettingsContextType | undefined>(undefined);
 
 export function SystemSettingsProvider({ children }: { children: React.ReactNode }) {
-  const [error, setError] = useState<Error | null>(null);
-
   const { data: settings, isLoading } = useQuery({
     queryKey: ['system-settings'],
     queryFn: async () => {

@@ -5,7 +5,7 @@ import { format } from 'date-fns';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
-import { Database, TaskPriority, TaskStatus } from '../lib/database.types';
+import { Database, TaskStatus } from '../lib/database.types';
 import { TaskComments } from './TaskComments';
 import { TimeTracking } from './TimeTracking';
 import { SubtaskForm } from './SubtaskForm';
