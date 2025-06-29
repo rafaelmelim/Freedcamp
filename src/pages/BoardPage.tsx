@@ -59,7 +59,6 @@ export function BoardPage() {
   const [reportsMenuOpen, setReportsMenuOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const projectsPerPage = 10;
-  const [addingSubtaskToTask, setAddingSubtaskToTask] = useState<{ projectId: number; parentTaskId: number } | null>(null);
   const queryClient = useQueryClient();
 
   // Query for total count of projects
