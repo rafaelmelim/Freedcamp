@@ -135,10 +135,26 @@ export function ArchivedProjectsPage() {
 
   const calculateProjectProgress = (projectId: number) => {
     const projectTasks = tasks?.filter(t => t.project_id === projectId) || [];
+    
+    // Separate main tasks and subtasks
+    const mainTasks = projectTasks.filter(t => !t.parent_task_id);
+    const subtasks = projectTasks.filter(t => t.parent_task_id);
+    
     const totalTasks = projectTasks.length;
+    const mainTaskCount = mainTasks.length;
+    const subtaskCount = subtasks.length;
     
     if (totalTasks === 0) {
-      return { completed: 0, inProgress: 0, notStarted: 0, completedPercentage: 0, inProgressPercentage: 0, notStartedPercentage: 0 };
+      return { 
+        completed: 0, 
+        inProgress: 0, 
+        notStarted: 0, 
+        completedPercentage: 0, 
+        inProgressPercentage: 0, 
+        notStartedPercentage: 0,
+        mainTaskCount: 0,
+        subtaskCount: 0
+      };
     }
     
     const completed = projectTasks.filter(t => t.status === 'concluida').length;
@@ -155,7 +171,9 @@ export function ArchivedProjectsPage() {
       notStarted,
       completedPercentage,
       inProgressPercentage,
-      notStartedPercentage
+      notStartedPercentage,
+      mainTaskCount,
+      subtaskCount
     };
   };
 
