@@ -495,6 +495,47 @@ export function ReportsChartsPage() {
     };
   }, [filteredTasks, previousPeriodTasks]);
 
+  // Project Evolution Chart
+  const projectEvolutionChartData: ChartData = useMemo(() => {
+    const projectEvolution = filteredProjects.map(project => {
+      // Calculate current week progress
+      const currentWeekTasks = filteredTasks.filter(task => task.project_id === project.id);
+      const currentWeekCompletedTasks = currentWeekTasks.filter(task => task.status === 'concluida').length;
+      const currentWeekProgress = currentWeekTasks.length > 0 ? (currentWeekCompletedTasks / currentWeekTasks.length) * 100 : 0;
+      
+      // Calculate previous week progress
+      const previousWeekTasks = previousPeriodTasks.filter(task => task.project_id === project.id);
+      const previousWeekCompletedTasks = previousWeekTasks.filter(task => task.status === 'concluida').length;
+      const previousWeekProgress = previousWeekTasks.length > 0 ? (previousWeekCompletedTasks / previousWeekTasks.length) * 100 : 0;
+      
+      return {
+        name: `#${project.sequence_number} - ${project.title}`,
+        currentWeek: currentWeekProgress,
+        previousWeek: previousWeekProgress
+      };
+    });
+
+    return {
+      labels: projectEvolution.map(p => p.name),
+      datasets: [
+        {
+          label: 'Semana Passada',
+          data: projectEvolution.map(p => p.previousWeek),
+          backgroundColor: 'rgba(59, 130, 246, 0.8)',
+          borderColor: 'rgb(59, 130, 246)',
+          borderWidth: 1,
+        },
+        {
+          label: 'Semana Atual',
+          data: projectEvolution.map(p => p.currentWeek),
+          backgroundColor: 'rgba(251, 191, 36, 0.8)',
+          borderColor: 'rgb(251, 191, 36)',
+          borderWidth: 1,
+        },
+      ],
+    };
+  }, [filteredProjects, filteredTasks, previousPeriodTasks]);
+
   const handleProjectToggle = (projectId: number) => {
     setSelectedProjects(prev => 
       prev.includes(projectId) 
@@ -838,6 +879,30 @@ export function ReportsChartsPage() {
                       <strong>Projetos:</strong> {selectedProjectsText} | <strong>Colaboradores:</strong> {selectedAssigneesText}
                     </p>
                     <Bar data={weeklyComparisonChartData} options={chartOptions} />
+                  </div>
+                </div>
+
+                {/* Project Evolution Chart */}
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-6">
+                    Evolução Semanal dos Projetos
+                  </h3>
+                  <div className="bg-white rounded-lg shadow-sm p-6">
+                    <h4 className="text-lg font-medium text-gray-900 mb-4">
+                      Evolução Semanal dos Projetos
+                    </h4>
+                    <div className="mb-4 text-sm text-gray-600">
+                      <p>
+                        <strong>Período Atual:</strong> {format(dateRange.startDate, 'dd/MM/yyyy')} a {format(dateRange.endDate,'dd/MM/yyyy')}
+                      </p>
+                      <p>
+                        <strong>Período Anterior:</strong> {format(previousPeriodRange.startDate, 'dd/MM/yyyy')} a {format(previousPeriodRange.endDate,'dd/MM/yyyy')}
+                      </p>
+                    </div>
+                    <p className="text-sm text-gray-600 mb-4">
+                      <strong>Projetos:</strong> {selectedProjectsText} | <strong>Colaboradores:</strong> {selectedAssigneesText}
+                    </p>
+                    <Bar data={projectEvolutionChartData} options={chartOptions} />
                   </div>
                 </div>
               </div>
