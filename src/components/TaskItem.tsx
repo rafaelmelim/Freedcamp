@@ -119,7 +119,10 @@ export function TaskItem({
 
         {/* Context Menu */}
         <Menu as="div" className="relative inline-block text-left">
-          <Menu.Button className={menuButtonClasses}>
+          <Menu.Button 
+            className={menuButtonClasses}
+            onClick={(e) => e.stopPropagation()}
+          >
             <EllipsisVerticalIcon className={iconClasses} />
           </Menu.Button>
 
