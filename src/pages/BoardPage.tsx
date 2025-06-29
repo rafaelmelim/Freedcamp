@@ -6,6 +6,7 @@ import { Menu, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { ConnectionError } from '../components/ConnectionError';
 import { toast } from 'react-hot-toast';
 import { Database, TaskPriority, TaskStatus } from '../lib/database.types';
 import { TaskForm } from '../components/TaskForm';
@@ -43,7 +44,7 @@ const statusLabels = {
 };
 
 export function BoardPage() {
-  const { user, hasRole, signOut } = useAuth();
+  const { user, hasRole, signOut, loading, connectionError, retryConnection } = useAuth();
   const [isAddingProject, setIsAddingProject] = useState(false);
   const [newProjectTitle, setNewProjectTitle] = useState('');
   const [addingTaskToProject, setAddingTaskToProject] = useState<number | null>(null);
@@ -445,6 +446,20 @@ export function BoardPage() {
   const getParentTask = (taskId: number) => {
     return tasks?.find(t => t.id === taskId);
   };
+
+  if (loading) {
+    return <div>Carregando...</div>;
+  }
+
+  if (connectionError) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="max-w-md w-full">
+          <ConnectionError onRetry={retryConnection} />
+        </div>
+      </div>
+    );
+  }
 
   if (isLoadingProjects || isLoadingTasks) {
     return <div>Carregando...</div>;

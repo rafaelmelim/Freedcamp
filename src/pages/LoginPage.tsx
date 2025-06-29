@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useAuth } from "../contexts/AuthContext";
+import { ConnectionError } from "../components/ConnectionError";
 import { toast } from "react-hot-toast";
 import { ResetPasswordForm } from "../components/ResetPasswordForm";
 import { SignUpForm } from "../components/SignUpForm";
@@ -12,7 +13,7 @@ interface LoginFormData {
 }
 
 export function LoginPage() {
-  const { signIn } = useAuth();
+  const { signIn, connectionError, retryConnection } = useAuth();
   const { settings } = useSystemSettings();
   const [isLoading, setIsLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
@@ -83,6 +84,12 @@ export function LoginPage() {
           <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">
             Acesse sua conta
           </h2>
+
+          {connectionError && (
+            <div className="mb-6">
+              <ConnectionError onRetry={retryConnection} />
+            </div>
+          )}
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div className="space-y-4">
@@ -174,7 +181,7 @@ export function LoginPage() {
 
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || connectionError}
               className="w-full py-3 px-4 bg-primary-600 text-white font-medium rounded-lg 
                        hover:bg-primary-700 focus:outline-none focus:ring-2 
                        focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 
