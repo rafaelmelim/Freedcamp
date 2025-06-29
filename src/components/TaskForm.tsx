@@ -31,6 +31,7 @@ export function TaskForm({ projectId, parentTaskId, onSubmit, onCancel }: TaskFo
   const [value, setValue] = useState('');
   const [actualHours, setActualHours] = useState('00:00:00');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Fetch parent task information if parentTaskId is provided
   const { data: parentTask } = useQuery({
@@ -69,15 +70,37 @@ export function TaskForm({ projectId, parentTaskId, onSubmit, onCancel }: TaskFo
     
     if (isSubmitting) return;
     
+    // Reset errors
+    setErrors({});
+    const newErrors: Record<string, string> = {};
+    
     // Validate required fields
     if (!title.trim()) {
-      toast.error(parentTaskId ? 'O nome da subtarefa é obrigatório' : 'O nome da tarefa é obrigatório');
-      return;
+      newErrors.title = parentTaskId ? 'O nome da subtarefa é obrigatório' : 'O nome da tarefa é obrigatório';
     }
 
     // Validate dates
     if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
-      toast.error('A data inicial não pode ser maior que a data final');
+      newErrors.endDate = 'A data final não pode ser anterior à data inicial';
+    }
+
+    // Validate value if provided
+    if (value && (isNaN(parseFloat(value)) || parseFloat(value) < 0)) {
+      newErrors.value = 'O valor deve ser um número positivo';
+    }
+
+    // Validate actual hours format
+    if (actualHours && actualHours !== '00:00:00') {
+      const timeRegex = /^([0-9]{1,2}):([0-5][0-9]):([0-5][0-9])$/;
+      if (!timeRegex.test(actualHours)) {
+        newErrors.actualHours = 'Formato deve ser hh:mm:ss (ex: 02:30:00)';
+      }
+    }
+
+    // If there are errors, show them and return
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      toast.error('Por favor, corrija os campos destacados em vermelho');
       return;
     }
 
@@ -173,11 +196,23 @@ export function TaskForm({ projectId, parentTaskId, onSubmit, onCancel }: TaskFo
                             type="text"
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors duration-200"
+                            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 transition-colors duration-200 ${
+                              errors.title 
+                                ? 'border-red-300 focus:ring-red-500 focus:border-red-500' 
+                                : 'border-gray-300 focus:ring-primary-500'
+                            }`}
                             placeholder={parentTaskId ? "Digite o nome da subtarefa" : "Digite o nome da tarefa"}
                             required
                             disabled={isSubmitting}
                           />
+                          {errors.title && (
+                            <p className="mt-1 text-sm text-red-600 flex items-center">
+                              <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                              </svg>
+                              {errors.title}
+                            </p>
+                          )}
                         </div>
 
                         <div>
@@ -203,9 +238,21 @@ export function TaskForm({ projectId, parentTaskId, onSubmit, onCancel }: TaskFo
                               type="date"
                               value={startDate}
                               onChange={(e) => setStartDate(e.target.value)}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors duration-200 cursor-pointer"
+                              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 transition-colors duration-200 cursor-pointer ${
+                                errors.startDate 
+                                  ? 'border-red-300 focus:ring-red-500 focus:border-red-500' 
+                                  : 'border-gray-300 focus:ring-primary-500'
+                              }`}
                               disabled={isSubmitting}
                             />
+                            {errors.startDate && (
+                              <p className="mt-1 text-sm text-red-600 flex items-center">
+                                <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                </svg>
+                                {errors.startDate}
+                              </p>
+                            )}
                           </div>
 
                           <div>
@@ -216,9 +263,21 @@ export function TaskForm({ projectId, parentTaskId, onSubmit, onCancel }: TaskFo
                               type="date"
                               value={endDate}
                               onChange={(e) => setEndDate(e.target.value)}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors duration-200 cursor-pointer"
+                              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 transition-colors duration-200 cursor-pointer ${
+                                errors.endDate 
+                                  ? 'border-red-300 focus:ring-red-500 focus:border-red-500' 
+                                  : 'border-gray-300 focus:ring-primary-500'
+                              }`}
                               disabled={isSubmitting}
                             />
+                            {errors.endDate && (
+                              <p className="mt-1 text-sm text-red-600 flex items-center">
+                                <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                </svg>
+                                {errors.endDate}
+                              </p>
+                            )}
                           </div>
                         </div>
 
@@ -233,9 +292,21 @@ export function TaskForm({ projectId, parentTaskId, onSubmit, onCancel }: TaskFo
                             value={value}
                             onChange={(e) => setValue(e.target.value)}
                             placeholder="0,00"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors duration-200"
+                            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 transition-colors duration-200 ${
+                              errors.value 
+                                ? 'border-red-300 focus:ring-red-500 focus:border-red-500' 
+                                : 'border-gray-300 focus:ring-primary-500'
+                            }`}
                             disabled={isSubmitting}
                           />
+                          {errors.value && (
+                            <p className="mt-1 text-sm text-red-600 flex items-center">
+                              <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                              </svg>
+                              {errors.value}
+                            </p>
+                          )}
                         </div>
 
                         <div>
@@ -247,9 +318,21 @@ export function TaskForm({ projectId, parentTaskId, onSubmit, onCancel }: TaskFo
                             value={actualHours}
                             onChange={(e) => setActualHours(e.target.value)}
                             placeholder="00:00:00"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors duration-200"
+                            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 transition-colors duration-200 ${
+                              errors.actualHours 
+                                ? 'border-red-300 focus:ring-red-500 focus:border-red-500' 
+                                : 'border-gray-300 focus:ring-primary-500'
+                            }`}
                             disabled={isSubmitting}
                           />
+                          {errors.actualHours && (
+                            <p className="mt-1 text-sm text-red-600 flex items-center">
+                              <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                              </svg>
+                              {errors.actualHours}
+                            </p>
+                          )}
                         </div>
 
                         <div>
@@ -290,6 +373,29 @@ export function TaskForm({ projectId, parentTaskId, onSubmit, onCancel }: TaskFo
                                 )}
                               </div>
                             ))}
+                          </div>
+                        </div>
+
+                        {/* Required Fields Notice */}
+                        <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
+                          <div className="flex items-start">
+                            <svg className="w-5 h-5 text-blue-600 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                            </svg>
+                            <div>
+                              <h4 className="text-sm font-medium text-blue-800 mb-1">
+                                Campos Obrigatórios
+                              </h4>
+                              <ul className="text-sm text-blue-700 space-y-1">
+                                <li className="flex items-center">
+                                  <span className="w-2 h-2 bg-blue-600 rounded-full mr-2"></span>
+                                  <strong>{parentTaskId ? 'Nome da Subtarefa' : 'Nome da Tarefa'}</strong> - Campo obrigatório
+                                </li>
+                              </ul>
+                              <div className="mt-2 text-xs text-blue-600">
+                                <strong>Campos Opcionais:</strong> Descrição, Datas, Valor, Horas Realizadas, Links de Issues
+                              </div>
+                            </div>
                           </div>
                         </div>
 
