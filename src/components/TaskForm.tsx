@@ -137,7 +137,7 @@ export function TaskForm({ projectId, parentTaskId, onSubmit, onCancel }: TaskFo
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+    <div className="fixed inset-0 bg-black bg-opacity-50 grid place-items-center p-4 z-50">
       <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
         <h3 className="text-lg font-semibold leading-6 text-gray-900 mb-4">
           {parentTaskId ? 'Cadastro de Subtarefa' : 'Nova Tarefa'}
