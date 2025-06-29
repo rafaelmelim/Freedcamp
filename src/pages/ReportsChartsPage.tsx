@@ -67,6 +67,20 @@ export function ReportsChartsPage() {
   const [selectedProjects, setSelectedProjects] = useState<number[]>([]);
   const [showCharts, setShowCharts] = useState(false);
 
+  // Format selected project names for display
+  const selectedProjectsText = useMemo(() => {
+    if (selectedProjects.length === 0) {
+      return 'Todos os projetos';
+    }
+    
+    const selectedProjectNames = projects
+      ?.filter(p => selectedProjects.includes(p.id))
+      .map(p => `#${p.sequence_number} - ${p.title}`)
+      .join(', ') || '';
+    
+    return selectedProjectNames;
+  }, [selectedProjects, projects]);
+
   // Fetch projects
   const { data: projects } = useQuery({
     queryKey: ['projects'],
@@ -573,6 +587,9 @@ export function ReportsChartsPage() {
                 <h3 className="text-lg font-medium text-gray-900 mb-4">
                   Horas Previstas vs. Realizadas por Dia
                 </h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  <strong>Projetos:</strong> {selectedProjectsText}
+                </p>
                 <Bar data={hoursBarChartData} options={chartOptions} />
               </div>
 
@@ -581,6 +598,9 @@ export function ReportsChartsPage() {
                 <h3 className="text-lg font-medium text-gray-900 mb-4">
                   Progresso de Tarefas Concluídas
                 </h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  <strong>Projetos:</strong> {selectedProjectsText}
+                </p>
                 <Line data={progressLineChartData} options={chartOptions} />
               </div>
 
@@ -589,6 +609,9 @@ export function ReportsChartsPage() {
                 <h3 className="text-lg font-medium text-gray-900 mb-4">
                   Distribuição de Tarefas por Status
                 </h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  <strong>Projetos:</strong> {selectedProjectsText}
+                </p>
                 <Pie data={statusPieChartData} options={{ responsive: true, plugins: { legend: { position: 'top' as const } } }} />
               </div>
 
@@ -597,6 +620,9 @@ export function ReportsChartsPage() {
                 <h3 className="text-lg font-medium text-gray-900 mb-4">
                   Acúmulo de Tarefas por Prioridade
                 </h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  <strong>Projetos:</strong> {selectedProjectsText}
+                </p>
                 <Line data={priorityAreaChartData} options={chartOptions} />
               </div>
 
@@ -605,6 +631,9 @@ export function ReportsChartsPage() {
                 <h3 className="text-lg font-medium text-gray-900 mb-4">
                   Tarefas por Responsável e Status
                 </h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  <strong>Projetos:</strong> {selectedProjectsText}
+                </p>
                 <Bar data={assigneeStackedChartData} options={stackedChartOptions} />
               </div>
 
@@ -613,12 +642,15 @@ export function ReportsChartsPage() {
                 <h3 className="text-lg font-medium text-gray-900 mb-4">
                   Comparação Semanal: Atual vs. Anterior
                 </h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  <strong>Projetos:</strong> {selectedProjectsText}
+                </p>
                 <div className="mb-4 text-sm text-gray-600">
                   <p>
-                    <strong>Semana Atual:</strong> {format(weekRange.startDate, 'dd/MM/yyyy')} a {format(weekRange.endDate, \'dd/MM/yyyy')}
+                    <strong>Semana Atual:</strong> {format(weekRange.startDate, 'dd/MM/yyyy')} a {format(weekRange.endDate, 'dd/MM/yyyy')}
                   </p>
                   <p>
-                    <strong>Semana Anterior:</strong> {format(previousWeekRange.startDate, 'dd/MM/yyyy')} a {format(previousWeekRange.endDate, \'dd/MM/yyyy')}
+                    <strong>Semana Anterior:</strong> {format(previousWeekRange.startDate, 'dd/MM/yyyy')} a {format(previousWeekRange.endDate, 'dd/MM/yyyy')}
                   </p>
                 </div>
                 <Bar data={weeklyComparisonChartData} options={chartOptions} />
