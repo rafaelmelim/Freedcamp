@@ -221,7 +221,7 @@ export function LoginPage() {
                       justify-between items-center space-y-4 md:space-y-0"
         >
           <nav>
-            <ul className="flex space-x-6flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-6 text-center md:text-left">
+            <ul className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-6 text-center md:text-left">
               <li>
                 <a
                   href="#"
