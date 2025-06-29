@@ -218,6 +218,7 @@ export interface Database {
           status: TaskStatus
           value: number | null
           actual_hours: number | null
+          parent_task_id: number | null
         }
         Insert: {
           id?: number
@@ -235,6 +236,7 @@ export interface Database {
           status?: TaskStatus
           value?: number | null
           actual_hours?: number | null
+          parent_task_id?: number | null
         }
         Update: {
           id?: number
@@ -252,6 +254,7 @@ export interface Database {
           status?: TaskStatus
           value?: number | null
           actual_hours?: number | null
+          parent_task_id?: number | null
         }
       }
       labels: {

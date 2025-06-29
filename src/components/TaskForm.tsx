@@ -10,6 +10,7 @@ type Label = Database['public']['Tables']['labels']['Row'];
 
 interface TaskFormProps {
   projectId: number;
+  parentTaskId?: number;
   onSubmit: (data: Task, labels: Label[]) => void;
   onCancel: () => void;
 }
@@ -20,6 +21,7 @@ interface IssueLink {
 }
 
 export function TaskForm({ projectId, onSubmit, onCancel }: TaskFormProps) {
+export function TaskForm({ projectId, parentTaskId, onSubmit, onCancel }: TaskFormProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [startDate, setStartDate] = useState('');
@@ -69,6 +71,7 @@ export function TaskForm({ projectId, onSubmit, onCancel }: TaskFormProps) {
       title: title.trim(),
       description: fullDescription || null,
       project_id: projectId,
+      parent_task_id: parentTaskId || null,
       position: 0,
       due_date: endDate || startDate || null,
       priority: 'medium',
