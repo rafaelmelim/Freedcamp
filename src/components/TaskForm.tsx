@@ -137,41 +137,11 @@ export function TaskForm({ projectId, parentTaskId, onSubmit, onCancel }: TaskFo
   };
 
   return (
-    <Transition.Root show={true} as={Fragment}>
-      <Dialog as="div" className="relative z-50" onClose={() => {}} static>
-        <Transition.Child
-          as={Fragment}
-          enter="ease-out duration-300"
-          enterFrom="opacity-0"
-          enterTo="opacity-100"
-          leave="ease-in duration-200"
-          leaveFrom="opacity-100"
-          leaveTo="opacity-0"
-        >
-          <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity z-40" />
-        </Transition.Child>
-
-        <div className="fixed inset-0 overflow-y-auto z-50">
-          <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-            <Transition.Child
-              as={Fragment}
-              enter="ease-out duration-300"
-              enterFrom="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-              enterTo="opacity-100 translate-y-0 sm:scale-100"
-              leave="ease-in duration-200"
-              leaveFrom="opacity-100 translate-y-0 sm:scale-100"
-              leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-            >
-              <Dialog.Panel 
-                className="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className="sm:flex sm:items-start">
-                  <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
-                    <Dialog.Title as="h3" className="text-lg font-semibold leading-6 text-gray-900">
-                      {parentTaskId ? 'Cadastro de Subtarefa' : 'Nova Tarefa'}
-                    </Dialog.Title>
-                    <div className="mt-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        <h3 className="text-lg font-semibold leading-6 text-gray-900 mb-4">
+          {parentTaskId ? 'Cadastro de Subtarefa' : 'Nova Tarefa'}
+        </h3>
                       <form onSubmit={handleSubmit} className="space-y-4">
                         {/* Parent Task Reference - Only show for subtasks */}
                         {parentTaskId && parentTask && (
@@ -472,14 +442,7 @@ export function TaskForm({ projectId, parentTaskId, onSubmit, onCancel }: TaskFo
                           </button>
                         </div>
                       </form>
-                    </div>
-                  </div>
-                </div>
-              </Dialog.Panel>
-            </Transition.Child>
-          </div>
-        </div>
-      </Dialog>
-    </Transition.Root>
+      </div>
+    </div>
   );
 }
