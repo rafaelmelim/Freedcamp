@@ -66,7 +66,7 @@ export function SystemSettingsPage() {
   const [previewColor, setPreviewColor] = useState(settings.primary_color || '#0EA5E9');
   const [previewFontColor, setPreviewFontColor] = useState(settings.system_font_color || '#000000');
 
-  const { data: currentSettings, isLoading, error } = useQuery({
+  const { data: currentSettings, isLoading } = useQuery({
     queryKey: ['system-settings'],
     initialData: undefined,
     queryFn: async () => {
@@ -82,46 +82,6 @@ export function SystemSettingsPage() {
       }
 
       return data;
-    },
-    onSuccess: (data) => {
-      if (data) {
-        setSettings(data);
-        setPreviewColor(data.primary_color || '#0EA5E9');
-        
-        // Apply settings to document
-        document.documentElement.style.setProperty('--primary-50', `${data.primary_color}10`);
-        document.documentElement.style.setProperty('--primary-100', `${data.primary_color}20`);
-        document.documentElement.style.setProperty('--primary-200', `${data.primary_color}30`);
-        document.documentElement.style.setProperty('--primary-300', `${data.primary_color}40`);
-        document.documentElement.style.setProperty('--primary-400', `${data.primary_color}50`);
-        document.documentElement.style.setProperty('--primary-500', data.primary_color);
-        document.documentElement.style.setProperty('--primary-600', `${data.primary_color}70`);
-        document.documentElement.style.setProperty('--primary-700', `${data.primary_color}80`);
-        document.documentElement.style.setProperty('--primary-800', `${data.primary_color}90`);
-        document.documentElement.style.setProperty('--primary-900', `${data.primary_color}95`);
-        document.documentElement.style.setProperty('--primary-950', `${data.primary_color}99`);
-
-        // Update favicon if set
-        if (data.favicon_url) {
-          const favicon = document.querySelector('link[rel="icon"]');
-          if (favicon) {
-            favicon.setAttribute('href', data.favicon_url);
-          } else {
-            const newFavicon = document.createElement('link');
-            newFavicon.rel = 'icon';
-            newFavicon.href = data.favicon_url;
-            document.head.appendChild(newFavicon);
-          }
-        }
-
-        // Update document title
-        if (data.site_name) {
-          document.title = data.site_name;
-        }
-      }
-    },
-    onError: () => {
-      toast.error('Erro ao carregar configurações');
     }
   });
 
@@ -129,8 +89,46 @@ export function SystemSettingsPage() {
     if (currentSettings) {
       setSettings(currentSettings);
       setPreviewColor(currentSettings.primary_color || '#0EA5E9');
+      setPreviewFontColor(currentSettings.system_font_color || '#000000');
+      
+      // Apply settings to document
+      document.documentElement.style.setProperty('--primary-50', `${currentSettings.primary_color}10`);
+      document.documentElement.style.setProperty('--primary-100', `${currentSettings.primary_color}20`);
+      document.documentElement.style.setProperty('--primary-200', `${currentSettings.primary_color}30`);
+      document.documentElement.style.setProperty('--primary-300', `${currentSettings.primary_color}40`);
+      document.documentElement.style.setProperty('--primary-400', `${currentSettings.primary_color}50`);
+      document.documentElement.style.setProperty('--primary-500', currentSettings.primary_color);
+      document.documentElement.style.setProperty('--primary-600', `${currentSettings.primary_color}70`);
+      document.documentElement.style.setProperty('--primary-700', `${currentSettings.primary_color}80`);
+      document.documentElement.style.setProperty('--primary-800', `${currentSettings.primary_color}90`);
+      document.documentElement.style.setProperty('--primary-900', `${currentSettings.primary_color}95`);
+      document.documentElement.style.setProperty('--primary-950', `${currentSettings.primary_color}99`);
+
+      // Update favicon if set
+      if (currentSettings.favicon_url) {
+        const favicon = document.querySelector('link[rel="icon"]');
+        if (favicon) {
+          favicon.setAttribute('href', currentSettings.favicon_url);
+        } else {
+          const newFavicon = document.createElement('link');
+          newFavicon.rel = 'icon';
+          newFavicon.href = currentSettings.favicon_url;
+          document.head.appendChild(newFavicon);
+        }
+      }
+
+      // Update document title
+      if (currentSettings.site_name) {
+        document.title = currentSettings.site_name;
+      }
     }
   }, [currentSettings]);
+
+  useEffect(() => {
+    if (isLoading === false && !currentSettings) {
+      toast.error('Erro ao carregar configurações');
+    }
+  }, [isLoading, currentSettings]);
 
   const updateSettings = useMutation({
     mutationFn: async (newSettings: Partial<SystemSettings>) => {
