@@ -137,7 +137,7 @@ export const TaskForm = forwardRef<TaskFormRef, TaskFormProps>(({ projectId, par
                 <div className="sm:flex sm:items-start">
                   <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
                     <Dialog.Title as="h3" className="text-lg font-semibold leading-6 text-gray-900">
-                      Nova Tarefa
+                      {parentTaskId ? 'Nova Subtarefa' : 'Nova Tarefa'}
                     </Dialog.Title>
                     <div className="mt-4">
                       <form onSubmit={handleSubmit} className="space-y-4">
@@ -272,7 +272,7 @@ export const TaskForm = forwardRef<TaskFormRef, TaskFormProps>(({ projectId, par
             type="submit"
             className="inline-flex justify-center px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
           >
-            Criar Tarefa
+            {parentTaskId ? 'Criar Subtarefa' : 'Criar Tarefa'}
           </button>
         </div>
                       </form>
