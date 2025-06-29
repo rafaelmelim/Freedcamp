@@ -1,5 +1,4 @@
-import { Fragment, useState } from 'react';
-import { Dialog, Transition } from '@headlessui/react';
+import { useState } from 'react';
 import { PlusIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';

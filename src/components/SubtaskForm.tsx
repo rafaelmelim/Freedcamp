@@ -57,6 +57,7 @@ export function SubtaskForm({
       due_date: initialData?.due_date || '',
       value: initialData?.value?.toString() || '',
       actual_hours: formatSecondsToHHMMSS(initialData?.actual_hours),
+      actual_hours: formatSecondsToHHMMSS(initialData?.actual_hours ?? null),
       status: initialData?.status || 'nao_iniciada',
     },
   });
