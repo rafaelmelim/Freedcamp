@@ -15,7 +15,7 @@ import { ExportCSV } from '../components/ExportCSV';
 import { Header } from '../components/Header';
 import { TaskDetailsModal } from '../components/TaskDetailsModal';
 import { ProjectForm } from '../components/ProjectForm';
-import { HomeIcon, ArchiveBoxIcon, Cog6ToothIcon, ArrowRightOnRectangleIcon, PlusIcon, ChevronUpIcon, ChevronDownIcon, MagnifyingGlassIcon, EllipsisVerticalIcon } from '@heroicons/react/24/outline';
+import { HomeIcon, ArchiveBoxIcon, Cog6ToothIcon, ArrowRightOnRectangleIcon, PlusIcon, ChevronUpIcon, ChevronDownIcon, MagnifyingGlassIcon, EllipsisVerticalIcon, TrashIcon, ArchiveBoxArrowDownIcon } from '@heroicons/react/24/outline';
 import { Link } from 'react-router-dom';
 import { formatSecondsToHHMMSS } from '../lib/utils';
 
@@ -199,6 +199,24 @@ export function BoardPage() {
     onError: (error: Error) => {
       console.error('Task creation error:', error);
       toast.error(error.message || 'Failed to create task');
+    },
+  });
+
+  const deleteProject = useMutation({
+    mutationFn: async (projectId: number) => {
+      const { error } = await supabase
+        .from('projects')
+        .delete()
+        .eq('id', projectId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      toast.success('Projeto excluído com sucesso');
+    },
+    onError: () => {
+      toast.error('Erro ao excluir projeto');
     },
   });
 
@@ -542,12 +560,69 @@ export function BoardPage() {
                 className="bg-white/80 backdrop-blur-sm rounded-lg shadow-sm p-4 w-full"
               >
                 <div className="flex justify-between items-center mb-4">
-                  <h3 
-                    className="text-lg font-semibold text-gray-900 cursor-pointer hover:text-primary-600 transition-colors"
-                    onClick={() => handleProjectClick(project)}
-                  >
-                    #{project.sequence_number} - {project.title}
-                  </h3>
+                  <div className="flex items-center justify-between w-full">
+                    <h3 
+                      className="text-lg font-semibold text-gray-900 cursor-pointer hover:text-primary-600 transition-colors"
+                      onClick={() => handleProjectClick(project)}
+                    >
+                      #{project.sequence_number} - {project.title}
+                    </h3>
+                    
+                    {/* Project Options Menu */}
+                    <Menu as="div" className="relative inline-block text-left">
+                      <Menu.Button className="flex items-center justify-center w-8 h-8 text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded-full hover:bg-gray-100">
+                        <EllipsisVerticalIcon className="w-5 h-5" />
+                      </Menu.Button>
+
+                      <Transition
+                        as={Fragment}
+                        enter="transition ease-out duration-100"
+                        enterFrom="transform opacity-0 scale-95"
+                        enterTo="transform opacity-100 scale-100"
+                        leave="transition ease-in duration-75"
+                        leaveFrom="transform opacity-100 scale-100"
+                        leaveTo="transform opacity-0 scale-95"
+                      >
+                        <Menu.Items className="absolute right-0 z-50 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                          <Menu.Item>
+                            {({ focus }) => (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toast.error('A funcionalidade de arquivar projetos não está disponível no momento, pois o esquema do banco de dados não possui um campo "arquivado" para projetos.');
+                                }}
+                                className={`${
+                                  focus ? 'bg-gray-100' : ''
+                                } flex items-center w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100`}
+                              >
+                                <ArchiveBoxArrowDownIcon className="w-4 h-4 mr-2" />
+                                Arquivar Projeto
+                              </button>
+                            )}
+                          </Menu.Item>
+                          <Menu.Item>
+                            {({ focus }) => (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (confirm('Tem certeza que deseja excluir este projeto? Esta ação não pode ser desfeita e todas as tarefas associadas também serão excluídas.')) {
+                                    deleteProject.mutate(project.id);
+                                  }
+                                }}
+                                className={`${
+                                  focus ? 'bg-gray-100' : ''
+                                } flex items-center w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-gray-100`}
+                              >
+                                <TrashIcon className="w-4 h-4 mr-2" />
+                                Excluir Projeto
+                              </button>
+                            )}
+                          </Menu.Item>
+                        </Menu.Items>
+                      </Transition>
+                    </Menu>
+                  </div>
+                  
                   <div className="flex items-center space-x-4">
                     {/* Project Values */}
                     <div className="text-sm text-gray-600">
