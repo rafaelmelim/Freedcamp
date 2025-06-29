@@ -46,7 +46,7 @@ const statusLabels = {
 export function BoardPage() {
   const { user, hasRole, signOut, loading, connectionError, retryConnection } = useAuth();
   const [addingTaskToProject, setAddingTaskToProject] = useState<number | null>(null);
-  const [addingSubtaskToTask, setAddingSubtaskToTask] = useState<number | null>(null);
+  const [addingSubtaskToTask, setAddingSubtaskToTask] = useState<{ projectId: number; parentTaskId: number } | null>(null);
   const [selectedTask, setSelectedTask] = useState<(Task & { task_labels: { label: Label }[] }) | null>(null);
   const [projectToEdit, setProjectToEdit] = useState<Project | null>(null);
   const [showProjectForm, setShowProjectForm] = useState(false);

@@ -442,7 +442,7 @@ export function EmailSettingsPage() {
               ))}
             </div>
             <div className="mt-8 pt-8 border-t border-gray-200">
-              <EmailTestForm onClose={() => {}} />
+              <EmailTestForm />
             </div>
           </div>
         </main>
