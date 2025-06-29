@@ -1,4 +1,4 @@
-import { Fragment, useState } from 'react';
+import { Fragment, useState, forwardRef, useImperativeHandle } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { PlusIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { Database } from '../lib/database.types';
@@ -7,6 +7,10 @@ import { parseHHMMSSToSeconds } from '../lib/utils';
 
 type Task = Database['public']['Tables']['tasks']['Insert'];
 type Label = Database['public']['Tables']['labels']['Row'];
+
+export interface TaskFormRef {
+  resetForm: () => void;
+}
 
 interface TaskFormProps {
   projectId: number;
@@ -20,7 +24,7 @@ interface IssueLink {
   url: string;
 }
 
-export function TaskForm({ projectId, parentTaskId, onSubmit, onCancel }: TaskFormProps) {
+export const TaskForm = forwardRef<TaskFormRef, TaskFormProps>(({ projectId, parentTaskId, onSubmit, onCancel }, ref) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [startDate, setStartDate] = useState('');
@@ -28,6 +32,20 @@ export function TaskForm({ projectId, parentTaskId, onSubmit, onCancel }: TaskFo
   const [issueLinks, setIssueLinks] = useState<IssueLink[]>([{ id: '1', url: '' }]);
   const [value, setValue] = useState('');
   const [actualHours, setActualHours] = useState('00:00:00');
+
+  const resetForm = () => {
+    setTitle('');
+    setDescription('');
+    setStartDate('');
+    setEndDate('');
+    setIssueLinks([{ id: '1', url: '' }]);
+    setValue('');
+    setActualHours('00:00:00');
+  };
+
+  useImperativeHandle(ref, () => ({
+    resetForm,
+  }));
 
   const handleAddIssueLink = () => {
     setIssueLinks([...issueLinks, { id: Date.now().toString(), url: '' }]);
@@ -48,13 +66,11 @@ export function TaskForm({ projectId, parentTaskId, onSubmit, onCancel }: TaskFo
     
     // Validate required fields
     if (!title.trim()) {
-      toast.error('O nome da tarefa é obrigatório');
       return;
     }
 
     // Validate dates
     if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
-      toast.error('A data inicial não pode ser maior que a data final');
       return;
     }
 
@@ -78,12 +94,7 @@ export function TaskForm({ projectId, parentTaskId, onSubmit, onCancel }: TaskFo
       actual_hours: actualHours !== '00:00:00' ? parseHHMMSSToSeconds(actualHours) : null,
     };
 
-    try {
-      onSubmit(taskData, []); // Pass empty array for labels
-    } catch (error) {
-      toast.error('Erro ao criar tarefa. Por favor, tente novamente.');
-      console.error('Error creating task:', error);
-    }
+    onSubmit(taskData, []); // Pass empty array for labels
   };
 
   return (
@@ -275,4 +286,6 @@ export function TaskForm({ projectId, parentTaskId, onSubmit, onCancel }: TaskFo
       </Dialog>
     </Transition.Root>
   );
-}
+});
+
+TaskForm.displayName = 'TaskForm';

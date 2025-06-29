@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format, isPast, isToday, addDays, startOfDay, isFuture } from 'date-fns';
@@ -9,7 +9,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { ConnectionError } from '../components/ConnectionError';
 import { toast } from 'react-hot-toast';
 import { Database, TaskPriority, TaskStatus } from '../lib/database.types';
-import { TaskForm } from '../components/TaskForm';
+import { TaskForm, TaskFormRef } from '../components/TaskForm';
 import { ImportCSV } from '../components/ImportCSV';
 import { ExportCSV } from '../components/ExportCSV';
 import { Header } from '../components/Header';
@@ -55,6 +55,7 @@ export function BoardPage() {
   const [inputProjectSearchTerm, setInputProjectSearchTerm] = useState('');
   const [actualProjectSearchTerm, setActualProjectSearchTerm] = useState('');
   const [collapsedProjects, setCollapsedProjects] = useState<Record<number, boolean>>({});
+  const subtaskFormRef = useRef<TaskFormRef>(null);
   const queryClient = useQueryClient();
 
   const { data: projects, isLoading: isLoadingProjects } = useQuery({
@@ -191,15 +192,6 @@ export function BoardPage() {
       }
 
       return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
-      setAddingTaskToProject(null);
-      toast.success('Task created successfully');
-    },
-    onError: (error: Error) => {
-      console.error('Task creation error:', error);
-      toast.error(error.message || 'Failed to create task');
     },
   });
 
@@ -657,18 +649,36 @@ export function BoardPage() {
                 {addingTaskToProject === project.id && (
                   <TaskForm
                     projectId={project.id}
-                    onSubmit={(task, labels) => createTask.mutate({ task, labels })}
+                    onSubmit={async (task, labels) => {
+                      try {
+                        await createTask.mutateAsync({ task, labels });
+                        queryClient.invalidateQueries({ queryKey: ['tasks'] });
+                        setAddingTaskToProject(null);
+                        toast.success('Tarefa criada com sucesso');
+                      } catch (error) {
+                        console.error('Task creation error:', error);
+                        toast.error('Erro ao criar tarefa. Por favor, tente novamente.');
+                      }
+                    }}
                     onCancel={() => setAddingTaskToProject(null)}
                   />
                 )}
 
                 {addingSubtaskToTask && (
                   <TaskForm
+                    ref={subtaskFormRef}
                     projectId={project.id}
                     parentTaskId={addingSubtaskToTask}
-                    onSubmit={(task, labels) => {
-                      createTask.mutate({ task, labels });
-                      setAddingSubtaskToTask(null);
+                    onSubmit={async (task, labels) => {
+                      try {
+                        await createTask.mutateAsync({ task, labels });
+                        queryClient.invalidateQueries({ queryKey: ['tasks'] });
+                        subtaskFormRef.current?.resetForm();
+                        toast.success('Subtarefa criada com sucesso');
+                      } catch (error) {
+                        console.error('Subtask creation error:', error);
+                        toast.error('Erro ao criar subtarefa. Por favor, tente novamente.');
+                      }
                     }}
                     onCancel={() => setAddingSubtaskToTask(null)}
                   />
