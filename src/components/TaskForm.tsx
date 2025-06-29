@@ -1,8 +1,7 @@
-import { Fragment } from 'react';
+import { Fragment, useState } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { PlusIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { useQuery } from '@tanstack/react-query';
-import { useForm, SubmitHandler } from 'react-hook-form';
 import { supabase } from '../lib/supabase';
 import { Database } from '../lib/database.types';
 import { toast } from 'react-hot-toast';
@@ -23,17 +22,16 @@ interface IssueLink {
   url: string;
 }
 
-interface TaskFormData {
-  title: string;
-  description: string;
-  startDate: string;
-  endDate: string;
-  value: string;
-  actualHours: string;
-  issueLinks: IssueLink[];
-}
-
 export function TaskForm({ projectId, parentTaskId, onSubmit, onCancel }: TaskFormProps) {
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [issueLinks, setIssueLinks] = useState<IssueLink[]>([{ id: '1', url: '' }]);
+  const [value, setValue] = useState('');
+  const [actualHours, setActualHours] = useState('00:00:00');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   // Fetch parent task information if parentTaskId is provided
   const { data: parentTask } = useQuery({
     queryKey: ['parent-task', parentTaskId],
@@ -52,81 +50,66 @@ export function TaskForm({ projectId, parentTaskId, onSubmit, onCancel }: TaskFo
     enabled: !!parentTaskId,
   });
 
-  const {
-    register,
-    handleSubmit,
-    watch,
-    setValue,
-    formState: { errors, isSubmitting }
-  } = useForm<TaskFormData>({
-    defaultValues: {
-      title: '',
-      description: '',
-      startDate: '',
-      endDate: '',
-      value: '',
-      actualHours: '00:00:00',
-      issueLinks: [{ id: '1', url: '' }]
-    }
-  });
-
-  const issueLinks = watch('issueLinks');
-
   const handleAddIssueLink = () => {
-    const newLinks = [...issueLinks, { id: Date.now().toString(), url: '' }];
-    setValue('issueLinks', newLinks);
+    setIssueLinks([...issueLinks, { id: Date.now().toString(), url: '' }]);
   };
 
   const handleRemoveIssueLink = (id: string) => {
-    const newLinks = issueLinks.filter(link => link.id !== id);
-    setValue('issueLinks', newLinks);
+    setIssueLinks(issueLinks.filter(link => link.id !== id));
   };
 
   const handleUpdateIssueLink = (id: string, url: string) => {
-    const newLinks = issueLinks.map(link => 
+    setIssueLinks(issueLinks.map(link => 
       link.id === id ? { ...link, url } : link
-    );
-    setValue('issueLinks', newLinks);
+    ));
   };
 
-  const onFormSubmit: SubmitHandler<TaskFormData> = async (data) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (isSubmitting) return;
+    
+    // Validate required fields
+    if (!title.trim()) {
+      toast.error(parentTaskId ? 'O nome da subtarefa é obrigatório' : 'O nome da tarefa é obrigatório');
+      return;
+    }
+
+    // Validate dates
+    if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
+      toast.error('A data inicial não pode ser maior que a data final');
+      return;
+    }
+
+    setIsSubmitting(true);
+
     try {
-      // Validar campos obrigatórios
-      if (!data.title.trim()) {
-        toast.error('O nome da tarefa é obrigatório');
-        return;
-      }
-
-      // Validate dates
-      if (data.startDate && data.endDate && new Date(data.startDate) > new Date(data.endDate)) {
-        toast.error('A data inicial não pode ser maior que a data final');
-        return;
-      }
-
       // Format issue links as part of the description
-      const issueLinksText = data.issueLinks
+      const issueLinksText = issueLinks
         .filter(link => link.url.trim())
         .map(link => link.url.trim())
         .join('\n');
 
-      const fullDescription = data.description.trim() + (issueLinksText ? `\n\nIssues:\n${issueLinksText}` : '');
+      const fullDescription = description.trim() + (issueLinksText ? `\n\nIssues:\n${issueLinksText}` : '');
 
       const taskData: Task = {
-        title: data.title.trim(),
+        title: title.trim(),
         description: fullDescription || null,
         project_id: projectId,
         parent_task_id: parentTaskId || null,
         position: 0,
-        due_date: data.endDate || data.startDate || null,
+        due_date: endDate || startDate || null,
         priority: 'medium',
-        value: data.value ? parseFloat(data.value) : null,
-        actual_hours: data.actualHours !== '00:00:00' ? parseHHMMSSToSeconds(data.actualHours) : null,
+        value: value ? parseFloat(value) : null,
+        actual_hours: actualHours !== '00:00:00' ? parseHHMMSSToSeconds(actualHours) : null,
       };
 
       await onSubmit(taskData, []); // Pass empty array for labels
     } catch (error) {
       console.error('Error creating task:', error);
       toast.error(parentTaskId ? 'Erro ao criar subtarefa' : 'Erro ao criar tarefa');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -166,7 +149,7 @@ export function TaskForm({ projectId, parentTaskId, onSubmit, onCancel }: TaskFo
                       {parentTaskId ? 'Cadastro de Subtarefa' : 'Nova Tarefa'}
                     </Dialog.Title>
                     <div className="mt-4">
-                      <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-4">
+                      <form onSubmit={handleSubmit} className="space-y-4">
                         {/* Parent Task Reference - Only show for subtasks */}
                         {parentTaskId && parentTask && (
                           <div>
@@ -188,25 +171,22 @@ export function TaskForm({ projectId, parentTaskId, onSubmit, onCancel }: TaskFo
                           </label>
                           <input
                             type="text"
-                            {...register('title', { 
-                              required: parentTaskId ? 'O nome da subtarefa é obrigatório' : 'O nome da tarefa é obrigatório'
-                            })}
+                            value={title}
+                            onChange={(e) => setTitle(e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors duration-200"
                             placeholder={parentTaskId ? "Digite o nome da subtarefa" : "Digite o nome da tarefa"}
+                            required
                             disabled={isSubmitting}
                           />
-                          {errors.title && (
-                            <p className="mt-1 text-sm text-red-600">{errors.title.message}</p>
-                          )}
                         </div>
 
-                        {/* Descrição */}
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">
                             {parentTaskId ? 'Descrição da subtarefa' : 'Descrição da tarefa'}
                           </label>
                           <textarea
-                            {...register('description')}
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
                             rows={3}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors duration-200"
                             placeholder={parentTaskId ? "Descreva a subtarefa" : "Descreva a tarefa"}
@@ -221,7 +201,8 @@ export function TaskForm({ projectId, parentTaskId, onSubmit, onCancel }: TaskFo
                             </label>
                             <input
                               type="date"
-                              {...register('startDate')}
+                              value={startDate}
+                              onChange={(e) => setStartDate(e.target.value)}
                               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors duration-200 cursor-pointer"
                               disabled={isSubmitting}
                             />
@@ -233,7 +214,8 @@ export function TaskForm({ projectId, parentTaskId, onSubmit, onCancel }: TaskFo
                             </label>
                             <input
                               type="date"
-                              {...register('endDate')}
+                              value={endDate}
+                              onChange={(e) => setEndDate(e.target.value)}
                               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors duration-200 cursor-pointer"
                               disabled={isSubmitting}
                             />
@@ -248,7 +230,8 @@ export function TaskForm({ projectId, parentTaskId, onSubmit, onCancel }: TaskFo
                             type="number"
                             step="0.01"
                             min="0"
-                            {...register('value')}
+                            value={value}
+                            onChange={(e) => setValue(e.target.value)}
                             placeholder="0,00"
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors duration-200"
                             disabled={isSubmitting}
@@ -261,7 +244,8 @@ export function TaskForm({ projectId, parentTaskId, onSubmit, onCancel }: TaskFo
                           </label>
                           <input
                             type="text"
-                            {...register('actualHours')}
+                            value={actualHours}
+                            onChange={(e) => setActualHours(e.target.value)}
                             placeholder="00:00:00"
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors duration-200"
                             disabled={isSubmitting}
@@ -284,7 +268,7 @@ export function TaskForm({ projectId, parentTaskId, onSubmit, onCancel }: TaskFo
                             </button>
                           </div>
                           <div className="space-y-2">
-                            {issueLinks.map((link, index) => (
+                            {issueLinks.map((link) => (
                               <div key={link.id} className="flex gap-2">
                                 <input
                                   type="url"
