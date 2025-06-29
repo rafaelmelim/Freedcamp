@@ -1,5 +1,4 @@
 import { useState, useMemo } from 'react';
-import { format } from 'date-fns';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { Database } from '../lib/database.types';
