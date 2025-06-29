@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { User, AuthSessionMissingError } from '@supabase/supabase-js'
+import { User, AuthSessionMissingError, AuthApiError } from '@supabase/supabase-js'
 import { supabase, testSupabaseConnection, validateEnvironment } from '../lib/supabase'
 import { getUserRoles } from '../lib/roles'
 import { Database } from '../lib/database.types'
@@ -213,6 +213,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Sign out from Supabase
       const { error } = await supabase.auth.signOut()
       if (error) {
+        // Handle session_not_found error as a successful logout
+        if (error instanceof AuthApiError && error.status === 403 && error.message?.includes('session_not_found')) {
+          console.log('Session already expired/invalidated, proceeding with navigation')
+          navigate('/login')
+          return
+        }
+        
         if (error.message?.includes('NetworkError') || 
             error.message?.includes('fetch') || 
             error.message?.includes('Failed to fetch') ||
@@ -230,6 +237,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Handle the case where session is already missing/invalid
       if (error instanceof AuthSessionMissingError) {
         console.log('Session already cleared, proceeding with navigation')
+        navigate('/login')
+      } else if (error instanceof AuthApiError && error.status === 403 && error.message?.includes('session_not_found')) {
+        console.log('Session not found during signout, proceeding with navigation')
         navigate('/login')
       } else {
         console.error('Sign out error:', error)
