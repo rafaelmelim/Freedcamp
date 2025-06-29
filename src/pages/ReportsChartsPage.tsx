@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { Header } from '../components/Header';
 import { format, startOfWeek, endOfWeek, subWeeks, addDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
@@ -16,6 +18,22 @@ import {
   PointElement,
 } from 'chart.js';
 import { Bar, Pie, Line } from 'react-chartjs-2';
+import {
+  HomeIcon,
+  ArchiveBoxIcon,
+  Cog6ToothIcon,
+  ArrowRightOnRectangleIcon,
+  EnvelopeIcon,
+  UsersIcon,
+  ComputerDesktopIcon,
+  ArrowDownTrayIcon,
+  UserCircleIcon,
+  ChartBarIcon,
+  ChartPieIcon,
+  UserGroupIcon,
+  ChevronDownIcon,
+  ChevronRightIcon,
+} from '@heroicons/react/24/outline';
 
 ChartJS.register(
   CategoryScale,
@@ -68,14 +86,25 @@ interface DateRange {
 }
 
 export default function ReportsChartsPage() {
-  const { user } = useAuth();
+  const { user, signOut, hasRole } = useAuth();
+  const [reportsMenuOpen, setReportsMenuOpen] = useState(false);
   const [projects, setProjects] = useState<Project[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedProjects, setSelectedProjects] = useState<number[]>([]);
-  const [selectedAssignees, setSelectedAssignees] = useState<string[]>([]);
-  const [dateRange, setDateRange] = useState<DateRange>({
+  
+  // Current filter states (what user is selecting in the UI)
+  const [currentSelectedProjects, setCurrentSelectedProjects] = useState<number[]>([]);
+  const [currentSelectedAssignees, setCurrentSelectedAssignees] = useState<string[]>([]);
+  const [currentDateRange, setCurrentDateRange] = useState<DateRange>({
+    startDate: startOfWeek(new Date(), { locale: ptBR }),
+    endDate: endOfWeek(new Date(), { locale: ptBR })
+  });
+
+  // Applied filter states (what is actually used to generate charts)
+  const [appliedProjects, setAppliedProjects] = useState<number[]>([]);
+  const [appliedAssignees, setAppliedAssignees] = useState<string[]>([]);
+  const [appliedDateRange, setAppliedDateRange] = useState<DateRange>({
     startDate: startOfWeek(new Date(), { locale: ptBR }),
     endDate: endOfWeek(new Date(), { locale: ptBR })
   });
@@ -123,9 +152,14 @@ export default function ReportsChartsPage() {
       setTasks(tasksData || []);
       setProfiles(profilesData || []);
 
-      // Set default selections
-      setSelectedProjects(projectsData?.map(p => p.id) || []);
-      setSelectedAssignees(profilesData?.map(p => p.id) || []);
+      // Set default selections for both current and applied states
+      const defaultProjects = projectsData?.map(p => p.id) || [];
+      const defaultAssignees = profilesData?.map(p => p.id) || [];
+      
+      setCurrentSelectedProjects(defaultProjects);
+      setCurrentSelectedAssignees(defaultAssignees);
+      setAppliedProjects(defaultProjects);
+      setAppliedAssignees(defaultAssignees);
 
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -134,12 +168,19 @@ export default function ReportsChartsPage() {
     }
   };
 
-  // Filter tasks based on selections and date range
+  // Handle filter application when "Gerar Gráficos" button is clicked
+  const handleGenerateCharts = () => {
+    setAppliedProjects([...currentSelectedProjects]);
+    setAppliedAssignees([...currentSelectedAssignees]);
+    setAppliedDateRange({ ...currentDateRange });
+  };
+
+  // Filter tasks based on applied selections and date range
   const filteredTasks = tasks.filter(task => {
     const taskDate = new Date(task.created_at);
-    const inDateRange = taskDate >= dateRange.startDate && taskDate <= dateRange.endDate;
-    const inSelectedProjects = selectedProjects.includes(task.project_id);
-    const inSelectedAssignees = !task.assignee_id || selectedAssignees.includes(task.assignee_id);
+    const inDateRange = taskDate >= appliedDateRange.startDate && taskDate <= appliedDateRange.endDate;
+    const inSelectedProjects = appliedProjects.includes(task.project_id);
+    const inSelectedAssignees = !task.assignee_id || appliedAssignees.includes(task.assignee_id);
     
     return inDateRange && inSelectedProjects && inSelectedAssignees;
   });
@@ -147,7 +188,7 @@ export default function ReportsChartsPage() {
   // Chart data generators
   const generateProjectProgressChartData = () => {
     const projectData = projects
-      .filter(p => selectedProjects.includes(p.id))
+      .filter(p => appliedProjects.includes(p.id))
       .map(project => {
         const projectTasks = filteredTasks.filter(t => t.project_id === project.id);
         const completedTasks = projectTasks.filter(t => t.status === 'concluida').length;
@@ -244,7 +285,7 @@ export default function ReportsChartsPage() {
 
   const generateHoursComparisonChartData = () => {
     const projectData = projects
-      .filter(p => selectedProjects.includes(p.id))
+      .filter(p => appliedProjects.includes(p.id))
       .map(project => ({
         project: project.title,
         estimated: project.estimated_hours || 0,
@@ -274,7 +315,7 @@ export default function ReportsChartsPage() {
 
   const generateValueComparisonChartData = () => {
     const projectData = projects
-      .filter(p => selectedProjects.includes(p.id))
+      .filter(p => appliedProjects.includes(p.id))
       .map(project => ({
         project: project.title,
         estimated: project.estimated_value || 0,
@@ -304,7 +345,7 @@ export default function ReportsChartsPage() {
 
   const generateTeamProductivityChartData = () => {
     const assigneeData = profiles
-      .filter(p => selectedAssignees.includes(p.id))
+      .filter(p => appliedAssignees.includes(p.id))
       .map(profile => {
         const assigneeTasks = filteredTasks.filter(t => t.assignee_id === profile.id);
         const completedTasks = assigneeTasks.filter(t => t.status === 'concluida').length;
@@ -342,7 +383,7 @@ export default function ReportsChartsPage() {
 
   const generateTeamWorkloadDistributionChartData = () => {
     const assigneeData = profiles
-      .filter(p => selectedAssignees.includes(p.id))
+      .filter(p => appliedAssignees.includes(p.id))
       .map(profile => {
         const assigneeTasks = filteredTasks.filter(t => t.assignee_id === profile.id);
         return {
@@ -381,7 +422,7 @@ export default function ReportsChartsPage() {
 
   const generateTeamHoursAllocatedChartData = () => {
     const assigneeData = profiles
-      .filter(p => selectedAssignees.includes(p.id))
+      .filter(p => appliedAssignees.includes(p.id))
       .map(profile => {
         const assigneeTasks = filteredTasks.filter(t => t.assignee_id === profile.id);
         const totalHours = assigneeTasks.reduce((sum, t) => sum + (t.actual_hours || 0), 0);
@@ -409,14 +450,14 @@ export default function ReportsChartsPage() {
 
   const generateWeeklyComparisonChartData = () => {
     const currentWeekTasks = filteredTasks;
-    const previousWeekStart = subWeeks(dateRange.startDate, 1);
-    const previousWeekEnd = subWeeks(dateRange.endDate, 1);
+    const previousWeekStart = subWeeks(appliedDateRange.startDate, 1);
+    const previousWeekEnd = subWeeks(appliedDateRange.endDate, 1);
     
     const previousWeekTasks = tasks.filter(task => {
       const taskDate = new Date(task.created_at);
       const inDateRange = taskDate >= previousWeekStart && taskDate <= previousWeekEnd;
-      const inSelectedProjects = selectedProjects.includes(task.project_id);
-      const inSelectedAssignees = !task.assignee_id || selectedAssignees.includes(task.assignee_id);
+      const inSelectedProjects = appliedProjects.includes(task.project_id);
+      const inSelectedAssignees = !task.assignee_id || appliedAssignees.includes(task.assignee_id);
       
       return inDateRange && inSelectedProjects && inSelectedAssignees;
     });
@@ -463,9 +504,9 @@ export default function ReportsChartsPage() {
 
   const generateProjectEvolutionChartData = () => {
     const days = [];
-    const currentDate = new Date(dateRange.startDate);
+    const currentDate = new Date(appliedDateRange.startDate);
     
-    while (currentDate <= dateRange.endDate) {
+    while (currentDate <= appliedDateRange.endDate) {
       days.push(new Date(currentDate));
       currentDate.setDate(currentDate.getDate() + 1);
     }
@@ -473,8 +514,8 @@ export default function ReportsChartsPage() {
     const evolutionData = days.map(day => {
       const dayTasks = tasks.filter(task => {
         const taskDate = new Date(task.created_at);
-        const inSelectedProjects = selectedProjects.includes(task.project_id);
-        const inSelectedAssignees = !task.assignee_id || selectedAssignees.includes(task.assignee_id);
+        const inSelectedProjects = appliedProjects.includes(task.project_id);
+        const inSelectedAssignees = !task.assignee_id || appliedAssignees.includes(task.assignee_id);
         
         return taskDate <= day && inSelectedProjects && inSelectedAssignees;
       });
@@ -591,19 +632,19 @@ export default function ReportsChartsPage() {
   };
 
   // Helper functions for display
-  const selectedProjectsText = selectedProjects.length === projects.length 
+  const appliedProjectsText = appliedProjects.length === projects.length 
     ? 'Todos os projetos' 
-    : projects.filter(p => selectedProjects.includes(p.id)).map(p => p.title).join(', ');
+    : projects.filter(p => appliedProjects.includes(p.id)).map(p => p.title).join(', ');
 
-  const selectedAssigneesText = selectedAssignees.length === profiles.length 
+  const appliedAssigneesText = appliedAssignees.length === profiles.length 
     ? 'Todos os colaboradores' 
-    : profiles.filter(p => selectedAssignees.includes(p.id)).map(p => p.name).join(', ');
+    : profiles.filter(p => appliedAssignees.includes(p.id)).map(p => p.name).join(', ');
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-primary-500/10 to-primary-700/20 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Carregando relatórios...</p>
         </div>
       </div>
@@ -611,264 +652,355 @@ export default function ReportsChartsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <header className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">📊 Relatórios e Gráficos</h1>
-          <p className="mt-2 text-gray-600">
-            Visualize o progresso dos seus projetos e equipe através de gráficos interativos
-          </p>
-        </header>
-
-        <main>
-          {/* Filters */}
-          <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Filtros</h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Date Range */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Período
-                </label>
-                <div className="space-y-2">
-                  <input
-                    type="date"
-                    value={format(dateRange.startDate, 'yyyy-MM-dd')}
-                    onChange={(e) => setDateRange(prev => ({ ...prev, startDate: new Date(e.target.value) }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <input
-                    type="date"
-                    value={format(dateRange.endDate, 'yyyy-MM-dd')}
-                    onChange={(e) => setDateRange(prev => ({ ...prev, endDate: new Date(e.target.value) }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
+    <div className="min-h-screen bg-gradient-to-br from-primary-500/10 to-primary-700/20">
+      <Header />
+      <div className="flex h-screen pt-16">
+        <aside className="w-64 bg-white border-r border-gray-200 fixed left-0 top-16 bottom-0 overflow-y-auto">
+          <nav className="p-4 space-y-2">
+            <div className="pb-4 mb-4 border-b border-gray-200">
+              <Link
+                to="/board"
+                className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md"
+              >
+                <HomeIcon className="w-5 h-5" />
+                <span>Página Inicial</span>
+              </Link>
+              <Link
+                to="/archived"
+                className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md"
+              >
+                <ArchiveBoxIcon className="w-5 h-5" />
+                <span>Projetos Arquivados</span>
+              </Link>
+              <button
+                onClick={() => setReportsMenuOpen(!reportsMenuOpen)}
+                className="flex items-center justify-between w-full px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md"
+              >
+                <div className="flex items-center space-x-2">
+                  <ChartBarIcon className="w-5 h-5" />
+                  <span>Relatórios Gerenciais</span>
                 </div>
-              </div>
+                {reportsMenuOpen ? (
+                  <ChevronDownIcon className="w-4 h-4" />
+                ) : (
+                  <ChevronRightIcon className="w-4 h-4" />
+                )}
+              </button>
+              {reportsMenuOpen && (
+                <div className="ml-4 space-y-2">
+                  <Link
+                    to="/reports/charts"
+                    className="flex items-center space-x-2 px-4 py-2 bg-gray-100 text-gray-900 rounded-md"
+                  >
+                    <ChartBarIcon className="w-4 h-4" />
+                    <span>Gráficos</span>
+                  </Link>
+                  <Link
+                    to="/reports/statistics"
+                    className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md"
+                  >
+                    <ChartPieIcon className="w-4 h-4" />
+                    <span>Estatísticas</span>
+                  </Link>
+                  <Link
+                    to="/reports/analysts"
+                    className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md"
+                  >
+                    <UserGroupIcon className="w-4 h-4" />
+                    <span>Analistas</span>
+                  </Link>
+                </div>
+              )}
+            </div>
+            <div className="pt-4 mt-4 border-t border-gray-200">
+              {hasRole('admin') && (
+                <Link
+                  to="/admin"
+                  className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md"
+                >
+                  <Cog6ToothIcon className="w-5 h-5" />
+                  <span>Configurações</span>
+                </Link>
+              )}
+              <button
+                onClick={() => signOut()}
+                className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md w-full text-left"
+              >
+                <ArrowRightOnRectangleIcon className="w-5 h-5" />
+                <span>Sair</span>
+              </button>
+            </div>
+          </nav>
+        </aside>
 
-              {/* Projects */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Projetos
-                </label>
-                <div className="space-y-2 max-h-32 overflow-y-auto border border-gray-300 rounded-md p-2">
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={selectedProjects.length === projects.length}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setSelectedProjects(projects.map(p => p.id));
-                        } else {
-                          setSelectedProjects([]);
-                        }
-                      }}
-                      className="mr-2"
-                    />
-                    <span className="text-sm font-medium">Todos</span>
+        <main className="flex-1 ml-64 p-8">
+          <div className="max-w-7xl mx-auto">
+            <header className="mb-8">
+              <h1 className="text-3xl font-bold text-gray-900">📊 Relatórios e Gráficos</h1>
+              <p className="mt-2 text-gray-600">
+                Visualize o progresso dos seus projetos e equipe através de gráficos interativos
+              </p>
+            </header>
+
+            {/* Filters */}
+            <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">Filtros</h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Date Range */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Período
                   </label>
-                  {projects.map(project => (
-                    <label key={project.id} className="flex items-center">
+                  <div className="space-y-2">
+                    <input
+                      type="date"
+                      value={format(currentDateRange.startDate, 'yyyy-MM-dd')}
+                      onChange={(e) => setCurrentDateRange(prev => ({ ...prev, startDate: new Date(e.target.value) }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    />
+                    <input
+                      type="date"
+                      value={format(currentDateRange.endDate, 'yyyy-MM-dd')}
+                      onChange={(e) => setCurrentDateRange(prev => ({ ...prev, endDate: new Date(e.target.value) }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    />
+                  </div>
+                </div>
+
+                {/* Projects */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Projetos
+                  </label>
+                  <div className="space-y-2 max-h-32 overflow-y-auto border border-gray-300 rounded-md p-2">
+                    <label className="flex items-center">
                       <input
                         type="checkbox"
-                        checked={selectedProjects.includes(project.id)}
+                        checked={currentSelectedProjects.length === projects.length}
                         onChange={(e) => {
                           if (e.target.checked) {
-                            setSelectedProjects(prev => [...prev, project.id]);
+                            setCurrentSelectedProjects(projects.map(p => p.id));
                           } else {
-                            setSelectedProjects(prev => prev.filter(id => id !== project.id));
+                            setCurrentSelectedProjects([]);
                           }
                         }}
                         className="mr-2"
                       />
-                      <span className="text-sm">{project.title}</span>
+                      <span className="text-sm font-medium">Todos</span>
                     </label>
-                  ))}
+                    {projects.map(project => (
+                      <label key={project.id} className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={currentSelectedProjects.includes(project.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setCurrentSelectedProjects(prev => [...prev, project.id]);
+                            } else {
+                              setCurrentSelectedProjects(prev => prev.filter(id => id !== project.id));
+                            }
+                          }}
+                          className="mr-2"
+                        />
+                        <span className="text-sm">{project.title}</span>
+                      </label>
+                    ))}
+                  </div>
                 </div>
-              </div>
 
-              {/* Assignees */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Colaboradores
-                </label>
-                <div className="space-y-2 max-h-32 overflow-y-auto border border-gray-300 rounded-md p-2">
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={selectedAssignees.length === profiles.length}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setSelectedAssignees(profiles.map(p => p.id));
-                        } else {
-                          setSelectedAssignees([]);
-                        }
-                      }}
-                      className="mr-2"
-                    />
-                    <span className="text-sm font-medium">Todos</span>
+                {/* Assignees */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Colaboradores
                   </label>
-                  {profiles.map(profile => (
-                    <label key={profile.id} className="flex items-center">
+                  <div className="space-y-2 max-h-32 overflow-y-auto border border-gray-300 rounded-md p-2">
+                    <label className="flex items-center">
                       <input
                         type="checkbox"
-                        checked={selectedAssignees.includes(profile.id)}
+                        checked={currentSelectedAssignees.length === profiles.length}
                         onChange={(e) => {
                           if (e.target.checked) {
-                            setSelectedAssignees(prev => [...prev, profile.id]);
+                            setCurrentSelectedAssignees(profiles.map(p => p.id));
                           } else {
-                            setSelectedAssignees(prev => prev.filter(id => id !== profile.id));
+                            setCurrentSelectedAssignees([]);
                           }
                         }}
                         className="mr-2"
                       />
-                      <span className="text-sm">{profile.name}</span>
+                      <span className="text-sm font-medium">Todos</span>
                     </label>
-                  ))}
+                    {profiles.map(profile => (
+                      <label key={profile.id} className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={currentSelectedAssignees.includes(profile.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setCurrentSelectedAssignees(prev => [...prev, profile.id]);
+                            } else {
+                              setCurrentSelectedAssignees(prev => prev.filter(id => id !== profile.id));
+                            }
+                          }}
+                          className="mr-2"
+                        />
+                        <span className="text-sm">{profile.name}</span>
+                      </label>
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
 
-          {/* Charts */}
-          <div className="space-y-12">
-            {/* Project Overview */}
-            <div>
-              <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
-                📈 Visão Geral dos Projetos
-              </h3>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div className="bg-white rounded-lg shadow-sm p-6">
-                  <h4 className="text-lg font-medium text-gray-900 mb-4">
-                    Progresso dos Projetos
-                  </h4>
-                  <p className="text-sm text-gray-600 mb-4">
-                    <strong>Projetos:</strong> {selectedProjectsText}
-                  </p>
-                  <Bar data={projectProgressChartData} options={chartOptions} />
-                </div>
-
-                <div className="bg-white rounded-lg shadow-sm p-6">
-                  <h4 className="text-lg font-medium text-gray-900 mb-4">
-                    Status das Tarefas
-                  </h4>
-                  <p className="text-sm text-gray-600 mb-4">
-                    <strong>Período:</strong> {format(dateRange.startDate, 'dd/MM/yyyy')} a {format(dateRange.endDate, 'dd/MM/yyyy')}
-                  </p>
-                  <Pie data={taskStatusChartData} options={chartOptions} />
-                </div>
-
-                <div className="bg-white rounded-lg shadow-sm p-6">
-                  <h4 className="text-lg font-medium text-gray-900 mb-4">
-                    Prioridade das Tarefas
-                  </h4>
-                  <p className="text-sm text-gray-600 mb-4">
-                    <strong>Período:</strong> {format(dateRange.startDate, 'dd/MM/yyyy')} a {format(dateRange.endDate, 'dd/MM/yyyy')}
-                  </p>
-                  <Pie data={taskPriorityChartData} options={chartOptions} />
-                </div>
-
-                <div className="bg-white rounded-lg shadow-sm p-6">
-                  <h4 className="text-lg font-medium text-gray-900 mb-4">
-                    Comparação de Horas
-                  </h4>
-                  <p className="text-sm text-gray-600 mb-4">
-                    <strong>Projetos:</strong> {selectedProjectsText}
-                  </p>
-                  <Bar data={hoursComparisonChartData} options={chartOptions} />
-                </div>
+              {/* Generate Charts Button */}
+              <div className="flex justify-center mt-6">
+                <button
+                  onClick={handleGenerateCharts}
+                  className="px-6 py-3 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors duration-200"
+                >
+                  Gerar Gráficos
+                </button>
               </div>
             </div>
 
-            {/* Financial Overview */}
-            <div>
-              <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
-                💰 Visão Financeira
-              </h3>
-              <div className="grid grid-cols-1 gap-8">
-                <div className="bg-white rounded-lg shadow-sm p-6">
-                  <h4 className="text-lg font-medium text-gray-900 mb-4">
-                    Comparação de Valores
-                  </h4>
-                  <p className="text-sm text-gray-600 mb-4">
-                    <strong>Projetos:</strong> {selectedProjectsText}
-                  </p>
-                  <Bar data={valueComparisonChartData} options={chartOptions} />
+            {/* Charts */}
+            <div className="space-y-12">
+              {/* Project Overview */}
+              <div>
+                <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
+                  📈 Visão Geral dos Projetos
+                </h3>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  <div className="bg-white rounded-lg shadow-sm p-6">
+                    <h4 className="text-lg font-medium text-gray-900 mb-4">
+                      Progresso dos Projetos
+                    </h4>
+                    <p className="text-sm text-gray-600 mb-4">
+                      <strong>Projetos:</strong> {appliedProjectsText}
+                    </p>
+                    <Bar data={projectProgressChartData} options={chartOptions} />
+                  </div>
+
+                  <div className="bg-white rounded-lg shadow-sm p-6">
+                    <h4 className="text-lg font-medium text-gray-900 mb-4">
+                      Status das Tarefas
+                    </h4>
+                    <p className="text-sm text-gray-600 mb-4">
+                      <strong>Período:</strong> {format(appliedDateRange.startDate, 'dd/MM/yyyy')} a {format(appliedDateRange.endDate, 'dd/MM/yyyy')}
+                    </p>
+                    <Pie data={taskStatusChartData} options={chartOptions} />
+                  </div>
+
+                  <div className="bg-white rounded-lg shadow-sm p-6">
+                    <h4 className="text-lg font-medium text-gray-900 mb-4">
+                      Prioridade das Tarefas
+                    </h4>
+                    <p className="text-sm text-gray-600 mb-4">
+                      <strong>Período:</strong> {format(appliedDateRange.startDate, 'dd/MM/yyyy')} a {format(appliedDateRange.endDate, 'dd/MM/yyyy')}
+                    </p>
+                    <Pie data={taskPriorityChartData} options={chartOptions} />
+                  </div>
+
+                  <div className="bg-white rounded-lg shadow-sm p-6">
+                    <h4 className="text-lg font-medium text-gray-900 mb-4">
+                      Comparação de Horas
+                    </h4>
+                    <p className="text-sm text-gray-600 mb-4">
+                      <strong>Projetos:</strong> {appliedProjectsText}
+                    </p>
+                    <Bar data={hoursComparisonChartData} options={chartOptions} />
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Team Performance */}
-            <div>
-              <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
-                👥 Performance da Equipe
-              </h3>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div className="bg-white rounded-lg shadow-sm p-6 lg:col-span-2">
-                  <h4 className="text-lg font-medium text-gray-900 mb-4">
-                    Produtividade da Equipe
-                  </h4>
-                  <p className="text-sm text-gray-600 mb-4">
-                    <strong>Colaboradores:</strong> {selectedAssigneesText}
-                  </p>
-                  <Bar data={teamProductivityChartData} options={dualAxisChartOptions} />
-                </div>
-
-                <div className="bg-white rounded-lg shadow-sm p-6">
-                  <h4 className="text-lg font-medium text-gray-900 mb-4">
-                    Distribuição de Carga de Trabalho
-                  </h4>
-                  <p className="text-sm text-gray-600 mb-4">
-                    <strong>Colaboradores:</strong> {selectedAssigneesText}
-                  </p>
-                  <Pie data={teamWorkloadDistributionChartData} options={chartOptions} />
-                </div>
-
-                <div className="bg-white rounded-lg shadow-sm p-6">
-                  <h4 className="text-lg font-medium text-gray-900 mb-4">
-                    Horas Alocadas por Colaborador
-                  </h4>
-                  <p className="text-sm text-gray-600 mb-4">
-                    <strong>Colaboradores:</strong> {selectedAssigneesText}
-                  </p>
-                  <Bar data={teamHoursAllocatedChartData} options={chartOptions} />
+              {/* Financial Overview */}
+              <div>
+                <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
+                  💰 Visão Financeira
+                </h3>
+                <div className="grid grid-cols-1 gap-8">
+                  <div className="bg-white rounded-lg shadow-sm p-6">
+                    <h4 className="text-lg font-medium text-gray-900 mb-4">
+                      Comparação de Valores
+                    </h4>
+                    <p className="text-sm text-gray-600 mb-4">
+                      <strong>Projetos:</strong> {appliedProjectsText}
+                    </p>
+                    <Bar data={valueComparisonChartData} options={chartOptions} />
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Weekly Comparison */}
-            <div>
-              <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
-                📊 Comparação Semanal
-              </h3>
-              <div className="grid grid-cols-1 gap-8">
-                <div className="bg-white rounded-lg shadow-sm p-6">
-                  <h4 className="text-lg font-medium text-gray-900 mb-4">
-                    Comparação com a Semana Anterior
-                  </h4>
-                  <p className="text-sm text-gray-600 mb-4">
-                    <strong>Período:</strong> {format(dateRange.startDate, 'dd/MM/yyyy')} a {format(dateRange.endDate, 'dd/MM/yyyy')}
-                  </p>
-                  <Bar data={weeklyComparisonChartData} options={stackedChartOptions} />
+              {/* Team Performance */}
+              <div>
+                <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
+                  👥 Performance da Equipe
+                </h3>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  <div className="bg-white rounded-lg shadow-sm p-6 lg:col-span-2">
+                    <h4 className="text-lg font-medium text-gray-900 mb-4">
+                      Produtividade da Equipe
+                    </h4>
+                    <p className="text-sm text-gray-600 mb-4">
+                      <strong>Colaboradores:</strong> {appliedAssigneesText}
+                    </p>
+                    <Bar data={teamProductivityChartData} options={dualAxisChartOptions} />
+                  </div>
+
+                  <div className="bg-white rounded-lg shadow-sm p-6">
+                    <h4 className="text-lg font-medium text-gray-900 mb-4">
+                      Distribuição de Carga de Trabalho
+                    </h4>
+                    <p className="text-sm text-gray-600 mb-4">
+                      <strong>Colaboradores:</strong> {appliedAssigneesText}
+                    </p>
+                    <Pie data={teamWorkloadDistributionChartData} options={chartOptions} />
+                  </div>
+
+                  <div className="bg-white rounded-lg shadow-sm p-6">
+                    <h4 className="text-lg font-medium text-gray-900 mb-4">
+                      Horas Alocadas por Colaborador
+                    </h4>
+                    <p className="text-sm text-gray-600 mb-4">
+                      <strong>Colaboradores:</strong> {appliedAssigneesText}
+                    </p>
+                    <Bar data={teamHoursAllocatedChartData} options={chartOptions} />
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Project Evolution */}
-            <div>
-              <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
-                📈 Evolução dos Projetos
-              </h3>
-              <div className="grid grid-cols-1 gap-8">
-                <div className="bg-white rounded-lg shadow-sm p-6">
-                  <h4 className="text-lg font-medium text-gray-900 mb-4">
-                    Progresso dos Projetos
-                  </h4>
-                  <p className="text-sm text-gray-600 mb-4">
-                    <strong>Projetos:</strong> {selectedProjectsText}
-                  </p>
-                  <Bar data={projectEvolutionChartData} options={stackedChartOptions} />
+              {/* Weekly Comparison */}
+              <div>
+                <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
+                  📊 Comparação Semanal
+                </h3>
+                <div className="grid grid-cols-1 gap-8">
+                  <div className="bg-white rounded-lg shadow-sm p-6">
+                    <h4 className="text-lg font-medium text-gray-900 mb-4">
+                      Comparação com a Semana Anterior
+                    </h4>
+                    <p className="text-sm text-gray-600 mb-4">
+                      <strong>Período:</strong> {format(appliedDateRange.startDate, 'dd/MM/yyyy')} a {format(appliedDateRange.endDate, 'dd/MM/yyyy')}
+                    </p>
+                    <Bar data={weeklyComparisonChartData} options={stackedChartOptions} />
+                  </div>
+                </div>
+              </div>
+
+              {/* Project Evolution */}
+              <div>
+                <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
+                  📈 Evolução dos Projetos
+                </h3>
+                <div className="grid grid-cols-1 gap-8">
+                  <div className="bg-white rounded-lg shadow-sm p-6">
+                    <h4 className="text-lg font-medium text-gray-900 mb-4">
+                      Progresso dos Projetos
+                    </h4>
+                    <p className="text-sm text-gray-600 mb-4">
+                      <strong>Projetos:</strong> {appliedProjectsText}
+                    </p>
+                    <Bar data={projectEvolutionChartData} options={stackedChartOptions} />
+                  </div>
                 </div>
               </div>
             </div>
