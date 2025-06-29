@@ -20,8 +20,6 @@ interface IssueLink {
   url: string;
 }
 
-export function TaskForm({ projectId, onSubmit, onCancel }: TaskFormProps) {
-}
 export function TaskForm({ projectId, parentTaskId, onSubmit, onCancel }: TaskFormProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
