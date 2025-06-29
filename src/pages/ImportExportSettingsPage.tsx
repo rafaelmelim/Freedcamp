@@ -30,7 +30,7 @@ export function ImportExportSettingsPage() {
   const [reportsMenuOpen, setReportsMenuOpen] = useState(false);
   const queryClient = useQueryClient();
   
-  const { data: settings, isLoading } = useQuery({
+  const { data: settings } = useQuery({
     queryKey: ['import-export-settings'],
     queryFn: async () => {
       const { data, error } = await supabase

@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { Header } from '../components/Header';
-import { format, startOfWeek, endOfWeek, subWeeks, addDays } from 'date-fns';
+import { format, startOfWeek, endOfWeek, subWeeks } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
   Chart as ChartJS,
@@ -14,17 +14,14 @@ import {
   Tooltip,
   Legend,
   ArcElement,
-  LineElement,
   PointElement,
 } from 'chart.js';
-import { Bar, Pie, Line } from 'react-chartjs-2';
+import { Bar, Pie } from 'react-chartjs-2';
 import {
   HomeIcon,
   ArchiveBoxIcon,
   Cog6ToothIcon,
   ArrowRightOnRectangleIcon,
-  EnvelopeIcon,
-  UsersIcon,
   ComputerDesktopIcon,
   ArrowDownTrayIcon,
   UserCircleIcon,
@@ -43,7 +40,6 @@ ChartJS.register(
   Tooltip,
   Legend,
   ArcElement,
-  LineElement,
   PointElement
 );
 
