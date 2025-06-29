@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom';
 import { Header } from '../components/Header';
 import { useAuth } from '../contexts/AuthContext';
 import { HomeIcon, ArchiveBoxIcon, Cog6ToothIcon, ArrowRightOnRectangleIcon, ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { formatSecondsToHHMMSS } from '../lib/utils';
 
 type Task = Database['public']['Tables']['tasks']['Row'];
@@ -69,6 +69,17 @@ export function ArchivedProjectsPage() {
       })) as (Task & { task_labels: { label: Label }[] })[];
     },
   });
+
+  // Initialize all archived projects as collapsed when data is loaded
+  useEffect(() => {
+    if (archivedProjects && archivedProjects.length > 0 && Object.keys(collapsedProjects).length === 0) {
+      const initialCollapsedState: Record<number, boolean> = {};
+      archivedProjects.forEach(project => {
+        initialCollapsedState[project.id] = true;
+      });
+      setCollapsedProjects(initialCollapsedState);
+    }
+  }, [archivedProjects, collapsedProjects]);
 
   const toggleCollapse = (projectId: number) => {
     setCollapsedProjects(prev => ({
