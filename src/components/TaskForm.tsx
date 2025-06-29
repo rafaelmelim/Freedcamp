@@ -66,11 +66,13 @@ export const TaskForm = forwardRef<TaskFormRef, TaskFormProps>(({ projectId, par
     
     // Validate required fields
     if (!title.trim()) {
+      toast.error('O nome da tarefa é obrigatório');
       return;
     }
 
     // Validate dates
     if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
+      toast.error('A data inicial não pode ser maior que a data final');
       return;
     }
 
