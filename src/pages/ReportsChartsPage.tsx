@@ -754,7 +754,7 @@ export default function ReportsChartsPage() {
                     Status das Tarefas
                   </h4>
                   <p className="text-sm text-gray-600 mb-4">
-                    <strong>Período:</strong> {format(dateRange.startDate, 'dd/MM/yyyy')} a {format(dateRange.endDate, \'dd/MM/yyyy')}
+                    <strong>Período:</strong> {format(dateRange.startDate, 'dd/MM/yyyy')} a {format(dateRange.endDate, 'dd/MM/yyyy')}
                   </p>
                   <Pie data={taskStatusChartData} options={chartOptions} />
                 </div>
@@ -764,7 +764,7 @@ export default function ReportsChartsPage() {
                     Prioridade das Tarefas
                   </h4>
                   <p className="text-sm text-gray-600 mb-4">
-                    <strong>Período:</strong> {format(dateRange.startDate, 'dd/MM/yyyy')} a {format(dateRange.endDate, \'dd/MM/yyyy')}
+                    <strong>Período:</strong> {format(dateRange.startDate, 'dd/MM/yyyy')} a {format(dateRange.endDate, 'dd/MM/yyyy')}
                   </p>
                   <Pie data={taskPriorityChartData} options={chartOptions} />
                 </div>
