@@ -59,6 +59,7 @@ export function BoardPage() {
   const [reportsMenuOpen, setReportsMenuOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const projectsPerPage = 10;
+  const [addingSubtaskToTask, setAddingSubtaskToTask] = useState<{ projectId: number; parentTaskId: number } | null>(null);
   const queryClient = useQueryClient();
 
   // Query for total count of projects
@@ -839,23 +840,6 @@ export function BoardPage() {
                   />
                 )}
 
-                {addingSubtaskToTask && (
-                  <SubtaskForm
-                    projectId={project.id}
-                    parentTaskId={addingSubtaskToTask}
-                    onSubmit={async (task) => {
-                      try {
-                        await createTask.mutateAsync({ task, labels: [] });
-                        setAddingSubtaskToTask(null);
-                      } catch (error) {
-                        // Re-throw error to let SubtaskForm handle it properly
-                        throw error;
-                      }
-                    }}
-                    onCancel={() => setAddingSubtaskToTask(null)}
-                  />
-                )}
-
                 <div className={collapsedProjects[project.id] ? 'hidden' : ''}>
                   <DragDropContext onDragEnd={handleDragEnd}>
                     <Droppable droppableId={String(project.id)} type="task">
@@ -951,7 +935,7 @@ export function BoardPage() {
                                                   e.stopPropagation();
                                                   // Fechar outros formulários antes de abrir o de subtarefa
                                                   setAddingTaskToProject(null);
-                                                  setAddingSubtaskToTask(task.id);
+                                                  setAddingSubtaskToTask({ projectId: project.id, parentTaskId: task.id });
                                                 }}
                                                 className={`${
                                                   focus ? 'bg-gray-100' : ''
@@ -1052,6 +1036,24 @@ export function BoardPage() {
             />
           )}
         </main>
+
+        {/* Render SubtaskForm globally, outside of project loop */}
+        {addingSubtaskToTask && (
+          <SubtaskForm
+            projectId={addingSubtaskToTask.projectId}
+            parentTaskId={addingSubtaskToTask.parentTaskId}
+            onSubmit={async (task) => {
+              try {
+                await createTask.mutateAsync({ task, labels: [] });
+                setAddingSubtaskToTask(null);
+              } catch (error) {
+                // Re-throw error to let SubtaskForm handle it properly
+                throw error;
+              }
+            }}
+            onCancel={() => setAddingSubtaskToTask(null)}
+          />
+        )}
 
         {/* Pagination Controls */}
         {totalPages > 1 && (
