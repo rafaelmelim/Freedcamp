@@ -610,7 +610,7 @@ export function ReportsChartsPage() {
                 className="flex items-center space-x-2 px-4 py-2 bg-gray-100 text-gray-900 rounded-md"
               >
                 <ChartBarIcon className="w-5 h-5" />
-                <span>Estatísticas</span>
+                <span>Gráficos</span>
               </Link>
             </div>
             <div className="pt-4 mt-4 border-t border-gray-200">
@@ -636,7 +636,7 @@ export function ReportsChartsPage() {
 
         <main className="flex-1 ml-64 p-8">
           <div className="max-w-7xl mx-auto">
-            <h2 className="text-2xl font-bold text-gray-900 mb-8">Estatísticas de Projetos</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-8">Gráficos de Evolução de Projetos</h2>
 
             {/* Filters */}
             <div className="bg-white rounded-lg shadow-sm p-6 mb-8">

@@ -1,8 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Header } from '../components/Header';
 import { useAuth } from '../contexts/AuthContext';
-import { HomeIcon, ArchiveBoxIcon, Cog6ToothIcon, ArrowRightOnRectangleIcon, EnvelopeIcon, UsersIcon, ComputerDesktopIcon, ArrowDownTrayIcon, UserCircleIcon } from '@heroicons/react/24/outline';
-import { useState } from 'react';
+import { HomeIcon, ArchiveBoxIcon, Cog6ToothIcon, ArrowRightOnRectangleIcon, EnvelopeIcon, UsersIcon, ComputerDesktopIcon, ArrowDownTrayIcon, UserCircleIcon, ChartBarIcon } from '@heroicons/react/24/outline';
 
 export function AdminPage() {
   const { signOut, hasRole } = useAuth();
@@ -27,6 +26,13 @@ export function AdminPage() {
               >
                 <ArchiveBoxIcon className="w-5 h-5" />
                 <span>Projetos Arquivados</span>
+              </Link>
+              <Link
+                to="/reports/charts"
+                className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md"
+              >
+                <ChartBarIcon className="w-5 h-5" />
+                <span>Gráficos</span>
               </Link>
             </div>
             <div className="pt-4 mt-4 border-t border-gray-200">

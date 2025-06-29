@@ -16,6 +16,7 @@ import {
   ComputerDesktopIcon,
   ArrowDownTrayIcon,
   UserCircleIcon,
+  ChartBarIcon,
 } from '@heroicons/react/24/outline';
 
 type SystemSettings = Database['public']['Tables']['system_settings']['Row'];
@@ -209,6 +210,13 @@ export function SystemSettingsPage() {
               >
                 <ArchiveBoxIcon className="w-5 h-5" />
                 <span>Projetos Arquivados</span>
+              </Link>
+              <Link
+                to="/reports/charts"
+                className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md"
+              >
+                <ChartBarIcon className="w-5 h-5" />
+                <span>Gráficos</span>
               </Link>
             </div>
             <div className="pt-4 mt-4 border-t border-gray-200">
